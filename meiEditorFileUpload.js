@@ -79,12 +79,12 @@ var meiEditorFileUpload = function()
                     {
                         currentTarget = e.target.id;
 
-                        $("#hover-div").html(neumeObjects[currentTarget]);
+                        $("#hover-div").html(meiEditorSettings.neumeObjects[currentTarget]);
                         $("#hover-div").css(//create a div with the name of the hovered neume
                         {
-                            'top': e.pageY - 50,
-                            'height': 40,
-                            'left': e.pageX,
+                            'height': 'auto',
+                            'top': e.pageY - 10,
+                            'left': e.pageX + 10,
                             'padding-left': '10px',
                             'padding-right': '10px',
                             'border': 'thin black solid',
@@ -97,10 +97,10 @@ var meiEditorFileUpload = function()
 
                         $(document).on('mousemove', function(e) //have it follow the mouse
                         {
-                            $("#hover-div").css(
+                            $("#hover-div").offset(
                             {
-                                'top': e.pageY - 50,
-                                'left': e.pageX,
+                                'top': e.pageY - 10,
+                                'left': e.pageX + 10,
                             });
                         });
                     }, function(e){
@@ -111,10 +111,18 @@ var meiEditorFileUpload = function()
 
                         $("#"+currentTarget).css('background-color', 'rgba(255, 0, 0, 0.2)'); //color is normal again
                     });
+                    $(".overlay-box").click(function(e)
+                    {
+                        testSearch = meiEditorSettings.editor.find(e.target.id, 
+                        {
+                            wrap: true,
+                            range: null,
+                        });
+                    });
                 };
 
                 var x2js = new X2JS(); //from xml2json.js
-                var pageIndex = omeiEditorSettings.rderedPageData.length;
+                var pageIndex = meiEditorSettings.orderedPageData.length;
                 meiEditorSettings.dv.resetHighlights();
                 while(pageIndex--)
                 { //for each page
@@ -136,7 +144,7 @@ var meiEditorFileUpload = function()
                             if (neumeArray[curNeumeIndex]["_xml:id"] == neumeID)
                             {
                                 curNeume = neumeArray[curNeumeIndex]; //assemble the info on the neume
-                                neumeObjects[neumeID] = curNeume['_name']
+                                meiEditorSettings.neumeObjects[neumeID] = curNeume['_name']
                                 neume_ulx = curZone._ulx;
                                 neume_uly = curZone._uly;
                                 neume_width = curZone._lrx - neume_ulx;
