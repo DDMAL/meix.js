@@ -21,6 +21,7 @@ var meiEditorXMLValidator = function(){
                 $(".meiValidate").on('click', function(e)
                 {
                     fileName = $(e.target).attr('pageTitle'); //grabs page title from custom attribute
+                    fileNameOriginal = $(e.target).attr('pageTitleOrig'); //grabs page title from custom attribute
                     meiEditor.validateMei(fileName, fileNameOriginal);
                 });
             }
@@ -33,7 +34,7 @@ var meiEditorXMLValidator = function(){
             {
                 var Module = 
                 {
-                    xml: meiEditorSettings.pageData[pageName].doc.getAllLines().join("\n"),
+                    xml: meiEditorSettings.pageData[pageNameOriginal].doc.getAllLines().join("\n"),
                     schema: meiEditorSettings.validatorText,
                     title: pageNameOriginal
                 }

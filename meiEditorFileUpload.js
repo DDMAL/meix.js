@@ -28,6 +28,7 @@ var meiEditorFileUpload = function()
             */
             meiEditor.changeActivePage = function(pageName)
             {
+                console.log(pageName);
                 meiEditorSettings.editor.setSession(meiEditorSettings.pageData[pageName]); //inserts text
                 meiEditorSettings.activeDoc = meiEditorSettings.editor.getSession().doc;
             };
@@ -37,7 +38,7 @@ var meiEditorFileUpload = function()
                 @param pageName The page to download.
                 @param pageNameOriginal The page to download with whitespace/periods/hyphens.
             */
-            meiEditor.savePageToClient = function(pageName, pageNameOriginal)
+            meiEditor.savePageToClient = function(pageName)
             {
                 formatToSave = function(lineIn, indexIn)
                 {          
@@ -51,7 +52,7 @@ var meiEditorFileUpload = function()
                 var lastRow = meiEditorSettings.pageData[pageName].doc.getLength() - 1; //0-indexed
                 meiEditorSettings.pageData[pageName].doc.getLines(0, lastRow).forEach(formatToSave); //format each
                 var pageBlob = new Blob(formattedData, {type: "text/plain;charset=utf-8"}); //create a blob
-                meiEditor.saveAs(pageBlob, pageNameOriginal); //download it! from FileSaver.js
+                saveAs(pageBlob, pageName); //download it! from FileSaver.js
             };
 
             /*
@@ -59,7 +60,7 @@ var meiEditorFileUpload = function()
                 @param pageName The page to remove.
                 @param pageNameOriginal The page to remove with whitespace/periods/hyphens.
             */
-            meiEditor.removePageFromProject = function(pageName, pageNameOriginal)
+            meiEditor.removePageFromProject = function(pageName)
             {   
                 if(pageName in meiEditorSettings.pageData)
                 {
@@ -75,7 +76,7 @@ var meiEditorFileUpload = function()
                     delete meiEditorSettings.whiteSpaceConversion[pageName];
                 }
 
-                var orderedIndex = meiEditorSettings.orderedPageData.indexOf(pageName) //delete from the orderedPageData arr
+                var orderedIndex = meiEditorSettings.orderedPageData.indexOf(pageName); //delete from the orderedPageData arr
                 if(orderedIndex !== -1)
                 {
                     delete meiEditorSettings.orderedPageData[orderedIndex];
@@ -83,7 +84,7 @@ var meiEditorFileUpload = function()
 
                 $("#"+pageName).remove();
 
-                meiEditor.events.publish("PageWasDeleted", [pageName, pageNameOriginal]); //let whoever is interested know
+                meiEditor.events.publish("PageWasDeleted", [pageName]); //let whoever is interested know
             }
 
             /*
@@ -93,6 +94,7 @@ var meiEditorFileUpload = function()
             */
             meiEditor.addPage = function(pageDataIn, fileNameIn)
             {
+                console.log(fileNameIn);
                 meiEditorSettings.pageData[fileNameIn] = new ace.EditSession(pageDataIn, "ace/mode/xml"); //add the file's data into a "pageData" array that will eventually feed into the ACE editor
                 meiEditorSettings.orderedPageData.push(fileNameIn); //keep track of the page orders to push the right highlights to the right pages
             };
@@ -211,38 +213,39 @@ var meiEditorFileUpload = function()
                 reader.onload = function(e) 
                 { 
                     fileNameOriginal = this.file.name;
-                    fileName = this.file.name.replace(/\W+/g, ""); //this one strips spaces/periods so that it can be used as a jQuery selector
-                    meiEditor.addPage(this.result, fileName); 
-                    meiEditorSettings.whiteSpaceConversion[fileName] = fileNameOriginal;
+                    fileNameStripped = this.file.name.replace(/\W+/g, ""); //this one strips spaces/periods so that it can be used as a jQuery selector
+                    meiEditor.addPage(this.result, fileNameOriginal); 
+                    meiEditorSettings.whiteSpaceConversion[fileNameStripped] = fileNameOriginal;
 
                     $("#file-list").html($("#file-list").html() //add the file to the GUI
-                        + "<div class='meiFile' id='" + fileName + "'>" + fileNameOriginal
+                        + "<div class='meiFile' id='" + fileNameStripped + "' pageTitleOrig='" + fileNameOriginal + "'>" + fileNameOriginal
                         + "<span class='meiFileButtons'>"
-                        + "<button class='meiLoad' pageTitle='" + fileName + "'>Load</button>"
-                        + "<button class='meiSave' pageTitle='" + fileName + "' pageTitleOrig='" + fileNameOriginal + "'>Save</button>"
-                        + "<button class='meiRemove' pageTitle='" + fileName + "' pageTitleOrig='" + fileNameOriginal + "'>Remove from project</button>"
+                        + "<button class='meiLoad' pageTitle='" + fileNameStripped + "' pageTitleOrig='" + fileNameOriginal + "'>Load</button>"
+                        + "<button class='meiSave' pageTitle='" + fileNameStripped + "' pageTitleOrig='" + fileNameOriginal + "'>Save</button>"
+                        + "<button class='meiRemove' pageTitle='" + fileNameStripped + "' pageTitleOrig='" + fileNameOriginal + "'>Remove from project</button>"
                         + "</span>"
                         + "</div>");
-                    meiEditor.events.publish("NewFile", [this.result, fileName, fileNameOriginal])
+                    meiEditor.events.publish("NewFile", [this.result, fileNameStripped, fileNameOriginal])
 
                     var reapplyFileUploadButtonListeners = function(){
                         $(".meiFileButtons").offset({'top': '-2px'});
                         $(".meiLoad").on('click', function(e)
                         {
-                            fileName = $(e.target).attr('pageTitle'); //grabs page title from custom attribute
-                            meiEditor.changeActivePage(fileName);
+                            fileNameOriginal = $(e.target).attr('pageTitleOrig'); //grabs page title from custom attribute
+                            meiEditor.changeActivePage(fileNameOriginal);
                         });
 
                         $(".meiSave").on('click', function(e)
                         {
-                            fileName = $(e.target).attr('pageTitle'); //grabs page title from custom attribute
-                            meiEditor.savePageToClient(fileName, fileNameOriginal); 
+                            fileNameOriginal = $(e.target).attr('pageTitleOrig'); //grabs page title from custom attribute
+                            meiEditor.savePageToClient(fileNameOriginal); 
                         });
 
                         $(".meiRemove").on('click', function(e)
                         {
-                            fileName = $(e.target).attr('pageTitle'); //grabs page title from custom attribute
-                            meiEditor.removePageFromProject(fileName, fileNameOriginal); 
+                            fileNameStripped = $(e.target).attr('pageTitle'); //grabs page title from custom attribute
+                            fileNameOriginal = $(e.target).attr('pageTitleOrig'); //grabs page title from custom attribute
+                            meiEditor.removePageFromProject(fileNameStripped, fileNameOriginal); 
                         });
                     }
                     reapplyFileUploadButtonListeners();
@@ -276,30 +279,9 @@ var meiEditorFileUpload = function()
                 numberOfFiles = $("#file-list .meiFile").length;
                 for(curFileIndex = 0; curFileIndex < numberOfFiles; curFileIndex++)
                 {
-                    newOrder.push(fileList[curFileIndex].id); //creates an array with the new order
+                    newOrder.push(fileList[curFileIndex].attr('pageTitleOrig')); //creates an array with the new order
                 }
                 reorderFiles(newOrder);
-            });
-
-            //when the page changes, make the editor reflect that
-            Events.subscribe("VisiblePageDidChange", function(pageNumber, fileName)
-            {
-                //gets the extension length
-                var fileExtLength = fileName.split(".")[1].length + 1;
-
-                //whiteSpaceConversion is ([white space removed] = with periods/hyphens/spaces)
-                for(curKeyIndex in meiEditorSettings.whiteSpaceConversion)
-                {
-                    //I hate JSON a bit
-                    curKey = meiEditorSettings.whiteSpaceConversion[curKeyIndex];
-                    //if the two filenames are equal
-                    if(fileName.slice(0, -(fileExtLength)) == curKey.slice(0, -4))
-                    {
-                        //change pages and we found it so break
-                        meiEditor.changeActivePage(curKeyIndex);
-                        break;
-                    }
-                }
             });
         }
     }
