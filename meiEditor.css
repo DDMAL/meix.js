@@ -65,6 +65,7 @@ body{
     border-radius:10px;
     border:thin black solid;
     padding:5px;
+    width:auto;
 }
 .meiFileButtons{
     float:right;
@@ -92,4 +93,20 @@ body{
 .file-list{
     max-height:500px;
     overflow-y:scroll;
+}
+#linked-file-header{
+    border-top: thin black solid;
+    margin-top: 5px;
+    padding-top: 5px;
+}
+#linked-file-list{
+    width:100%;
+    display:inline-block;
+}
+.manager-sub-wrapper{
+    vertical-align: top;
+    width:50%;
+    min-width:250px;
+    display:inline-block;
+    top:0px;
 }

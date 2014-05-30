@@ -9,6 +9,10 @@ var meiEditorGenericPlugin = function()
         minimizedAppearance: '<div>This HTML is what will show up on the taskbar in addition to the title when the plugin is minimized.</div>', //can be empty
         _init: function(meiEditor, meiEditorSettings)
         {
+            $.extend(meiEditorSettings, {
+                newSettings: 'newVal',
+            });
+
             var thisFunctionIsOnlyLocal = function()
             {
 
@@ -18,8 +22,6 @@ var meiEditorGenericPlugin = function()
             {
                 thisFunctionIsOnlyLocal();
             }
-
-            meiEditorSettings.newSetting = true;
         }
     }
     return retval;

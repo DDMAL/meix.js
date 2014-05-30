@@ -6,6 +6,7 @@
         var settings = {
             dv: "",
             editor: "",
+            jsonFileLocation: 'imagesOut.json',
         }
 
         //for topbar plugins
@@ -300,7 +301,7 @@
                 enableAutoWidth: true,
                 fixedHeightGrid: false,
                 iipServerURL: "http://132.206.14.136:8000/fcgi-bin/iipsrv.fcgi",
-                objectData: "imagesOut.json",
+                objectData: settings.jsonFileLocation,
                 imageDir: "/opt/stgall",
                 enableHighlight: true,
                 viewerWidthPadding: 0,
