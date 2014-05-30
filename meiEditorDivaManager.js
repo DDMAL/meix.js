@@ -11,7 +11,11 @@ var meiEditorDivaManager = function()
             + 'Unlinked files in Diva:<br>'
             + '<div id="diva-file-list"></div>'
             + '</div>'
-            + '<div id="diva-manager-button-container"><button id="link-files">Link selected files</button><div id="diva-manager-error"></div></div>'
+            + '<div id="diva-manager-button-container">'
+            + '<button id="link-files">Link selected files</button>'
+            + '<button id="auto-link-files">Automatically link by filename</button>'
+            + '<div id="diva-manager-error"></div>'
+            + '</div>'
             + '<div id="linked-file-header">Linked files:</div>'
             + '<div id="linked-file-list"></div>'
             + '<button id="updateDiva">Update highlights</button>',
@@ -87,7 +91,6 @@ var meiEditorDivaManager = function()
                 { //for each page
                     var pageName = meiEditorSettings.divaImagesToMeiFiles[curKey];
                     pageIndex = meiEditorSettings.divaPageList.indexOf(curKey);
-                    console.log(pageName);
                     pageText = meiEditorSettings.pageData[pageName].doc.getAllLines().join("\n"); //get the information from the page expressed in one string
                     jsonData = x2js.xml_str2json(pageText); //turn this into a JSON "dict"
                     regions = [];
@@ -120,6 +123,51 @@ var meiEditorDivaManager = function()
                     meiEditorSettings.dv.highlightOnPage(pageIndex, regions, undefined, "overlay-box", reapplyHoverListener);
                 }
             };
+
+            /* 
+                Function that links an mei file to a diva image.
+                @param selectedMEI The MEI page to link
+                @param selectedImage The image to link.
+            */
+            
+            meiEditor.linkMeiToDiva = function(selectedMEI, selectedImage)
+            {
+                var selectedStrippedMEI = selectedMEI.replace(/\W+/g, "");
+                var selectedStrippedImage = selectedImage.replace(/\W+/g, "");
+
+                //make the link
+                meiEditorSettings.divaImagesToMeiFiles[selectedImage] = selectedMEI;
+
+                //hide the linked items (in case they're unlinked later)
+                $("#unlinked-mei-"+selectedStrippedMEI).parent().css('display', 'none');
+                $("#unlinked-diva-"+selectedStrippedImage).parent().css('display', 'none');
+
+                //add a linked file line
+                $("#linked-file-list").html($("#linked-file-list").html()
+                    + "<div class='linkedMeiWrapper'>"
+                    + "<span class='meiFile' id='linked-" + selectedStrippedMEI + "'>" + selectedMEI + "</span>"
+                    + "<span class='meiFile' id='linked-" + selectedStrippedImage + "'>" + selectedImage + "</span>"
+                    + "<button class='unlink'>Unlink</button>"
+                    + "</div>");
+
+                //when they want to unlink them
+                $(".unlink").on('click', function()
+                {
+                    //easier to do this than "2" - this is the two .meiFile span objects
+                    var numberOfChildren = $(this).parent().children("span").length;
+                    while(numberOfChildren--)
+                    {
+                        curChild = $(this).parent().children("span")[numberOfChildren];
+                        var tempID = curChild.id.split("-")[1]; //get the suffix that corresponds to the page filename
+
+                        //show the unlinked objects again
+                        $("#unlinked-mei-"+tempID).parent().css('display', 'inline-block');
+                        $("#unlinked-diva-"+tempID).parent().css('display', 'inline-block');
+                    }
+                    //remove the linked object because we'll just make a new one if needed.
+                    $(this).parent().remove()
+                });
+            }
 
 
             meiEditor.events.subscribe("NewFile", function(fileData, fileNameStripped, fileNameOriginal)
@@ -177,8 +225,6 @@ var meiEditorDivaManager = function()
                 //grab the IDs/stripped IDs of the linked files
                 var selectedMEI = $('input[name=manager-files]:checked').val();
                 var selectedImage = $('input[name=diva-images]:checked').val();
-                var selectedStrippedMEI = $('input[name=manager-files]:checked').attr('strippedPage');
-                var selectedStrippedImage = $('input[name=diva-images]:checked').attr('strippedPage');
 
                 //if there's not 2 selected files, throw an error
                 if(selectedMEI === undefined || selectedImage === undefined)
@@ -187,38 +233,36 @@ var meiEditorDivaManager = function()
                     return;
                 }
 
-                //make the link
-                meiEditorSettings.divaImagesToMeiFiles[selectedImage] = selectedMEI;
+                meiEditor.linkMeiToDiva(selectedMEI, selectedImage);
+            });
 
-                //hide the linked items (in case they're unlinked later)
-                $("#unlinked-mei-"+selectedStrippedMEI).parent().css('display', 'none');
-                $("#unlinked-diva-"+selectedStrippedImage).parent().css('display', 'none');
-
-                //add a linked file line
-                $("#linked-file-list").html($("#linked-file-list").html()
-                    + "<div class='linkedMeiWrapper'>"
-                    + "<span class='meiFile' id='linked-" + selectedStrippedMEI + "'>" + selectedMEI + "</span>"
-                    + "<span class='meiFile' id='linked-" + selectedStrippedImage + "'>" + selectedImage + "</span>"
-                    + "<button class='unlink'>Unlink</button>"
-                    + "</div>");
-
-                //when they want to unlink them
-                $(".unlink").on('click', function()
+            //automatically links files
+            $("#auto-link-files").on('click', function()
+            {
+                //for each ordered page
+                for(curMeiIndex in meiEditorSettings.orderedPageData)
                 {
-                    //easier to do this than "2" - this is the two .meiFile span objects
-                    var numberOfChildren = $(this).parent().children("span").length;
-                    while(numberOfChildren--)
-                    {
-                        curChild = $(this).parent().children("span")[numberOfChildren];
-                        var tempID = curChild.id.split("-")[1]; //get the suffix that corresponds to the page filename
+                    //get the extension
+                    var curMei = meiEditorSettings.orderedPageData[curMeiIndex];
+                    var meiExtLength = curMei.split(".")[1].length + 1;
 
-                        //show the unlinked objects again
-                        $("#unlinked-mei-"+tempID).parent().css('display', 'inline-block');
-                        $("#unlinked-diva-"+tempID).parent().css('display', 'inline-block');
+                    //for each diva image
+                    for(curDivaIndex in meiEditorSettings.divaPageList)
+                    {
+
+                        //same
+                        var curDivaFile = meiEditorSettings.divaPageList[curDivaIndex];
+                        var divaExtLength = curDivaFile.split(".")[1].length + 1;
+
+                        //if the two filenames are equal
+                        if(curMei.slice(0, -(meiExtLength)) == curDivaFile.slice(0, -(divaExtLength)))
+                        {
+                            //link 'em, and we found it so break
+                            meiEditor.linkMeiToDiva(curMei, curDivaFile);
+                            break;
+                        }
                     }
-                    //remove the linked object because we'll just make a new one if needed.
-                    $(this).parent().remove()
-                });
+                }
             });
         }
     }
