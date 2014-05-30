@@ -13,7 +13,8 @@ var meiEditorDivaManager = function()
             + '</div>'
             + '<div id="diva-manager-button-container"><button id="link-files">Link selected files</button><div id="diva-manager-error"></div></div>'
             + '<div id="linked-file-header">Linked files:</div>'
-            + '<div id="linked-file-list"></div>',
+            + '<div id="linked-file-list"></div>'
+            + '<button id="updateDiva">Update highlights</button>',
         minimizedTitle: 'Diva page manager:',
         minimizedAppearance: '',
         _init: function(meiEditor, meiEditorSettings)
@@ -22,6 +23,104 @@ var meiEditorDivaManager = function()
                 divaPageList: [], //list of active pages in Diva
                 divaImagesToMeiFiles: {}, //keeps track of linked files
             });
+
+            /*
+                Creates highlights based on the ACE documents.
+            */
+            meiEditor.createHighlights = function()
+            {      
+
+                /*
+                    Function called when sections are rehighlighted to refresh the listeners.
+                */
+                var reapplyHoverListener = function()
+                {
+                    $(".overlay-box").hover(function(e) //when the hover starts for an overlay-box
+                    {
+                        currentTarget = e.target.id;
+
+                        $("#hover-div").html(meiEditorSettings.neumeObjects[currentTarget]+"<br>Click to find in document.");
+                        $("#hover-div").css(//create a div with the name of the hovered neume
+                        {
+                            'height': 'auto',
+                            'top': e.pageY - 10,
+                            'left': e.pageX + 10,
+                            'padding-left': '10px',
+                            'padding-right': '10px',
+                            'border': 'thin black solid',
+                            'background': '#FFFFFF',
+                            'display': 'block',
+                            'vertical-align': 'middle',
+                        });
+                        //change the color of the hovered div
+                        $("#"+currentTarget).css('background-color', 'rgba(255, 255, 255, 0.05)');
+
+                        $(document).on('mousemove', function(e) //have it follow the mouse
+                        {
+                            $("#hover-div").offset(
+                            {
+                                'top': e.pageY - 10,
+                                'left': e.pageX + 10,
+                            });
+                        });
+                    }, function(e){
+                        currentTarget = e.target.id;
+                        $(document).unbind('mousemove'); //stops moving the div
+                        $("#hover-div").css('display', 'none'); //hides the div
+                        $("#hover-div").html("");
+
+                        $("#"+currentTarget).css('background-color', 'rgba(255, 0, 0, 0.2)'); //color is normal again
+                    });
+                    $(".overlay-box").click(function(e)
+                    {
+                        testSearch = meiEditorSettings.editor.find(e.target.id, 
+                        {
+                            wrap: true,
+                            range: null,
+                        });
+                    });
+                };
+
+                var x2js = new X2JS(); //from xml2json.js
+                meiEditorSettings.dv.resetHighlights();
+                for(curKey in meiEditorSettings.divaImagesToMeiFiles)
+                { //for each page
+                    var pageName = meiEditorSettings.divaImagesToMeiFiles[curKey];
+                    pageIndex = meiEditorSettings.divaPageList.indexOf(curKey);
+                    console.log(pageName);
+                    pageText = meiEditorSettings.pageData[pageName].doc.getAllLines().join("\n"); //get the information from the page expressed in one string
+                    jsonData = x2js.xml_str2json(pageText); //turn this into a JSON "dict"
+                    regions = [];
+
+                    xmlns = jsonData['mei']['_xmlns'] //find the xml namespace file
+                    var neume_ulx, neume_uly, neume_width, neume_height;
+                    neumeArray = jsonData['mei']['music']['body']['neume'];
+                    facsArray = jsonData['mei']['music']['facsimile']['surface']['zone'];
+                    for (curZoneIndex in facsArray) //for each "zone" object
+                    { 
+                        curZone = facsArray[curZoneIndex];
+                        neumeID = curZone._neume;
+                        for (curNeumeIndex in neumeArray) //find the corresponding neume - don't think there's a more elegant way in JS
+                        { 
+                            if (neumeArray[curNeumeIndex]["_xml:id"] == neumeID)
+                            {
+                                curNeume = neumeArray[curNeumeIndex]; //assemble the info on the neume
+                                meiEditorSettings.neumeObjects[neumeID] = curNeume['_name']
+                                neume_ulx = curZone._ulx;
+                                neume_uly = curZone._uly;
+                                neume_width = curZone._lrx - neume_ulx;
+                                neume_height = curZone._lry - neume_uly;
+                                break;
+                            }
+                        }
+                        //add it to regions
+                        regions.push({'width': neume_width, 'height': neume_height, 'ulx': neume_ulx, 'uly': neume_uly, 'divID': neumeID});
+                    }
+                    //at the end of each page, call the highlights
+                    meiEditorSettings.dv.highlightOnPage(pageIndex, regions, undefined, "overlay-box", reapplyHoverListener);
+                }
+            };
+
 
             meiEditor.events.subscribe("NewFile", function(fileData, fileNameStripped, fileNameOriginal)
             {
@@ -67,6 +166,8 @@ var meiEditorDivaManager = function()
                     meiEditor.changeActivePage(activeFileName);
                 }
             });
+
+            $("#updateDiva").on('click', meiEditor.createHighlights);
 
             //when "Link selected files" is clicked
             $("#link-files").on('click', function(){
