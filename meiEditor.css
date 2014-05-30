@@ -72,6 +72,10 @@ body{
     top:-2px;
     margin-left:5px;
 }
+.linkRadioButtons{
+    padding-right:3px;
+    padding-left:3px;
+}
 .maximize{
     float:right;
     vertical-align: middle;
@@ -106,11 +110,24 @@ body{
 .manager-sub-wrapper{
     vertical-align: top;
     width:50%;
-    min-width:250px;
+    min-width:200px;
+    max-height:500px;
+    overflow-y:scroll;
+    padding-left:;
     display:inline-block;
     top:0px;
 }
 #diva-manager-button-container{
     text-align:center;
     margin-top:5px;
+}
+.linkedMeiWrapper{
+    margin-top:8px;
+    margin-bottom:8px;
+}
+::-webkit-scrollbar{
+    background-color:inherit;
+} 
+::-webkit-scrollbar-corner{
+    background-color:inherit;
 }
