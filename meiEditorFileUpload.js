@@ -28,7 +28,6 @@ var meiEditorFileUpload = function()
             */
             meiEditor.changeActivePage = function(pageName)
             {
-                console.log(pageName);
                 meiEditorSettings.editor.setSession(meiEditorSettings.pageData[pageName]); //inserts text
                 meiEditorSettings.activeDoc = meiEditorSettings.editor.getSession().doc;
             };
@@ -94,7 +93,6 @@ var meiEditorFileUpload = function()
             */
             meiEditor.addPage = function(pageDataIn, fileNameIn)
             {
-                console.log(fileNameIn);
                 meiEditorSettings.pageData[fileNameIn] = new ace.EditSession(pageDataIn, "ace/mode/xml"); //add the file's data into a "pageData" array that will eventually feed into the ACE editor
                 meiEditorSettings.orderedPageData.push(fileNameIn); //keep track of the page orders to push the right highlights to the right pages
             };

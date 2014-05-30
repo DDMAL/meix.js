@@ -60,30 +60,11 @@ var meiEditorDivaManager = function()
             //when the page changes, make the editor reflect that
             Events.subscribe("VisiblePageDidChange", function(pageNumber, fileName)
             {
-                console.log(fileName, meiEditorSettings.divaImagesToMeiFiles);
-
+                //if they're linked, change them
                 if(fileName in meiEditorSettings.divaImagesToMeiFiles)
                 {
                     activeFileName = meiEditorSettings.divaImagesToMeiFiles[fileName];
-                    console.log(meiEditorSettings.whiteSpaceConversion[activeFileName]);
-                    //meiEditor.changeActivePage(meiEditorSettings.whiteSpaceConversion[activeFileName]);
-                }
-                //gets the extension length
-                var fileExtLength = fileName.split(".")[1].length + 1;
-
-                //whiteSpaceConversion is ([white space removed] = with periods/hyphens/spaces)
-                for(curKeyIndex in meiEditorSettings.whiteSpaceConversion)
-                {
-                    //I hate JSON a bit
-                    curKey = meiEditorSettings.whiteSpaceConversion[curKeyIndex];
-                    //if the two filenames are equal
-                    if(fileName.slice(0, -(fileExtLength)) == curKey.slice(0, -4))
-                    {
-                        //change pages and we found it so break
-                        console.log(curKeyIndex);
-                        meiEditor.changeActivePage(curKeyIndex);
-                        break;
-                    }
+                    meiEditor.changeActivePage(activeFileName);
                 }
             });
 
