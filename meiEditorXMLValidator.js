@@ -2,7 +2,7 @@ var meiEditorXMLValidator = function(){
     var retval = {
         divName: "xml-validator",
         minimizedTitle: "Files to validate:",
-        maximizedAppearance: 'Files to validate:<br><div id="validate-file-list"></div>',
+        maximizedAppearance: 'Files to validate:<br><div id="validate-file-list" class="file-list"></div>',
         minimizedAppearance: '<span id="numNewMessages">0</span>',
         _init: function(meiEditor, meiEditorSettings){
             $.extend(meiEditorSettings, {
@@ -51,7 +51,7 @@ var meiEditorXMLValidator = function(){
                         }
                         curCount += 1;
                         $("#numNewMessages").html(curCount);
-                        $("#numNewMessages").css('display', 'block');
+                        $("#numNewMessages").css('display', 'inline');
                     }
                 }
                 validationWorker.postMessage(Module);
@@ -69,28 +69,32 @@ var meiEditorXMLValidator = function(){
                 reapplyXMLValidatorButtonListeners();
             });
 
-            meiEditor.events.subscribe("NewOrder", function(newOrder){
+            meiEditor.events.subscribe("NewOrder", function(newOrder)
+            {
+                var tempChildren = [];
+                var curPage = 0;
+                while(curPage < newOrder.length)
                 {
-                    var tempChildren = [];
-                    var curPage = 0;
-                    while(curPage < newOrder.length)
+                    var curPageTitle = newOrder[curPage];
+                    var curChildren = $("#validate-file-list").children();
+                    var curCount = curChildren.length;
+                    while(curCount--)
                     {
-                        var curPageTitle = newOrder[curPage];
-                        var curChildren = $("#validate-file-list").children();
-                        var curCount = curChildren.length;
-                        while(curCount--)
+                        if($(curChildren[curCount]).attr('pageTitle') == curPageTitle)
                         {
-                            if($(curChildren[curCount]).attr('pageTitle') == curPageTitle)
-                            {
-                                tempChildren.push(curChildren[curCount].outerHTML);
-                                break;
-                            } 
-                        }
-                        curPage++;
+                            tempChildren.push(curChildren[curCount].outerHTML);
+                            break;
+                        } 
                     }
-                    $("#validate-file-list").html(tempChildren.join(""));
+                    curPage++;
                 }
+                $("#validate-file-list").html(tempChildren.join(""));
                 reapplyXMLValidatorButtonListeners();
+            });
+
+            meiEditor.events.subscribe("PageWasDeleted", function(pageName, pageNameOriginal)
+            {
+                $("#validate-" + pageName).remove();
             });
 
             //load in the XML validator

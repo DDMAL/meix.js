@@ -5,7 +5,7 @@ var meiEditorFileUpload = function()
         divName: "file-upload",
         maximizedAppearance: '<input type="file" id="fileInput">' 
             +'<br>Files loaded:<br>'
-            +'<div id="file-list"></div>'
+            +'<div id="file-list" class="file-list"></div>'
             +'<button id="updateDiva">Update highlights</button>',
         minimizedTitle: 'Files loaded:',
         minimizedAppearance: '',
@@ -35,6 +35,7 @@ var meiEditorFileUpload = function()
             /*
                 Prompts local download of a page.
                 @param pageName The page to download.
+                @param pageNameOriginal The page to download with whitespace/periods/hyphens.
             */
             meiEditor.savePageToClient = function(pageName, pageNameOriginal)
             {
@@ -52,6 +53,38 @@ var meiEditorFileUpload = function()
                 var pageBlob = new Blob(formattedData, {type: "text/plain;charset=utf-8"}); //create a blob
                 meiEditor.saveAs(pageBlob, pageNameOriginal); //download it! from FileSaver.js
             };
+
+            /*
+                Removes from page without project without saving.
+                @param pageName The page to remove.
+                @param pageNameOriginal The page to remove with whitespace/periods/hyphens.
+            */
+            meiEditor.removePageFromProject = function(pageName, pageNameOriginal)
+            {   
+                if(pageName in meiEditorSettings.pageData)
+                {
+                    if(meiEditorSettings.editor.getSession() == meiEditorSettings.pageData[pageName]) //if the deleted page was the active page
+                    {
+                        meiEditorSettings.editor.setSession(new ace.EditSession("", "ace/mode/xml")); //reset to editor to a blank edit session
+                    }
+                    delete meiEditorSettings.pageData[pageName];
+                }
+
+                if(pageName in meiEditorSettings.whiteSpaceConversion) //delete from the whiteSpace -> original arr
+                {
+                    delete meiEditorSettings.whiteSpaceConversion[pageName];
+                }
+
+                var orderedIndex = meiEditorSettings.orderedPageData.indexOf(pageName) //delete from the orderedPageData arr
+                if(orderedIndex !== -1)
+                {
+                    delete meiEditorSettings.orderedPageData[orderedIndex];
+                }
+
+                $("#"+pageName).remove();
+
+                meiEditor.events.publish("PageWasDeleted", [pageName, pageNameOriginal]); //let whoever is interested know
+            }
 
             /*
                 Adds a page to the database
@@ -79,7 +112,7 @@ var meiEditorFileUpload = function()
                     {
                         currentTarget = e.target.id;
 
-                        $("#hover-div").html(meiEditorSettings.neumeObjects[currentTarget]);
+                        $("#hover-div").html(meiEditorSettings.neumeObjects[currentTarget]+"<br>Click to find in document.");
                         $("#hover-div").css(//create a div with the name of the hovered neume
                         {
                             'height': 'auto',
@@ -187,6 +220,7 @@ var meiEditorFileUpload = function()
                         + "<span class='meiFileButtons'>"
                         + "<button class='meiLoad' pageTitle='" + fileName + "'>Load</button>"
                         + "<button class='meiSave' pageTitle='" + fileName + "' pageTitleOrig='" + fileNameOriginal + "'>Save</button>"
+                        + "<button class='meiRemove' pageTitle='" + fileName + "' pageTitleOrig='" + fileNameOriginal + "'>Remove from project</button>"
                         + "</span>"
                         + "</div>");
                     meiEditor.events.publish("NewFile", [this.result, fileName, fileNameOriginal])
@@ -203,6 +237,12 @@ var meiEditorFileUpload = function()
                         {
                             fileName = $(e.target).attr('pageTitle'); //grabs page title from custom attribute
                             meiEditor.savePageToClient(fileName, fileNameOriginal); 
+                        });
+
+                        $(".meiRemove").on('click', function(e)
+                        {
+                            fileName = $(e.target).attr('pageTitle'); //grabs page title from custom attribute
+                            meiEditor.removePageFromProject(fileName, fileNameOriginal); 
                         });
                     }
                     reapplyFileUploadButtonListeners();

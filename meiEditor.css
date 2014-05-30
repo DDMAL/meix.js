@@ -86,3 +86,7 @@ body{
     top: 2px;
     margin-left: 10px;
 }
+.file-list{
+    max-height:500px;
+    overflow-y:scroll;
+}
