@@ -110,3 +110,7 @@ body{
     display:inline-block;
     top:0px;
 }
+#diva-manager-button-container{
+    text-align:center;
+    margin-top:5px;
+}
