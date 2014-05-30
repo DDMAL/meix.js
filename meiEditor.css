@@ -22,7 +22,8 @@ body{
     top:30px;
     position:absolute;
     left: 0.2%;
-    width: 99.6%;
+    width: 100%;
+    display: inline-block;
 }
 #diva-wrapper{
     float:right;
@@ -31,13 +32,15 @@ body{
     width:50%;
     height:100%;
     position:relative;
+    display:inline-block;
 }
 #editor{
     float:left;
-    width:calc(50% - 20px);
+    width:50%;
     height:100%;
     border:thin black solid;
     position:relative;
+    display:inline-block;
 }
 #mei-editor{
     height:100%;
