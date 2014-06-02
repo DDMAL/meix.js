@@ -38,7 +38,7 @@ var meiEditorXMLValidator = function(){
                     schema: meiEditorSettings.validatorText,
                     title: pageNameOriginal
                 }
-                validationWorker = new Worker("xmllintNew.js");
+                validationWorker = new Worker("xmllintStable.js");
                 validationWorker.pageName = pageName;
                 $("#validate-output-" + pageName).html("Sent to validator...");
                 validationWorker.onmessage = function(event)

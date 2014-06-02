@@ -6,7 +6,7 @@ this.addEventListener('message', function(event){
   Module['printErr'] = function(x) {
     postMessage(x);
   };
-  validateXML(event.data);
+  validateXML(Module);
 }, false);
 function validateXML(Module) {
   Module['preRun'] = function() {
