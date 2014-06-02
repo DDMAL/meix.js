@@ -4,7 +4,7 @@ var meiEditorFileUpload = function()
     {
         divName: "file-upload",
         maximizedAppearance: '<input type="file" id="fileInput">' 
-            + '<br>Files loaded:<br>'
+            + '<br>Files loaded:'
             + '<div id="file-list" class="file-list"></div>',
         minimizedTitle: 'Files loaded:',
         minimizedAppearance: '',
@@ -123,10 +123,10 @@ var meiEditorFileUpload = function()
                         + "<button class='meiRemove' pageTitle='" + fileNameStripped + "' pageTitleOrig='" + fileNameOriginal + "'>Remove from project</button>"
                         + "</span>"
                         + "</div>");
+
                     meiEditor.events.publish("NewFile", [this.result, fileNameStripped, fileNameOriginal])
 
                     var reapplyFileUploadButtonListeners = function(){
-                        $(".meiFileButtons").offset({'top': '-2px'});
                         $(".meiLoad").on('click', function(e)
                         {
                             fileNameOriginal = $(e.target).attr('pageTitleOrig'); //grabs page title from custom attribute
@@ -146,17 +146,27 @@ var meiEditorFileUpload = function()
                             meiEditor.removePageFromProject(fileNameStripped, fileNameOriginal); 
                         });
                     }
-                    reapplyFileUploadButtonListeners();
-                    
+                    reapplyFileUploadButtonListeners();   
                 };
                 reader.readAsText(this.files[0]);
             });
 
             //make the files re-orderable
-            $("#file-list").sortable();
-            $("#file-list").disableSelection();
+            $("#file-list").sortable(
+                {
+                    'forcePlaceholderSize': true, 
+                });
+            $("#file-list").on("sortstart", function(e, ui)
+            {
+                //there's gotta be a more graceful way to do this, but long story short, meiFile items sometimes have fractional widths, and jQueryUI forces them to whole digits and causes extra line breaks. this prevents that.
+                $(ui.item).width($(ui.item).width() + 1);
+                $(ui.placeholder).height($(ui.item).height());
+
+            });
+            //$("#file-list").disableSelection();
             $("#file-list").on("sortstop", function(e, ui) //when dragging a sortable item ends
             {
+                $(ui.item).width('auto');
                 /*
                     Reorders the MEI files in the data to reflect the GUI.
                     @param newOrder A list of the filenames in the desired order.
@@ -177,7 +187,7 @@ var meiEditorFileUpload = function()
                 numberOfFiles = $("#file-list .meiFile").length;
                 for(curFileIndex = 0; curFileIndex < numberOfFiles; curFileIndex++)
                 {
-                    newOrder.push(fileList[curFileIndex].attr('pageTitleOrig')); //creates an array with the new order
+                    newOrder.push($(fileList[curFileIndex]).attr('pageTitleOrig')); //creates an array with the new order
                 }
                 reorderFiles(newOrder);
             });

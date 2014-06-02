@@ -210,7 +210,7 @@
             var numMinimized = sortedByLeft.length;
             while(numMinimized--)
             {
-                $("#" + sortedByLeft[numMinimized]['id']).animate({'left': numMinimized * 300 + 3}, 500);
+                $("#" + sortedByLeft[numMinimized]['id']).animate({'left': numMinimized * 300}, 500);
             }
         }
 
