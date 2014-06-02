@@ -4,11 +4,13 @@ var meiEditorDivaManager = function()
     {
         divName: "diva-manager",
         maximizedAppearance: '<div class="manager-sub-wrapper">'
-            + 'Unlinked files:<br>'
+            + 'Unlinked files:'
+            + '<span class="unlinkedFilesCount"></span><br>'
             + '<div id="manager-file-list"></div>'
             + '</div>'
             + '<div class="manager-sub-wrapper" style="text-align:right;">' //helps keep height/width standard
-            + 'Unlinked files in Diva:<br>'
+            + 'Unlinked images in Diva:'
+            + '<span class="unlinkedImagesCount"></span><br>'
             + '<div id="diva-file-list"></div>'
             + '</div>'
             + '<div id="diva-manager-button-container">'
@@ -20,7 +22,8 @@ var meiEditorDivaManager = function()
             + '<div id="linked-file-list"></div>'
             + '<button id="updateDiva">Update highlights</button>',
         minimizedTitle: 'Diva page manager:',
-        minimizedAppearance: '',
+        minimizedAppearance: '<span class="unlinkedFilesCount"></span>'
+            + '<span class="unlinkedImagesCount"></span>',
         _init: function(meiEditor, meiEditorSettings)
         {
             $.extend(meiEditorSettings, {
@@ -33,7 +36,6 @@ var meiEditorDivaManager = function()
             */
             meiEditor.createHighlights = function()
             {      
-
                 /*
                     Function called when sections are rehighlighted to refresh the listeners.
                 */
@@ -124,6 +126,13 @@ var meiEditorDivaManager = function()
                 }
             };
 
+            meiEditor.updateUnlinked = function()
+            {
+                $(".unlinkedFilesCount").html(" ("+$("#manager-file-list > .meiFileWrapper > .unlinked").length+")");
+                $(".unlinkedImagesCount").html(" ("+$("#diva-file-list > .meiFileWrapper > .unlinked").length+")");
+
+            }
+
             /* 
                 Function that links an mei file to a diva image.
                 @param selectedMEI The MEI page to link
@@ -141,6 +150,9 @@ var meiEditorDivaManager = function()
                 //hide the linked items (in case they're unlinked later)
                 $("#unlinked-mei-"+selectedStrippedMEI).parent().css('display', 'none');
                 $("#unlinked-diva-"+selectedStrippedImage).parent().css('display', 'none');
+                $("#unlinked-mei-"+selectedStrippedMEI).removeClass('unlinked');
+                $("#unlinked-diva-"+selectedStrippedImage).removeClass('unlinked');
+                        meiEditor.updateUnlinked();
 
                 //add a linked file line
                 $("#linked-file-list").html($("#linked-file-list").html()
@@ -163,6 +175,9 @@ var meiEditorDivaManager = function()
                         //show the unlinked objects again
                         $("#unlinked-mei-"+tempID).parent().css('display', 'inline-block');
                         $("#unlinked-diva-"+tempID).parent().css('display', 'inline-block');
+                        $("#unlinked-mei-"+tempID).addClass('unlinked');
+                        $("#unlinked-diva-"+tempID).addClass('unlinked');
+                        meiEditor.updateUnlinked();
                     }
                     //remove the linked object because we'll just make a new one if needed.
                     $(this).parent().remove()
@@ -173,11 +188,12 @@ var meiEditorDivaManager = function()
             {
                 $("#manager-file-list").html($("#manager-file-list").html() //create a new file div
                     + "<div class='meiFileWrapper'>" //needed because of the line break to separate them. I LOVE CSS.
-                    + "<div class='meiFile' pageTitle='" + fileNameStripped + "' id='unlinked-mei-" + fileNameStripped + "' style='display:inline-block;'>" + fileNameOriginal
+                    + "<div class='meiFile unlinked' pageTitle='" + fileNameStripped + "' id='unlinked-mei-" + fileNameStripped + "' style='display:inline-block;'>" + fileNameOriginal
                     + "<span class='linkRadioButtons'>"
                     + "<input type='radio' name='manager-files' strippedPage='" + fileNameStripped + "' value='" + fileNameOriginal + "'>"
                     + "</span>"
                     + "</div><br></div>");
+                meiEditor.updateUnlinked();
             });
 
             //the div that pops up when highlights are hovered over
@@ -197,12 +213,13 @@ var meiEditorDivaManager = function()
                         meiEditorSettings.divaPageList.push(fileNameOriginal);
                         $("#diva-file-list").html($("#diva-file-list").html()
                             + "<div class='meiFileWrapper'>"
-                            + "<div class='meiFile' pageTitle='" + fileNameOriginal + "' id='unlinked-diva-" + fileNameStripped + "' style='display:inline-block;'>" 
+                            + "<div class='meiFile unlinked' pageTitle='" + fileNameOriginal + "' id='unlinked-diva-" + fileNameStripped + "' style='display:inline-block;'>" 
                             + "<span class='linkRadioButtons' style='float:left;'>"
                             + "<input type='radio' name='diva-images' strippedPage='" + fileNameStripped + "' value='" + fileNameOriginal + "'>"
                             + "</span>"
                             + fileNameOriginal
                             + "</div><br></div>");
+                        meiEditor.updateUnlinked();
                     }
                 }
             });
