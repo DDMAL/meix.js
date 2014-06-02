@@ -249,7 +249,6 @@ var meiEditorDivaManager = function()
                     //for each diva image
                     for(curDivaIndex in meiEditorSettings.divaPageList)
                     {
-
                         //same
                         var curDivaFile = meiEditorSettings.divaPageList[curDivaIndex];
                         var divaExtLength = curDivaFile.split(".")[1].length + 1;
