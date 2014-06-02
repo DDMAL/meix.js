@@ -24,14 +24,61 @@
         <script src="meiEditorXMLValidator.js"></script>
         <script src="meiEditorDivaManager.js"></script>
         <script>
+        /*
+            Function to be called on resizing. Not leaving this anonymous so that it can be called at the beginning without triggering the Diva .resize() listener.
+        */
+        var resizeComponents = function()
+        {
+            topbarHeight = $("#topbar").height();
+            $("#topbar").css({
+                'left': '0.2%',
+                'width': '49.6%' 
+            });
+            $("#mei-editor").css({
+                'height': $(window).height() - topbarHeight - 7, //7 for padding
+            });
+            $("#mei-editor").offset({
+                'top': topbarHeight,
+                'left': '0.2%',
+            });
+            $("#diva-wrapper").offset({
+                'left': $(window).width / 2 - 10,
+            })
+        }
+
         $(function() 
         {
-            meiEditor = $("#mei-editor").AceMeiEditor([new meiEditorFileUpload, new meiEditorXMLValidator, new meiEditorDivaManager], {});
+            jsonFile = 'imagesOut.json';
+            //create the diva wrapper and editor
+            $('#diva-wrapper').diva(
+            {
+                contained: true,
+                enableAutoHeight: true,
+                enableAutoWidth: true,
+                fixedHeightGrid: false,
+                iipServerURL: "http://132.206.14.136:8000/fcgi-bin/iipsrv.fcgi",
+                objectData: jsonFile,
+                imageDir: "/opt/stgall",
+                enableHighlight: true,
+                viewerWidthPadding: 0,
+                viewerHeightPadding: 0,
+            });
+
+            divaInstance = $('#diva-wrapper').data('diva');
+            meiEditor = $("#mei-editor").AceMeiEditor([new meiEditorFileUpload, new meiEditorXMLValidator, new meiEditorDivaManager], {'divaInstance': divaInstance, 'jsonFileLocation': jsonFile});
+
+            //little graphics things
+            $(window).on('resize', resizeComponents);
+
+            resizeComponents();
+
         });
 
         </script>
     </head>
     <body>
+
         <div id="mei-editor"></div>
+        <div id="diva-wrapper"></div>
     </body>
 </html> 

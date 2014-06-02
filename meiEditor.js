@@ -4,10 +4,10 @@
         var element = $(element);
         var self = this;
         var settings = {
-            dv: "",
             editor: "",
-            jsonFileLocation: 'imagesOut.json',
         }
+
+        $.extend(settings, options);
 
         //for topbar plugins
         var previousSizes = {};
@@ -211,34 +211,6 @@
         }
 
         /*
-            Function to be called on resizing. Not leaving this anonymous so that it can be called at the beginning without triggering the Diva .resize() listener.
-        */
-        var resizeComponents = function()
-        {
-            topbarHeight = $("#topbar").height();
-            $("#topbar").css({
-                'left': '0.2%',
-                'width': '99.6%' 
-            });
-            $("#container").css({
-                'top': topbarHeight,
-                'left': '0.2%',
-                'width': '99.6%',
-                'height': $(window).height() - topbarHeight - 7, //7 for padding
-            });
-            
-            containerWidth = $("#container").width();
-            containerHeight = $("#container").height();
-            innerMargin = containerWidth * 0.006; //for inner margin
-            
-            $("#mei-editor").height(containerHeight);
-            $("#diva-wrapper").height(containerHeight);
-            $("#editor").height(containerHeight);
-            $("#editor").width((containerWidth / 2) - innerMargin);
-            $("#diva-wrapper").width((containerWidth / 2) - innerMargin);
-        }
-
-        /*
             Stolen with no mercy from http://stackoverflow.com/questions/881510/jquery-sorting-json-by-properties
         */
         var jsonSort = function(jsonObject, prop, asc) 
@@ -259,12 +231,8 @@
             element.height($(window).height());
             element.append('<div id="topbar">'
                 + '</div>' //header
-                + '<div id="container">'
                 + '<div id="editor"></div>' //ACE editor
-                + '<div id="diva-wrapper"></div>' //Diva
-                + '<div class="clear"></div>'
                 + '<span id="hover-div"></span>' //the div that pops up when highlights are hovered over
-                + '</div>' //container for body
                 );
 
             //for each plugin...
@@ -293,22 +261,6 @@
                 curPlugin._init(self, settings);
             }            
 
-            //create the diva wrapper and editor
-            $('#diva-wrapper').diva(
-            {
-                contained: true,
-                enableAutoHeight: true,
-                enableAutoWidth: true,
-                fixedHeightGrid: false,
-                iipServerURL: "http://132.206.14.136:8000/fcgi-bin/iipsrv.fcgi",
-                objectData: settings.jsonFileLocation,
-                imageDir: "/opt/stgall",
-                enableHighlight: true,
-                viewerWidthPadding: 0,
-                viewerHeightPadding: 0,
-            });
-            settings.dv = $('#diva-wrapper').data('diva');
-
             settings.editor = ace.edit("editor"); //create the ACE editor
             settings.editor.setTheme("ace/theme/ambiance");
             settings.editor.getSession().setMode("ace/mode/xml");
@@ -322,11 +274,6 @@
             {
                 maximizeObject(event.target.name);
             });
-
-            //little graphics things
-            $(window).on('resize', resizeComponents);
-
-            resizeComponents();
         };
 
         _init();

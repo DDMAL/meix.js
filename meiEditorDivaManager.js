@@ -86,7 +86,7 @@ var meiEditorDivaManager = function()
                 };
 
                 var x2js = new X2JS(); //from xml2json.js
-                meiEditorSettings.dv.resetHighlights();
+                meiEditorSettings.divaInstance.resetHighlights();
                 for(curKey in meiEditorSettings.divaImagesToMeiFiles)
                 { //for each page
                     var pageName = meiEditorSettings.divaImagesToMeiFiles[curKey];
@@ -120,7 +120,7 @@ var meiEditorDivaManager = function()
                         regions.push({'width': neume_width, 'height': neume_height, 'ulx': neume_ulx, 'uly': neume_uly, 'divID': neumeID});
                     }
                     //at the end of each page, call the highlights
-                    meiEditorSettings.dv.highlightOnPage(pageIndex, regions, undefined, "overlay-box", reapplyHoverListener);
+                    meiEditorSettings.divaInstance.highlightOnPage(pageIndex, regions, undefined, "overlay-box", reapplyHoverListener);
                 }
             };
 
