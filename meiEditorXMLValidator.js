@@ -2,12 +2,13 @@ var meiEditorXMLValidator = function(){
     var retval = {
         divName: "xml-validator",
         minimizedTitle: "Files to validate:",
-        maximizedAppearance: 'Files to validate:<br><div id="validate-file-list" class="file-list"></div>',
+        maximizedAppearance: 'Files to validate:<br><div id="validate-file-list" class="file-list"></div>'
+            +'Active RelaxNG schema: <select id="validatorSelect"></select>',
         minimizedAppearance: '<span id="numNewMessages">0</span>',
         _init: function(meiEditor, meiEditorSettings){
             $.extend(meiEditorSettings, {
-                validatorLink: "mei-Neumes.rng",
-                validatorText: "",
+                validatorLinks: ["all", "all_anyStart", "CMN", "Mensural", "Neumes"],
+                validators: {},
             });
             /* 
                 Function called to reapply button listeners
@@ -35,12 +36,13 @@ var meiEditorXMLValidator = function(){
                 var Module = 
                 {
                     xml: meiEditorSettings.pageData[pageNameOriginal].doc.getAllLines().join("\n"),
-                    schema: meiEditorSettings.validatorText,
-                    title: pageNameOriginal
+                    schema: meiEditorSettings.validators[$(validatorSelect).find(":selected").text()],
+                    title: pageNameOriginal,
+                    schemaTitle: "mei-"+$(validatorSelect).find(":selected").text()+".rng",
                 }
                 validationWorker = new Worker("xmllintStable.js");
                 validationWorker.pageName = pageName;
-                $("#validate-output-" + pageName).html("Sent to validator...");
+                $("#validate-output-" + pageName).html("Validating " + Module['title'] + " against " + Module['schemaTitle'] + ".");
                 validationWorker.onmessage = function(event)
                 {
                     pageName = this.pageName;
@@ -99,15 +101,23 @@ var meiEditorXMLValidator = function(){
             });
 
             //load in the XML validator
-
-            $.ajax(
+            curValidatorCount = meiEditorSettings.validatorLinks.length;
+            while(curValidatorCount--)
             {
-                url: meiEditorSettings.validatorLink,
-                success: function(data)
+                function singleAjax(curValidator)
                 {
-                    meiEditorSettings.validatorText = data;
+                    $.ajax(
+                    {
+                        url: 'validation/mei-'+curValidator+'.rng',
+                        success: function(data)
+                        {
+                            meiEditorSettings.validators[curValidator] = data;
+                            $("#validatorSelect").html($("#validatorSelect").html()+"<option value='" + curValidator + "'>" + curValidator + "</option>");
+                        }
+                    });
                 }
-            });
+                singleAjax(meiEditorSettings.validatorLinks[curValidatorCount]);
+            }
 
             $("#" + this.divName).on('maximize', function(){
                 $("#numNewMessages").css('display', 'block');
