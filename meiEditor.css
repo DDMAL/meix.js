@@ -9,7 +9,7 @@ body{
     cursor: default;
 }
 #hover-div{
-    z-index:1001;
+    z-index:101; /*toolbar-object should be above this*/
     position:absolute;
     display:none;
 }
@@ -38,7 +38,7 @@ body{
     display:inline-block;
 }
 .toolbar-object{
-    z-index:5;
+    z-index:102; /*diva-fullscreen is 101 */
     border:thin black solid;
     position:fixed;
     background: #EEEEEE;
@@ -116,9 +116,9 @@ body{
     margin-top:8px;
     margin-bottom:8px;
 }
-/*::-webkit-scrollbar{
+.toolbar-object ::-webkit-scrollbar{
     background-color:inherit;
 } 
-::-webkit-scrollbar-corner{
+.toolbar-object ::-webkit-scrollbar-corner{
     background-color:inherit;
-}*/
+}

@@ -1,10 +1,10 @@
 (function ($)
 {
     var AceMeiEditor = function(element, plugins, options){
-        var element = $(element);
         var self = this;
         var settings = {
             editor: "",
+            element: $(element)
         }
 
         $.extend(settings, options);
@@ -104,6 +104,7 @@
                  'height': $("#" + divID).height(),
                  'margin': $("#" + divID).css('margin'),
                  'padding': $("#" + divID).css('padding'),
+
             };
 
             if(!animateOverride)
@@ -141,11 +142,11 @@
                 axis: "x",
                 start: function(e, ui)
                 {
-                    $(e.target).css('z-index', '1000');
+                    $(e.target).css('z-index', '103');
                 },
                 stop: function(e, ui)
                 {
-                    $(e.target).css('z-index', '5');
+                    $(e.target).css('z-index', '102');
                     reorderToolbarObjects();
                 },
             });
@@ -165,17 +166,20 @@
             {
                 $("#" + divID).css('width', 'auto');
                 $("#" + divID).css('height', 'auto');
+                $("#" + divID + "-maximized-wrapper").css('display', 'block');
+                $("#" + divID + "-minimized-wrapper").css('display', 'none');
             }
 
-            $("#" + divID).animate(previousSizes[divID], 
+            //add the difference in -maximized-wrapper heights before animating to avoid a weird glitch thing
+            var tempPrevSizes = previousSizes[divID];
+            tempPrevSizes['height'] = $("#" + divID + "-maximized-wrapper").height();
+
+            $("#" + divID).animate(tempPrevSizes, 
             {
                 duration: 500,
-                complete: resetDims 
+                complete: resetDims,
             });
 
-            $("#" + divID + "-maximized-wrapper").css('display', 'block');
-            $("#" + divID + "-minimized-wrapper").css('display', 'none');
-            
             //it's better to do jQuery built-in events rather than self.events because I have to check for ID with the latter.
             $("#" + divID).trigger('maximize');
             $("#" + divID).removeClass('minimized');
@@ -185,7 +189,7 @@
                 axis: "",
                 start: "",
                 stop: "",
-            }); //needed to reset axes and start/stop listeners
+            }); //need to reset axes and start/stop listeners
 
         };
 
@@ -228,11 +232,9 @@
         */
         var _init = function()
         {
-            element.height($(window).height());
-            element.append('<div id="topbar">'
+            settings.element.append('<div id="topbar">'
                 + '</div>' //header
                 + '<div id="editor"></div>' //ACE editor
-                + '<span id="hover-div"></span>' //the div that pops up when highlights are hovered over
                 );
 
             //for each plugin...

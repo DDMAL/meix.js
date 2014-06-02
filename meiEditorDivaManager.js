@@ -169,7 +169,6 @@ var meiEditorDivaManager = function()
                 });
             }
 
-
             meiEditor.events.subscribe("NewFile", function(fileData, fileNameStripped, fileNameOriginal)
             {
                 $("#manager-file-list").html($("#manager-file-list").html() //create a new file div
@@ -181,6 +180,9 @@ var meiEditorDivaManager = function()
                     + "</div><br></div>");
             });
 
+            //the div that pops up when highlights are hovered over
+            meiEditorSettings.element.html(meiEditorSettings.element.html() + '<span id="hover-div"></span>'); 
+
             $.ajax( //this grabs the json file to get another list of the image filepaths
             {
                 url: meiEditorSettings.jsonFileLocation,
@@ -188,7 +190,8 @@ var meiEditorDivaManager = function()
                 dataType: 'json',
                 success: function (data, status, jqxhr)
                 {
-                    for(curPage in data.pgs){
+                    for(curPage in data.pgs)
+                    {
                         fileNameOriginal = data.pgs[curPage].f; //original file name
                         fileNameStripped = fileNameOriginal.replace(/\W+/g, ""); //used for jQuery selectors as they can't handle periods easily
                         meiEditorSettings.divaPageList.push(fileNameOriginal);
