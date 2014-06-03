@@ -5,13 +5,15 @@
         <title>MEI Editor Demo Page - No DIVA</title>
 
         <link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/themes/smoothness/jquery-ui.css" />
+        <link rel="stylesheet" href="/css/bootstrap.min.css" />
         <link rel="stylesheet" href="/css/meiEditor.css" />
-        <link rel="stylesheet" href="/diva.js/build/css/diva.min.css" />
+        <link rel="stylesheet" href="/css/example.css" />
 
         <!--foreign libraries -->
         <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js" ></script>
         <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min.js"></script>
         <script src="/js/FileSaver.js"></script> <!-- Thanks to http://eligrey.com/demos/FileSaver.js/FileSaver.js -->
+        <script src="/js/bootstrap.min.js" />
         <script src="https://x2js.googlecode.com/hg/xml2json.js"></script>
 
         <!--local libraries -->
@@ -29,14 +31,10 @@
         var resizeComponents = function()
         {
             topbarHeight = $("#topbar").height();
-            $("#topbar").css({
-                'left': '0.2%',
-                'width': '100%' 
-            });
-            $("#mei-editor").css({
+            $("#editor").css({
                 'height': $(window).height() - topbarHeight - 7, //7 for padding
             });
-            $("#mei-editor").offset({
+            $("#editor").offset({
                 'top': topbarHeight,
                 'left': '0.2%',
             });
@@ -49,15 +47,15 @@
             //little graphics things
             $(window).on('resize', resizeComponents);
 
-            resizeComponents();
+            //resizeComponents();
 
         });
 
         </script>
     </head>
     <body>
-
-        <div id="mei-editor"></div>
-        <div id="diva-wrapper"></div>
+        <div id="editor-wrapper">
+            <div id="mei-editor"></div>
+        </div>
     </body>
 </html> 

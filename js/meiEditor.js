@@ -83,138 +83,6 @@ window.meiEditorPlugins = [];
                     unsubscribe: unsubscribe
             };
         }());
-        
-
-        /*
-            Minimizes an object.
-            @param divID The root ID of the object to minimize.
-            @param animateOverride Used at initial load and as needed to skip the jQuery animate function.
-        */
-        var minimizeObject = function(divID, animateOverride)
-        {
-            if(typeof animateOverride === undefined)
-            {
-                animateOverride = false;
-            }
-
-            var numMinimized = $(".minimized").length;
-
-            previousSizes[divID] = {
-                 'left': $("#" + divID).offset().left,
-                 'top': $("#" + divID).offset().top,
-                 'width': $("#" + divID).width(),
-                 'height': $("#" + divID).height(),
-                 'margin': $("#" + divID).css('margin'),
-                 'padding': $("#" + divID).css('padding'),
-
-            };
-
-            if(!animateOverride)
-            {
-                $("#" + divID).animate(
-                {
-                    'left': numMinimized * 300,
-                    'margin': '2px',
-                    'width': '280px', //300(actual width) - 4(2 for both margins) - 16(7 for both paddings)
-                    'height': 'auto',
-                    'top': '0px',
-                    'padding': '2px 8px 0px 8px',
-                }, 500);
-            } 
-            else 
-            {
-                $("#" + divID).css(
-                {
-                    'left': numMinimized * 300,
-                    'margin': '2px',
-                    'width': '280px',
-                    'height': 'auto',
-                    'top': '0px',
-                    'padding': '2px 8px 0px 8px',
-                });
-
-            }
-
-            $("#" + divID + "-minimized-wrapper").css('display', 'block');
-            $("#" + divID + "-maximized-wrapper").css('display', 'none');
-
-            //sortable wasn't working the way I wanted it to so I implemented something manually
-            $("#" + divID).draggable(
-            {
-                axis: "x",
-                start: function(e, ui)
-                {
-                    $(e.target).css('z-index', '103');
-                },
-                stop: function(e, ui)
-                {
-                    $(e.target).css('z-index', '102');
-                    reorderToolbarObjects();
-                },
-            });
-
-            //it's better to do jQuery built-in events rather than self.events because I have to check for ID with the latter.
-            $("#" + divID).trigger('minimize');
-            $("#" + divID).addClass('minimized');
-        };
-
-        /*
-            Maximizes the file list.
-            @param divID The root ID of the object to maximize.
-        */
-        var maximizeObject = function(divID)
-        {
-            function resetDims()
-            {
-                $("#" + divID).css('width', 'auto');
-                $("#" + divID).css('height', 'auto');
-                $("#" + divID + "-maximized-wrapper").css('display', 'block');
-                $("#" + divID + "-minimized-wrapper").css('display', 'none');
-            }
-
-            //add the difference in -maximized-wrapper heights before animating to avoid a weird glitch thing
-            var tempPrevSizes = previousSizes[divID];
-            tempPrevSizes['height'] = $("#" + divID + "-maximized-wrapper").height();
-
-            $("#" + divID).animate(tempPrevSizes, 
-            {
-                duration: 500,
-                complete: resetDims,
-            });
-
-            //it's better to do jQuery built-in events rather than self.events because I have to check for ID with the latter.
-            $("#" + divID).trigger('maximize');
-            $("#" + divID).removeClass('minimized');
-            reorderToolbarObjects();
-            $("#" + divID).draggable(
-            {
-                axis: "",
-                start: "",
-                stop: "",
-            }); //need to reset axes and start/stop listeners
-
-        };
-
-        /*
-            Function called to reorder the toolbar objects.
-        */
-        var reorderToolbarObjects = function()
-        {
-            var numMinimized = $(".minimized").length;
-            var orderedByLeft = [];
-
-            while(numMinimized--)
-            {
-                orderedByLeft.push({'id': $($(".minimized")[numMinimized]).attr('id'), 'left': $($(".minimized")[numMinimized]).offset().left});
-            }
-
-            var sortedByLeft = jsonSort(orderedByLeft, 'left', true);
-            var numMinimized = sortedByLeft.length;
-            while(numMinimized--)
-            {
-                $("#" + sortedByLeft[numMinimized]['id']).animate({'left': numMinimized * 300}, 500);
-            }
-        }
 
         /*
             Stolen with no mercy from http://stackoverflow.com/questions/881510/jquery-sorting-json-by-properties
@@ -229,32 +97,80 @@ window.meiEditorPlugins = [];
             return newJsonObject;
         }
 
+        var resizeComponents = function()
+        {
+            topbarHeight = $("#meiEditor").height();
+            $("#editor").css({
+                'height': $(window).height() - topbarHeight - 7, //7 for padding
+            });
+            $("#editor").offset({
+                'top': topbarHeight,
+            });
+        }
+
+        this.createModal = function(modalClass, small, modalBody, primaryTitle){
+            var modalSize = small ? "modal-sm" : "modal-lg";
+            settings.element.append("<div id='" + modalClass + "' class='modal fade'>"
+                + '<div class="modal-dialog ' + modalSize + '">'
+                    + '<div class="modal-content">'
+                        + '<div class="modal-body">'
+                            + modalBody
+                        + '</div>'
+                        + '<div class="modal-footer">'
+                            + '<button type="button" class="btn btn-default" id="' + modalClass + '-close" data-dismiss="modal">Close</button>'
+                            + '<button type="button" class="btn btn-primary" id="' + modalClass + '-primary">' + primaryTitle + '</button>'
+                        + '</div>'
+                    + '</div>'
+                + '</div>');
+        }
+
         /*
             Function ran on initialization.
         */
         var _init = function()
         {
-            settings.element.append('<div id="topbar">'
-                + '</div>' //header
-                + '<div id="editor"></div>' //ACE editor
+            settings.element.append('<div class="navbar navbar-inverse navbar-sm" id="topbar">'
+                + '<div ckass="container-fluid">'
+                + '<div class="collapse navbar-collapse">'
+                + '<ul class="nav navbar-nav" id="topbarContent">'
+                + '<div class="navbar-brand">ACE MEI Editor</div>'
+                //+ '<span class="headerObject dropdown" control="plugins" id="plugins-dropdown">&#x25bc;</span>'
+                + '</ul></div></div></div></div>'
+                + '<div id="plugins-maximized-wrapper"></div>'
+                + '<div id="openPages">'
+                + '<ul id="pagesList">'
+                + '<li><a href="#newDoc">New Document</a></li>'
+                + '</ul>'
+                + '<div id="editor" class="aceEditorPane"></div>'
+                + '</div>'
                 );
 
             //for each plugin...
             $.each(window.meiEditorPlugins, function(index, curPlugin)
             {
                 //append a formattable structure
-                $("#topbar").append('<div id="' + curPlugin.divName + '" class="toolbar-object">' //creates toolbar object
-                    + '<div id="' + curPlugin.divName + '-maximized-wrapper">'
-                    + curPlugin.maximizedAppearance //user-settable
-                    + '<button class="minimize" name="' + curPlugin.divName + '">Minimize</button>' //minimize button
-                    + '</div>'
-                    + '<div id="' + curPlugin.divName + '-minimized-wrapper">'
-                    + '<span id="' + curPlugin.divName + '-minimized-title">' + curPlugin.minimizedTitle + '</span>'
+                $("#topbarContent").append('<li class="dropdown">'
+                    + '<a href="#" class="dropdown-toggle" data-toggle="dropdown">' + curPlugin.title + ' <b class="caret"></b></a>'
+                    + '<ul class="dropdown-menu" id="dropdown-' + curPlugin.divName + '">'
+                    + '</ul></li>');
+
+                for(optionName in curPlugin.dropdownOptions){
+                    optionClick = curPlugin.dropdownOptions[optionName];
+                    $("#dropdown-"+curPlugin.divName).append("<li><a onclick='" + optionClick + "'>" + optionName + "</a></li>");
+                }
+
+                /*$("#topbar").append("<div class='headerObject title'>"+curPlugin.minimizedTitle+"</div>");
+                $("#plugins-maximized-wrapper").append('<div id="' + curPlugin.divName + '" class="toolbar-object">' //creates toolbar object
+                    + '<div id="' + curPlugin.divName + '-title-wrapper" class="title-wrapper">'
+                    + '<span id="' + curPlugin.divName + '-minimized-title" class="plugin-title">' + curPlugin.minimizedTitle + '</span>'
                     + curPlugin.minimizedAppearance //also user-settable
-                    + '<button class="maximize" name="' + curPlugin.divName + '">Maximize</button>' //maximize button
+                    + '<span class="dropdown" control="' + curPlugin.divName + '" id="' + curPlugin.divName + '-dropdown">&#x25bc;</span>' //maximize button
+                    + '</div>'
+                    + '<div id="' + curPlugin.divName + '-maximized-wrapper" class="maximized-wrapper">'
+                    + curPlugin.maximizedAppearance //user-settable
                     + '</div>'
                     + '</div>'
-                    );
+                    );*/
 
                 // Call the init function and check return value
                 var pluginReturn = curPlugin.init(self, settings);
@@ -266,23 +182,29 @@ window.meiEditorPlugins = [];
                     return;
                 }
 
-                minimizeObject(curPlugin.divName, true);
-                $("#"+curPlugin.divName).draggable();
-            });          
+            });  
 
+            $(".dropdown").on('click', function(e)
+            {
+                controlledDiv = $(e.target).attr('control');
+                $("#" + controlledDiv + "-maximized-wrapper").slideToggle({'complete': function(){
+                    if($("#" + controlledDiv + "-maximized-wrapper").is(':visible'))
+                    {
+                        $("#" + controlledDiv + "-dropdown").html('&#x25b2;');
+                    } 
+                    else
+                    {
+                        $("#" + controlledDiv + "-dropdown").html('&#x25bc;');
+                    }
+                }});
+                $("")
+            });        
+            $("#openPages").tabs();
             settings.editor = ace.edit("editor"); //create the ACE editor
             settings.editor.setTheme("ace/theme/ambiance");
             settings.editor.getSession().setMode("ace/mode/xml");
 
-            //various jQuery listeners that have to be put in after the buttons exist
-            $(".minimize").on('click', function(event)
-            {
-                minimizeObject(event.target.name);
-            });
-            $(".maximize").on('click', function(event)
-            {
-                maximizeObject(event.target.name);
-            });
+            resizeComponents();
         };
 
         _init();
