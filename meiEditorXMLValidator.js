@@ -28,22 +28,13 @@ var meiEditorXMLValidator = function(){
             }
             
             /* 
-                Validates MEI using the locally-hosted .RNG file
+                Validates MEI using the locally-hosted .RNG files
                 @param pageName The page to validate.
+                @param pageNameOriginal The non-stripped version of the filename.
             */
             meiEditor.validateMei = function(pageName, pageNameOriginal)
             {
-                var Module = 
-                {
-                    xml: meiEditorSettings.pageData[pageNameOriginal].doc.getAllLines().join("\n"),
-                    schema: meiEditorSettings.validators[$(validatorSelect).find(":selected").text()],
-                    title: pageNameOriginal,
-                    schemaTitle: "mei-"+$(validatorSelect).find(":selected").text()+".rng",
-                }
-                validationWorker = new Worker("xmllintStable.js");
-                validationWorker.pageName = pageName;
-                $("#validate-output-" + pageName).html("Validating " + Module['title'] + " against " + Module['schemaTitle'] + ".");
-                validationWorker.onmessage = function(event)
+                callbackFunction = function(event)
                 {
                     pageName = this.pageName;
                     $("#validate-output-" + pageName).html($("#validate-output-" + pageName).html() + "<br>" + event.data);
@@ -57,7 +48,18 @@ var meiEditorXMLValidator = function(){
                         $("#numNewMessages").css('display', 'inline');
                     }
                 }
-                validationWorker.postMessage(Module);
+
+                var Module = 
+                {
+                    xml: meiEditorSettings.pageData[pageNameOriginal].doc.getAllLines().join("\n"),
+                    schema: meiEditorSettings.validators[$(validatorSelect).find(":selected").text()],
+                    xmlTitle: pageNameOriginal,
+                    schemaTitle: "mei-"+$(validatorSelect).find(":selected").text()+".rng",
+                }
+
+                validateMEI(Module, {'pageName': pageName}, callbackFunction);
+
+                $("#validate-output-" + pageName).html("Validating " + Module['title'] + " against " + Module['schemaTitle'] + ".");
             }
 
             meiEditor.events.subscribe("NewFile", function(fileData, fileName, fileNameOriginal){

@@ -1,3 +1,5 @@
+/* Use bits of this as needed to add to emcc output. */
+
 this.addEventListener('message', function(event){
   Module = event.data;
   Module['print'] = function(x) {
