@@ -68,7 +68,7 @@
             });
 
             divaInstance = $('#diva-wrapper').data('diva');
-            meiEditor = $("#mei-editor").AceMeiEditor([new meiEditorFileUpload, new meiEditorXMLValidator, new meiEditorDivaManager], {'divaInstance': divaInstance, 'jsonFileLocation': jsonFile});
+            meiEditor = $("#mei-editor").AceMeiEditor({'divaInstance': divaInstance, 'jsonFileLocation': jsonFile});
 
             //little graphics things
             $(window).on('resize', resizeComponents);

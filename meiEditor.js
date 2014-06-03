@@ -1,6 +1,8 @@
+window.meiEditorPlugins = [];
+
 (function ($)
 {
-    var AceMeiEditor = function(element, plugins, options){
+    var AceMeiEditor = function(element, options){
         var self = this;
         var settings = {
             editor: "",
@@ -238,10 +240,9 @@
                 );
 
             //for each plugin...
-            pluginLength = plugins.length;
-            while(pluginLength--)
+            console.log(window.meiEditorPlugins);
+            $.each(window.meiEditorPlugins, function(index, curPlugin)
             {
-                curPlugin = plugins[pluginLength];
                 //append a formattable structure
                 $("#topbar").append('<div id="' + curPlugin.divName + '" class="toolbar-object">' //creates toolbar object
                     + '<div id="' + curPlugin.divName + '-maximized-wrapper">'
@@ -256,12 +257,19 @@
                     + '</div>'
                     );
 
+                // Call the init function and check return value
+                var pluginReturn = curPlugin.init(self, settings);
+                
+                // If it returns false, consider the plugin disabled
+                if (!pluginReturn)
+                {
+                    $("#" + curPlugin.divName).remove();
+                    return;
+                }
+
                 minimizeObject(curPlugin.divName, true);
                 $("#"+curPlugin.divName).draggable();
-
-                //call the init function to set up some more stuff
-                curPlugin._init(self, settings);
-            }            
+            });          
 
             settings.editor = ace.edit("editor"); //create the ACE editor
             settings.editor.setTheme("ace/theme/ambiance");
@@ -282,7 +290,7 @@
 
     }
 
-    $.fn.AceMeiEditor = function (plugins, options)
+    $.fn.AceMeiEditor = function (options)
     {
         return this.each(function ()
         {
@@ -296,7 +304,7 @@
             options.parentSelector = element;
 
             // Otherwise, instantiate the document viewer
-            var meiEditor = new AceMeiEditor(this, plugins, options);
+            var meiEditor = new AceMeiEditor(this, options);
             element.data('AceMeiEditor', meiEditor);
         });
     };
