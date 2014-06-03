@@ -23,7 +23,7 @@
                 + '<div id="linked-file-header">Linked files:</div>'
                 + '<div id="linked-file-list"></div>'
                 + '<button id="updateDiva">Update highlights</button>',
-            minimizedTitle: 'Diva page manager:',
+            title: 'Diva page manager:',
             minimizedAppearance: '<span class="unlinkedFilesCount"></span>'
                 + '<span class="unlinkedImagesCount"></span>',
             init: function(meiEditor, meiEditorSettings)

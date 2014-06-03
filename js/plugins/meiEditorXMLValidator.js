@@ -5,15 +5,39 @@
         var retval = 
         {
             divName: "xml-validator",
-            minimizedTitle: "Files to validate:",
-            maximizedAppearance: 'Files to validate:<br><div id="validate-file-list" class="file-list"></div>'
-                +'Active RelaxNG schema: <select id="validatorSelect"></select>',
+            title: "Validator",
+            dropdownOptions: 
+            {
+                'Upload validator': '$("#testModal").modal();',
+                "Validate a file...": 'console.log("validate a file here")'
+            },
+
+            maximizedAppearance: 'Active RelaxNG schema: <select id="validatorSelect"></select>'
+                + '<div id="validate-file-list" class="file-list"></div>',
             minimizedAppearance: '<span id="numNewMessages">0</span>',
             init: function(meiEditor, meiEditorSettings){
                 $.extend(meiEditorSettings, {
                     validatorLinks: ["all", "all_anyStart", "CMN", "Mensural", "Neumes"],
                     validators: {},
                 });
+
+                meiEditorSettings.element.append("<div id='testModal' class='modal fade'>"
+                    + '<div class="modal-dialog">'
+    + '<div class="modal-content">'
+      + '<div class="modal-header">'
+        + '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>'
+        + '<h4 class="modal-title" id="myModalLabel">Modal title</h4>'
+      + '</div>'
+      + '<div class="modal-body">'
+      + 'blah'
+      + '</div>'
+      + '<div class="modal-footer">'
+        + '<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>'
+        + '<button type="button" class="btn btn-primary">Save changes</button>'
+      + '</div>'
+    + '</div>'
+  + '</div>');
+
                 /* 
                     Function called to reapply button listeners
                 */

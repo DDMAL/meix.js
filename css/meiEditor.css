@@ -7,11 +7,11 @@ body{
     position: absolute;
     cursor: default;
 }
-#editor{
+.aceEditorPane{
     float:left;
     height:100%;
     width:100%;
-    position:relative;
+    position:absolute;
 }
 #mei-editor{
     width:100%;

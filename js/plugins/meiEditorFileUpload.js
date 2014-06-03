@@ -5,10 +5,13 @@
         var retval = 
         {
             divName: "file-upload",
-            maximizedAppearance: '<input type="file" id="fileInput">' 
-                + '<br>Files loaded:'
-                + '<div id="file-list" class="file-list"></div>',
-            minimizedTitle: 'Files loaded:',
+            /*maximizedAppearance:'<div id="file-list" class="file-list"></div>'
+                + '<input type="file" id="fileInput">',*/
+            title: 'Files',
+            dropdownOptions: 
+            {
+                'Upload a file...': '$("#fileLoadModal").modal();',
+            },
             minimizedAppearance: '',
             init: function(meiEditor, meiEditorSettings)
             {
@@ -29,8 +32,8 @@
                 */
                 meiEditor.changeActivePage = function(pageName)
                 {
-                    meiEditorSettings.editor.setSession(meiEditorSettings.pageData[pageName]); //inserts text
-                    meiEditorSettings.activeDoc = meiEditorSettings.editor.getSession().doc;
+                    /*meiEditorSettings.editor.setSession(meiEditorSettings.pageData[pageName]); //inserts text
+                    meiEditorSettings.activeDoc = meiEditorSettings.editor.getSession().doc;*/
                 };
 
                 /*
@@ -40,7 +43,7 @@
                 */
                 meiEditor.savePageToClient = function(pageName)
                 {
-                    formatToSave = function(lineIn, indexIn)
+                    /*formatToSave = function(lineIn, indexIn)
                     {          
                         if(lineIn !== "") //if the line's not blank (nothing in MEI should be)
                         {
@@ -52,7 +55,7 @@
                     var lastRow = meiEditorSettings.pageData[pageName].doc.getLength() - 1; //0-indexed
                     meiEditorSettings.pageData[pageName].doc.getLines(0, lastRow).forEach(formatToSave); //format each
                     var pageBlob = new Blob(formattedData, {type: "text/plain;charset=utf-8"}); //create a blob
-                    saveAs(pageBlob, pageName); //download it! from FileSaver.js
+                    saveAs(pageBlob, pageName); //download it! from FileSaver.js*/
                 };
 
                 /*
@@ -62,7 +65,7 @@
                 */
                 meiEditor.removePageFromProject = function(pageName)
                 {   
-                    if(pageName in meiEditorSettings.pageData)
+                    /*if(pageName in meiEditorSettings.pageData)
                     {
                         if(meiEditorSettings.editor.getSession() == meiEditorSettings.pageData[pageName]) //if the deleted page was the active page
                         {
@@ -84,7 +87,7 @@
 
                     $("#"+pageName).remove();
 
-                    meiEditor.events.publish("PageWasDeleted", [pageName]); //let whoever is interested know
+                    meiEditor.events.publish("PageWasDeleted", [pageName]); //let whoever is interested know */
                 }
 
                 /*
@@ -92,11 +95,36 @@
                     @param pageDataIn The result of a FileReader.readAsText operation containing the data from the MEI file.
                     @param fileNameIn The name of the file to be referenced in the database.
                 */
-                meiEditor.addPage = function(pageDataIn, fileNameIn)
+                var addPage = function()
                 {
-                    meiEditorSettings.pageData[fileNameIn] = new ace.EditSession(pageDataIn, "ace/mode/xml"); //add the file's data into a "pageData" array that will eventually feed into the ACE editor
-                    meiEditorSettings.orderedPageData.push(fileNameIn); //keep track of the page orders to push the right highlights to the right pages
+                    var reader = new FileReader();
+                    reader.file = document.getElementById("fileInput").files[0];
+
+                    //when the file is loaded as text
+                    reader.onload = function(e) 
+                    { 
+                        fileNameOriginal = this.file.name;
+                        fileNameStripped = this.file.name.replace(/\W+/g, ""); //this one strips spaces/periods so that it can be used as a jQuery selector
+
+                        meiEditorSettings.whiteSpaceConversion[fileNameStripped] = fileNameOriginal;
+
+                        meiEditor.events.publish("NewFile", [this.result, fileNameStripped, fileNameOriginal])
+                        
+                        $("#pagesList").append("<li><a href='#" + fileNameStripped + "'>" + fileNameOriginal + "</a></li>");
+                        $("#openPages").append("<div id='" + fileNameStripped + "' class='aceEditorPane'></div>");
+                        meiEditorSettings.pageData[fileNameOriginal] = new ace.edit(fileNameStripped); //add the file's data into a "pageData" array that will eventually feed into the ACE editor
+                        meiEditorSettings.pageData[fileNameOriginal].setTheme("ace/theme/ambiance");
+                        var tempSession = new ace.EditSession(this.result);
+                        meiEditorSettings.pageData[fileNameOriginal].setSession(tempSession, "ace/mode/xml");
+                        meiEditorSettings.orderedPageData.push(fileNameOriginal); //keep track of the page orders to push the right highlights to the right pages
+                        $("#fileLoadModal-close").trigger('click');
+                        $("#openPages").tabs("refresh");
+                    };
+                    reader.readAsText(reader.file);
                 };
+
+                meiEditor.createModal('fileLoadModal', true, '<input type="file" id="fileInput">', "Load file");
+                $("#fileLoadModal-primary").on('click', addPage);
 
                 /*$('#fileInput').click(function(e)
                 {
@@ -104,7 +132,7 @@
                 });*/
 
                 //when a new file is uploaded; easier to write inline than separately because of the "this" references
-                $('#fileInput').change(function(e)
+                /*$('#fileInput').change(function(e)
                 { 
                     var reader = new FileReader();
                     reader.file = this.files[0];
@@ -151,8 +179,9 @@
                         reapplyFileUploadButtonListeners();   
                     };
                     reader.readAsText(this.files[0]);
-                });
+                });*/
 
+                /* 
                 //make the files re-orderable
                 $("#file-list").sortable(
                     {
@@ -173,7 +202,7 @@
                         Reorders the MEI files in the data to reflect the GUI.
                         @param newOrder A list of the filenames in the desired order.
                     */
-                    var reorderFiles = function(newOrder)
+                    /*var reorderFiles = function(newOrder)
                     {
                         meiEditorSettings.orderedPageData = [];
                         var curPage = 0;
@@ -193,7 +222,7 @@
                     }
                     reorderFiles(newOrder);
                 });
-                return true;
+                return true;*/
             }
         }
         return retval;
