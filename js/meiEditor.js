@@ -6,8 +6,8 @@ window.meiEditorPlugins = [];
         var self = this;
         var settings = {
             pageData: {},
-            element: $(element)
-            aceTheme: "ace/themes/ambiance"
+            element: $(element),
+            aceTheme: "ace/theme/ambiance"
         }
 
         $.extend(settings, options);
