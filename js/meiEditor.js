@@ -156,7 +156,7 @@ window.meiEditorPlugins = [];
         {
             var retString = "<select id='select" + idAppend + "'>";
             for (curKey in jsonObject){
-                retString += "<option id='" + curKey + "'>" + curKey + "</option>";
+                retString += "<option name='" + curKey + "'>" + curKey + "</option>";
             }
             return retString + "</select>";
         }
@@ -183,6 +183,21 @@ window.meiEditorPlugins = [];
         }
 
         /*
+            Called to reset the listeners for icons on the tabs.
+        */
+        var resetIconListeners = function()
+        {
+            $(".tabIcon").css('cursor', 'pointer'); //can't do this in CSS file for some reason, likely because it's dynamic
+            $(".remove").on('click', function(e){
+                var pageName = $($(e.target).siblings("a")[0]).text();
+                self.removePageFromProject(pageName, e.target);
+            });
+            $(".rename").on('click', function(e){
+                self.renameFile(e.target);
+            });
+        }
+
+        /*
             Called to add file visually and in settings.pageData.
             @param fileData Data in the original file.
             @param fileNameStripped Stripped file name for jQuery ID usage. May not be necessary.
@@ -190,19 +205,6 @@ window.meiEditorPlugins = [];
         */
         this.addFileToGUI = function(fileData, fileNameStripped, fileNameOriginal)
         {            
-
-            var resetIconListeners = function()
-            {
-                $(".tabIcon").css('cursor', 'pointer'); //can't do this in CSS file for some reason, likely because it's dynamic
-                $(".remove").on('click', function(e){
-                    var pageName = $($(e.target).siblings("a")[0]).text();
-                    self.removePageFromProject(pageName, e.target);
-                });
-                $(".rename").on('click', function(e){
-                    self.renameFile(e.target);
-                });
-            }
-
             //add a new tab to the editor
             $("#pagesList").append("<li><a href='#" + fileNameStripped + "wrapper'>" + fileNameOriginal + "</a>" + settings.iconPane.join("") + "</li>");
             $("#openPages").append("<div id='" + fileNameStripped + "wrapper'>" //necessary for CSS to work
@@ -223,11 +225,10 @@ window.meiEditorPlugins = [];
         /*
             Removes from page without project without saving.
             @param pageName The page to remove.
-            @param clicked Remove sign that was clicked.
+            @param clicked Remove icon that was clicked.
         */
         this.removePageFromProject = function(pageName, clicked)
         {
-            console.log(pageName);
             var pageNameStripped = self.stripFilenameForJQuery(pageName);
 
             //if removed panel is active, set it 
@@ -268,9 +269,73 @@ window.meiEditorPlugins = [];
             self.events.publish("PageWasDeleted", [pageName]); //let whoever is interested know 
         }
 
-        this.renameFile = function()
+        /*
+            Renames a file
+            @param clicked Rename icon that was clicked.
+        */
+        this.renameFile = function(clicked)
         {
+            var saveRename = function(parentListItem, originalName)
+            {
+                var newInput = parentListItem.children("input");
+                if(newInput.val() == originalName)
+                {
+                    newInput.remove();
+                    parentListItem.children("a").css('display', 'block');
+                } 
+                else 
+                {
+                    var newName = newInput.val();
+                    parentListItem.children("a").text(newName);
+                    parentListItem.children("a").attr('href', '#' + self.stripFilenameForJQuery(newName));
+                    newInput.remove();
+                    parentListItem.children("a").css('display', 'block');
 
+                    var editorDiv = $("#"+self.stripFilenameForJQuery(originalName))
+                    editorDiv.attr('id', self.stripFilenameForJQuery(newName));
+                    editorDiv.parent().attr('id', self.stripFilenameForJQuery(newName)+"wrapper");
+                    settings.pageData[newName] = settings.pageData[originalName];
+
+                    var curSelectIndex = $("select").length;
+                    while(curSelectIndex--)
+                    {
+                        var childArray = $($("select")[curSelectIndex]).children();
+                        var curChildIndex = childArray.length;
+                        while(curChildIndex--)
+                        {
+                            var curChild = $(childArray[curChildIndex]);
+                            if(curChild.text() == originalName)
+                            {
+                                $(curChild).text(newName);
+                                $(curChild).attr('name', newName);
+                            }
+                        }
+                    }
+                }
+                resetIconListeners();
+            }
+
+
+            var parentListItem = $(clicked).parent();
+            var containedLink = parentListItem.children("a");
+            containedLink.css('display', 'none');
+            var originalName = containedLink.text();
+
+            parentListItem.append("<input class='input-ui-emulator' type='text' value='" + originalName + "''>");
+
+            $(clicked).on('click', function(e)
+            {
+                saveRename(parentListItem, originalName);
+            });
+
+            $(parentListItem.children("input")).on('keyup', function(e)
+            {
+                if(e.keyCode == 13){
+                    saveRename(parentListItem, originalName);
+                }
+            });
+
+            console.log(originalName);
         }
 
         /*
@@ -279,14 +344,13 @@ window.meiEditorPlugins = [];
         var _init = function()
         {
             self.events.subscribe('NewFile', self.addFileToGUI);
-            settings.iconPane.push("<a class='rename tabIcon'>&#x270e;</a><a class='remove tabIcon'>&#x2573;</a>");
+            settings.iconPane.push("<span class='rename tabIcon'>&#x270e;</span><span class='remove tabIcon'>&#x2573;</span>");
 
             settings.element.append('<div class="navbar navbar-inverse navbar-sm" id="topbar">'
                 + '<div ckass="container-fluid">'
                 + '<div class="collapse navbar-collapse">'
                 + '<ul class="nav navbar-nav" id="topbarContent">'
                 + '<div class="navbar-brand">ACE MEI Editor</div>'
-                //+ '<span class="headerObject dropdown" control="plugins" id="plugins-dropdown">&#x25bc;</span>'
                 + '</ul></div></div></div></div>'
                 + '<div id="plugins-maximized-wrapper"></div>'
                 + '<div id="openPages">'
