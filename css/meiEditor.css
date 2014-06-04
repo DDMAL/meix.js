@@ -26,5 +26,17 @@ ul.dropdown-menu > li > a:hover{
     cursor:pointer;
     background-color:#EEEEEE;
 };
-.ui-tabs-panel{
+.tabIcon{
+    vertical-align: center;
+    text-align: middle;
+    float: right;
+}
+.tabIcon:hover{
+    background-color:#DDDDDD;
+}
+a:focus{
+    outline:0; /*removes the dotted border*/
+}
+li:focus{
+    outline:0; /*removes the dotted border*/
 }

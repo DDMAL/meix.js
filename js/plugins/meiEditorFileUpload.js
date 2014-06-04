@@ -39,38 +39,6 @@
                 };
 
                 /*
-                    Removes from page without project without saving.
-                    @param pageName The page to remove.
-                    @param pageNameOriginal The page to remove with whitespace/periods/hyphens.
-                */
-                meiEditor.removePageFromProject = function(pageName)
-                {   
-                    /*if(pageName in meiEditorSettings.pageData)
-                    {
-                        if(meiEditorSettings.editor.getSession() == meiEditorSettings.pageData[pageName]) //if the deleted page was the active page
-                        {
-                            meiEditorSettings.editor.setSession(new ace.EditSession("", "ace/mode/xml")); //reset to editor to a blank edit session
-                        }
-                        delete meiEditorSettings.pageData[pageName];
-                    }
-
-                    if(pageName in meiEditorSettings.whiteSpaceConversion) //delete from the whiteSpace -> original arr
-                    {
-                        delete meiEditorSettings.whiteSpaceConversion[pageName];
-                    }
-
-                    var orderedIndex = meiEditorSettings.orderedPageData.indexOf(pageName); //delete from the orderedPageData arr
-                    if(orderedIndex !== -1)
-                    {
-                        delete meiEditorSettings.orderedPageData[orderedIndex];
-                    }
-
-                    $("#"+pageName).remove();
-
-                    meiEditor.events.publish("PageWasDeleted", [pageName]); //let whoever is interested know */
-                }
-
-                /*
                     Adds the currently selected page of the fileLoadModal input to the database
                 */
                 var addPage = function()
@@ -82,8 +50,8 @@
                     reader.onload = function(e) 
                     { 
                         fileNameOriginal = this.file.name;
-                        fileNameStripped = this.file.name.replace(/\W+/g, ""); //this one strips spaces/periods so that it can be used as a jQuery selector
-                        
+                        fileNameStripped = meiEditor.stripFilenameForJQuery(fileNameOriginal); //this one strips spaces/periods so that it can be used as a jQuery selector
+
                         meiEditor.events.publish("NewFile", [this.result, fileNameStripped, fileNameOriginal])
 
                         //close the modal

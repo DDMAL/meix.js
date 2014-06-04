@@ -7,7 +7,8 @@ window.meiEditorPlugins = [];
         var settings = {
             pageData: {},
             element: $(element),
-            aceTheme: "ace/theme/ambiance"
+            aceTheme: "ace/theme/ambiance",
+            iconPane: []
         }
 
         $.extend(settings, options);
@@ -107,17 +108,17 @@ window.meiEditorPlugins = [];
                 $("#openPages").tabs("option", "active", 0);
                 tabIndex = 0;
             }
-            var activeTab = $($("#pagesList > li > a")[tabIndex]).attr('href');
+            var activeTab = $($("#pagesList > li > a")[tabIndex]);
             return activeTab;
         }
 
         /*
-            Function called when window is resized.
+            Function called when window is resized/editor pane is changed.
         */
         var resizeComponents = function()
         {
             $("#mei-editor").height($(window).height());
-            var activeTab = getActivePanel();
+            var activeTab = getActivePanel().attr('href');
             $(activeTab).css('padding', '0px');
             $(activeTab+" > .aceEditorPane").height($("#mei-editor").height() - $(activeTab).offset().top);
         }
@@ -129,7 +130,8 @@ window.meiEditorPlugins = [];
             @param modalBody HTML string for the content of the modal
             @param primaryTitle Text to put on the primary (not-"close") button at the bottom of the modal.
         */
-        this.createModal = function(modalID, small, modalBody, primaryTitle){
+        this.createModal = function(modalID, small, modalBody, primaryTitle)
+        {
             var modalSize = small ? "modal-sm" : "modal-lg";
             settings.element.append("<div id='" + modalID + "' class='modal fade'>"
                 + '<div class="modal-dialog ' + modalSize + '">'
@@ -150,12 +152,22 @@ window.meiEditorPlugins = [];
             @param idAppend A string to append to the ID of the select object to make it unique.
             @param jsonObject Source for the select object.
         */
-        this.createSelect = function(idAppend, jsonObject){
+        this.createSelect = function(idAppend, jsonObject)
+        {
             var retString = "<select id='select" + idAppend + "'>";
             for (curKey in jsonObject){
                 retString += "<option id='" + curKey + "'>" + curKey + "</option>";
             }
             return retString + "</select>";
+        }
+
+        /*
+            Strips a file name of characters that jQuery selectors may misinterpret.
+            @param fileName The filename to strip.
+        */
+        this.stripFilenameForJQuery = function(fileName)
+        {
+            return fileName.replace(/\W+/g, "");
         }
 
         /*
@@ -170,14 +182,36 @@ window.meiEditorPlugins = [];
             return retString + "</ul>";
         }
 
+        /*
+            Called to add file visually and in settings.pageData.
+            @param fileData Data in the original file.
+            @param fileNameStripped Stripped file name for jQuery ID usage. May not be necessary.
+            @param fileNameOriginal Original file name for variable usage.
+        */
         this.addFileToGUI = function(fileData, fileNameStripped, fileNameOriginal)
-        {                     
+        {            
+
+            var resetIconListeners = function()
+            {
+                $(".tabIcon").css('cursor', 'pointer'); //can't do this in CSS file for some reason, likely because it's dynamic
+                $(".remove").on('click', function(e){
+                    var pageName = $($(e.target).siblings("a")[0]).text();
+                    self.removePageFromProject(pageName, e.target);
+                });
+                $(".rename").on('click', function(e){
+                    self.renameFile(e.target);
+                });
+            }
+
             //add a new tab to the editor
-            $("#pagesList").append("<li><a href='#" + fileNameStripped + "wrapper'>" + fileNameOriginal + "</a></li>");
+            $("#pagesList").append("<li><a href='#" + fileNameStripped + "wrapper'>" + fileNameOriginal + "</a>" + settings.iconPane.join("") + "</li>");
             $("#openPages").append("<div id='" + fileNameStripped + "wrapper'>" //necessary for CSS to work
                 + "<div id='" + fileNameStripped + "' class='aceEditorPane'>"
                 + "</div></div>");
             $("#openPages").tabs("refresh");  
+
+            resetIconListeners();
+
             //add the data to the pageData object
             settings.pageData[fileNameOriginal] = ace.edit(fileNameStripped); //add the file's data into a "pageData" array that will eventually feed into the ACE editor
             settings.pageData[fileNameOriginal].resize();
@@ -187,11 +221,65 @@ window.meiEditorPlugins = [];
         }
 
         /*
+            Removes from page without project without saving.
+            @param pageName The page to remove.
+            @param clicked Remove sign that was clicked.
+        */
+        this.removePageFromProject = function(pageName, clicked)
+        {
+            console.log(pageName);
+            var pageNameStripped = self.stripFilenameForJQuery(pageName);
+
+            //if removed panel is active, set it 
+            if(pageName == getActivePanel().text())
+            {
+                var activeIndex = $("#openPages").tabs("option", "active");
+                if(activeIndex != 0)
+                {
+                    $("#openPages").tabs("option", "active", activeIndex - 1);
+                }
+            }
+
+
+            $(clicked).parent().remove();
+            $("#"+self.stripFilenameForJQuery(pageName)).remove();
+            delete settings.pageData[pageName];
+
+            var curSelectIndex = $("select").length;
+            while(curSelectIndex--)
+            {
+                var childArray = $($("select")[curSelectIndex]).children();
+                var curChildIndex = childArray.length;
+                while(curChildIndex--)
+                {
+                    var curChild = $(childArray[curChildIndex]);
+                    if(curChild.text() == pageName)
+                    {
+                        $(curChild).remove();
+                    }
+                }
+            }
+
+            if($("#pagesList").children().length == 0)
+            {
+                self.addFileToGUI("", "untitled", "untitled");
+            }
+
+            self.events.publish("PageWasDeleted", [pageName]); //let whoever is interested know 
+        }
+
+        this.renameFile = function()
+        {
+
+        }
+
+        /*
             Function ran on initialization.
         */
         var _init = function()
         {
             self.events.subscribe('NewFile', self.addFileToGUI);
+            settings.iconPane.push("<a class='rename tabIcon'>&#x270e;</a><a class='remove tabIcon'>&#x2573;</a>");
 
             settings.element.append('<div class="navbar navbar-inverse navbar-sm" id="topbar">'
                 + '<div ckass="container-fluid">'
@@ -209,15 +297,15 @@ window.meiEditorPlugins = [];
 
             //initializes tabs
             $("#openPages").tabs({
-                activate: function(event, ui){
-                    //makes sure the new editor panes are sized correctly
-                    $("#mei-editor").height($(window).height());
-                    $(ui.newPanel).height($(window).height() - $(ui.newPanel).offset().top);
-                }
+                activate: resizeComponents
             });
 
             //create the initial ACE editor
             self.addFileToGUI("", "untitled", "untitled");
+
+            //graphics stuff
+            resizeComponents();
+            $(window).on('resize', resizeComponents);
 
             //for each plugin...
             $.each(window.meiEditorPlugins, function(index, curPlugin)
@@ -244,10 +332,6 @@ window.meiEditorPlugins = [];
                 }
 
             });        
-
-            //graphics stuff
-            resizeComponents();
-            $(window).on('resize', resizeComponents);
         };
 
         _init();
