@@ -11,6 +11,7 @@
             dropdownOptions: 
             {
                 'Upload a file...': '$("#fileLoadModal").modal();',
+                'Save a file...': '$("#fileSaveModal").modal();',
             },
             minimizedAppearance: '',
             init: function(meiEditor, meiEditorSettings)
@@ -28,35 +29,25 @@
                 });
 
                 /*
-                    Changes the active page in the editor.
-                    @param pageName The page to switch to.
-                */
-                meiEditor.changeActivePage = function(pageName)
-                {
-                    /*meiEditorSettings.editor.setSession(meiEditorSettings.pageData[pageName]); //inserts text
-                    meiEditorSettings.activeDoc = meiEditorSettings.editor.getSession().doc;*/
-                };
-
-                /*
                     Prompts local download of a page.
                     @param pageName The page to download.
-                    @param pageNameOriginal The page to download with whitespace/periods/hyphens.
                 */
-                meiEditor.savePageToClient = function(pageName)
+                var savePageToClient = function(pageName)
                 {
-                    /*formatToSave = function(lineIn, indexIn)
+                    formatToSave = function(lineIn, indexIn)
                     {          
                         if(lineIn !== "") //if the line's not blank (nothing in MEI should be)
                         {
                             formattedData[indexIn] = lineIn + "\n"; //add a newline - it doesn't use them otherwise. Last line will have a newline but this won't stack when pages are re-uploaded as this also removes blank lines.
                         }
                     }
-
+                    
                     var formattedData = [];
-                    var lastRow = meiEditorSettings.pageData[pageName].doc.getLength() - 1; //0-indexed
-                    meiEditorSettings.pageData[pageName].doc.getLines(0, lastRow).forEach(formatToSave); //format each
+                    var lastRow = meiEditorSettings.pageData[pageName].getSession().doc.getLength() - 1; //0-indexed
+                    meiEditorSettings.pageData[pageName].getSession().doc.getLines(0, lastRow).forEach(formatToSave); //format each
                     var pageBlob = new Blob(formattedData, {type: "text/plain;charset=utf-8"}); //create a blob
-                    saveAs(pageBlob, pageName); //download it! from FileSaver.js*/
+                    saveAs(pageBlob, pageName); //download it! from FileSaver.js
+                    $("#fileSaveModal-close").trigger('click');
                 };
 
                 /*
@@ -92,9 +83,7 @@
                 }
 
                 /*
-                    Adds a page to the database
-                    @param pageDataIn The result of a FileReader.readAsText operation containing the data from the MEI file.
-                    @param fileNameIn The name of the file to be referenced in the database.
+                    Adds the currently selected page of the fileLoadModal input to the database
                 */
                 var addPage = function()
                 {
@@ -107,27 +96,49 @@
                         fileNameOriginal = this.file.name;
                         fileNameStripped = this.file.name.replace(/\W+/g, ""); //this one strips spaces/periods so that it can be used as a jQuery selector
 
-                        meiEditorSettings.whiteSpaceConversion[fileNameStripped] = fileNameOriginal;
+                        //meiEditorSettings.whiteSpaceConversion[fileNameStripped] = fileNameOriginal;
 
                         meiEditor.events.publish("NewFile", [this.result, fileNameStripped, fileNameOriginal])
                         
+                        //add a new tab to the editor
                         $("#pagesList").append("<li><a href='#" + fileNameStripped + "'>" + fileNameOriginal + "</a></li>");
                         $("#openPages").append("<div id='" + fileNameStripped + "' class='aceEditorPane'></div>");
                         $("#openPages").tabs("refresh");
-                        meiEditorSettings.editorArr[fileNameOriginal] = ace.edit(fileNameStripped); //add the file's data into a "pageData" array that will eventually feed into the ACE editor
-                        //meiEditorSettings.editorArr[fileNameOriginal].setTheme("ace/theme/ambiance");
-                        meiEditorSettings.editorArr[fileNameOriginal].resize();
-                        meiEditorSettings.pageData[fileNameOriginal] = new ace.EditSession(this.result);
-                        meiEditorSettings.editorArr[fileNameOriginal].setSession(meiEditorSettings.pageData[fileNameOriginal], "ace/mode/xml");
-                        meiEditorSettings.editorArr[fileNameOriginal].getSession().setMode("ace/mode/xml");
+                        
+                        //add the data to the pageData object
+                        meiEditorSettings.pageData[fileNameOriginal] = ace.edit(fileNameStripped); //add the file's data into a "pageData" array that will eventually feed into the ACE editor
+                        meiEditorSettings.pageData[fileNameOriginal].resize();
+                        meiEditorSettings.pageData[fileNameOriginal].setSession(new ace.EditSession(this.result));
+                        meiEditorSettings.pageData[fileNameOriginal].getSession().setMode("ace/mode/xml");
                         meiEditorSettings.orderedPageData.push(fileNameOriginal); //keep track of the page orders to push the right highlights to the right pages
+                        
+                        //close the modal
                         $("#fileLoadModal-close").trigger('click');
+
+                        //add to the save modal
+                        $("#meiSelectSave").append("<option name='" + fileNameOriginal + "'>" + fileNameOriginal + "</option>");
                     };
                     reader.readAsText(reader.file);
                 };
 
+                /*
+                    Shorthand function for creating an HTML select object with the names of every file currently loaded.
+                    @param idAppend A string to append to the ID of the select object to make it unique.
+
+                */
+                var createFileSelect = function(idAppend){
+                    var retString = "<select id='meiSelect" + idAppend + "'>";
+                    console.log(meiEditorSettings.pageData);
+                    for (curKey in meiEditorSettings.pageData){
+                        retString += "<option id='" + curKey + "'>" + curKey + "</option>";
+                    }
+                    return retString + "</select>";
+                }
+
                 meiEditor.createModal('fileLoadModal', true, '<input type="file" id="fileInput">', "Load file");
+                meiEditor.createModal('fileSaveModal', true, createFileSelect("Save"), "Save file");
                 $("#fileLoadModal-primary").on('click', addPage);
+                $("#fileSaveModal-primary").on('click', function(){savePageToClient($("#meiSelectSave").find(":selected").text());});
 
                 /*$('#fileInput').click(function(e)
                 {
