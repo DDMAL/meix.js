@@ -142,14 +142,26 @@ window.meiEditorPlugins = [];
         /*
             Shorthand function for creating an HTML select object from the keys of a JSON object.
             @param idAppend A string to append to the ID of the select object to make it unique.
-
+            @param jsonObject Source for the select object.
         */
         this.createSelect = function(idAppend, jsonObject){
-            var retString = "<select id='meiSelect" + idAppend + "'>";
+            var retString = "<select id='select" + idAppend + "'>";
             for (curKey in jsonObject){
                 retString += "<option id='" + curKey + "'>" + curKey + "</option>";
             }
             return retString + "</select>";
+        }
+
+        /*
+            Shorthand function for creating an HTML list object from the keys of a JSON object.
+            @param jsonObject Source for the list object.
+        */
+        this.createList = function(idAppend, jsonObject){
+            var retString = "<ul id='list" + idAppend + "'>";
+            for (curKey in jsonObject){
+                retString += "<li id='" + curKey + "'>" + curKey + "</li>";
+            }
+            return retString + "</ul>";
         }
 
         /*

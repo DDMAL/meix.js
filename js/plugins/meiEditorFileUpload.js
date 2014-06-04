@@ -5,8 +5,6 @@
         var retval = 
         {
             divName: "file-upload",
-            /*maximizedAppearance:'<div id="file-list" class="file-list"></div>'
-                + '<input type="file" id="fileInput">',*/
             title: 'Files',
             dropdownOptions: 
             {
@@ -110,11 +108,11 @@
                 meiEditor.createModal('fileLoadModal', true, '<input type="file" id="fileInput">', "Load file");
                 meiEditor.createModal('fileSaveModal', true, meiEditor.createSelect("Save", meiEditorSettings.pageData), "Save file");
                 $("#fileLoadModal-primary").on('click', addPage);
-                $("#fileSaveModal-primary").on('click', function(){savePageToClient($("#meiSelectSave").find(":selected").text());});
+                $("#fileSaveModal-primary").on('click', function(){savePageToClient($("#selectSave").find(":selected").text());});
 
                 meiEditor.events.subscribe("NewFile", function(a, b, fileNameOriginal)
                 {
-                    $("#meiSelectSave").append("<option name='" + fileNameOriginal + "'>" + fileNameOriginal + "</option>");
+                    $("#selectSave").append("<option name='" + fileNameOriginal + "'>" + fileNameOriginal + "</option>");
                 });
             }
         }
