@@ -97,15 +97,18 @@ window.meiEditorPlugins = [];
             return newJsonObject;
         }
 
+        var getActivePanel = function(){
+            var tabIndex = $("#openPages").tabs("option", "active");
+            var activeTab = $($("#pagesList > li > a")[tabIndex]).attr('href');
+            console.log(activeTab);
+            return activeTab;
+        }
+
         var resizeComponents = function()
         {
-            topbarHeight = $("#meiEditor").height();
-            $("#editor").css({
-                'height': $(window).height() - topbarHeight - 7, //7 for padding
-            });
-            $("#editor").offset({
-                'top': topbarHeight,
-            });
+            $("#mei-editor").height($(window).height());
+            var activeTab = getActivePanel();
+            $(activeTab).height($("#mei-editor").height() - $(activeTab).offset().top);
         }
 
         this.createModal = function(modalClass, small, modalBody, primaryTitle){
@@ -139,9 +142,9 @@ window.meiEditorPlugins = [];
                 + '<div id="plugins-maximized-wrapper"></div>'
                 + '<div id="openPages">'
                 + '<ul id="pagesList">'
-                + '<li><a href="#newDoc">New Document</a></li>'
+                + '<li><a href="#editor">New Document</a></li>'
                 + '</ul>'
-                + '<div id="editor" class="aceEditorPane"></div>'
+                + '<div id="editor"></div>'
                 + '</div>'
                 );
 
@@ -199,12 +202,18 @@ window.meiEditorPlugins = [];
                 }});
                 $("")
             });        
-            $("#openPages").tabs();
+            $("#openPages").tabs({
+                activate: function(event, ui){
+                    $("#mei-editor").height($(window).height());
+                    $(ui.newPanel).height($(window).height() - $(ui.newPanel).offset().top);
+                }
+            });
             settings.editor = ace.edit("editor"); //create the ACE editor
-            settings.editor.setTheme("ace/theme/ambiance");
+            //settings.editor.setTheme("ace/theme/ambiance");
             settings.editor.getSession().setMode("ace/mode/xml");
 
             resizeComponents();
+            $(window).on('resize', resizeComponents);
         };
 
         _init();

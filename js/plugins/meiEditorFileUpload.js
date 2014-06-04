@@ -19,6 +19,7 @@
                     activeDoc: "",
                     currentPage: "",
                     currentDocPosition: {'row': 1, 'col': 1},
+                    editorArr: [],
                     pageData: {},
                     orderedPageData: [],
                     whiteSpaceConversion: {},
@@ -112,13 +113,15 @@
                         
                         $("#pagesList").append("<li><a href='#" + fileNameStripped + "'>" + fileNameOriginal + "</a></li>");
                         $("#openPages").append("<div id='" + fileNameStripped + "' class='aceEditorPane'></div>");
-                        meiEditorSettings.pageData[fileNameOriginal] = new ace.edit(fileNameStripped); //add the file's data into a "pageData" array that will eventually feed into the ACE editor
-                        meiEditorSettings.pageData[fileNameOriginal].setTheme("ace/theme/ambiance");
-                        var tempSession = new ace.EditSession(this.result);
-                        meiEditorSettings.pageData[fileNameOriginal].setSession(tempSession, "ace/mode/xml");
+                        $("#openPages").tabs("refresh");
+                        meiEditorSettings.editorArr[fileNameOriginal] = ace.edit(fileNameStripped); //add the file's data into a "pageData" array that will eventually feed into the ACE editor
+                        //meiEditorSettings.editorArr[fileNameOriginal].setTheme("ace/theme/ambiance");
+                        meiEditorSettings.editorArr[fileNameOriginal].resize();
+                        meiEditorSettings.pageData[fileNameOriginal] = new ace.EditSession(this.result);
+                        meiEditorSettings.editorArr[fileNameOriginal].setSession(meiEditorSettings.pageData[fileNameOriginal], "ace/mode/xml");
+                        meiEditorSettings.editorArr[fileNameOriginal].getSession().setMode("ace/mode/xml");
                         meiEditorSettings.orderedPageData.push(fileNameOriginal); //keep track of the page orders to push the right highlights to the right pages
                         $("#fileLoadModal-close").trigger('click');
-                        $("#openPages").tabs("refresh");
                     };
                     reader.readAsText(reader.file);
                 };

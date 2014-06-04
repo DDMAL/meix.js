@@ -4,14 +4,14 @@
         <meta charset="utf-8" />
         <title>MEI Editor Demo Page - No DIVA</title>
 
-        <link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/themes/smoothness/jquery-ui.css" />
+        <link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.2/themes/smoothness/jquery-ui.css" />
         <link rel="stylesheet" href="/css/bootstrap.min.css" />
         <link rel="stylesheet" href="/css/meiEditor.css" />
         <link rel="stylesheet" href="/css/example.css" />
 
         <!--foreign libraries -->
-        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js" ></script>
-        <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min.js"></script>
+        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js" ></script>
+        <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.2/jquery-ui.min.js"></script>
         <script src="/js/FileSaver.js"></script> <!-- Thanks to http://eligrey.com/demos/FileSaver.js/FileSaver.js -->
         <script src="/js/bootstrap.min.js" />
         <script src="https://x2js.googlecode.com/hg/xml2json.js"></script>
@@ -25,27 +25,13 @@
         <script src="/js/plugins/meiEditorXMLValidator.js"></script>
         <script src="/js/meilint.js"></script>
         <script>
-        /*
-            Function to be called on resizing. Not leaving this anonymous so that it can be called at the beginning without triggering the Diva .resize() listener.
-        */
-        var resizeComponents = function()
-        {
-            topbarHeight = $("#topbar").height();
-            $("#editor").css({
-                'height': $(window).height() - topbarHeight - 7, //7 for padding
-            });
-            $("#editor").offset({
-                'top': topbarHeight,
-                'left': '0.2%',
-            });
-        }
 
         $(function() 
         {
             meiEditor = $("#mei-editor").AceMeiEditor({});
 
             //little graphics things
-            $(window).on('resize', resizeComponents);
+            //$(window).on('resize', resizeComponents);
 
             //resizeComponents();
 
