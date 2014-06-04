@@ -7,6 +7,7 @@ window.meiEditorPlugins = [];
         var settings = {
             pageData: {},
             element: $(element)
+            aceTheme: "ace/themes/ambiance"
         }
 
         $.extend(settings, options);
@@ -102,6 +103,10 @@ window.meiEditorPlugins = [];
         */
         var getActivePanel = function(){
             var tabIndex = $("#openPages").tabs("option", "active");
+            if(!tabIndex){
+                $("#openPages").tabs("option", "active", 0);
+                tabIndex = 0;
+            }
             var activeTab = $($("#pagesList > li > a")[tabIndex]).attr('href');
             return activeTab;
         }
@@ -113,7 +118,8 @@ window.meiEditorPlugins = [];
         {
             $("#mei-editor").height($(window).height());
             var activeTab = getActivePanel();
-            $(activeTab).height($("#mei-editor").height() - $(activeTab).offset().top);
+            $(activeTab).css('padding', '0px');
+            $(activeTab+" > .aceEditorPane").height($("#mei-editor").height() - $(activeTab).offset().top);
         }
 
         /* 
@@ -164,11 +170,29 @@ window.meiEditorPlugins = [];
             return retString + "</ul>";
         }
 
+        this.addFileToGUI = function(fileData, fileNameStripped, fileNameOriginal)
+        {                     
+            //add a new tab to the editor
+            $("#pagesList").append("<li><a href='#" + fileNameStripped + "wrapper'>" + fileNameOriginal + "</a></li>");
+            $("#openPages").append("<div id='" + fileNameStripped + "wrapper'>" //necessary for CSS to work
+                + "<div id='" + fileNameStripped + "' class='aceEditorPane'>"
+                + "</div></div>");
+            $("#openPages").tabs("refresh");  
+            //add the data to the pageData object
+            settings.pageData[fileNameOriginal] = ace.edit(fileNameStripped); //add the file's data into a "pageData" array that will eventually feed into the ACE editor
+            settings.pageData[fileNameOriginal].resize();
+            settings.pageData[fileNameOriginal].setTheme(settings.aceTheme);
+            settings.pageData[fileNameOriginal].setSession(new ace.EditSession(fileData));
+            settings.pageData[fileNameOriginal].getSession().setMode("ace/mode/xml");
+        }
+
         /*
             Function ran on initialization.
         */
         var _init = function()
         {
+            self.events.subscribe('NewFile', self.addFileToGUI);
+
             settings.element.append('<div class="navbar navbar-inverse navbar-sm" id="topbar">'
                 + '<div ckass="container-fluid">'
                 + '<div class="collapse navbar-collapse">'
@@ -179,9 +203,7 @@ window.meiEditorPlugins = [];
                 + '<div id="plugins-maximized-wrapper"></div>'
                 + '<div id="openPages">'
                 + '<ul id="pagesList">'
-                + '<li><a href="#editor">untitled</a></li>'
                 + '</ul>'
-                + '<div id="editor"></div>'
                 + '</div>'
                 );
 
@@ -195,9 +217,7 @@ window.meiEditorPlugins = [];
             });
 
             //create the initial ACE editor
-            settings.pageData["untitled"] = ace.edit("editor"); 
-            //settings.editor.setTheme("ace/theme/ambiance");
-            settings.pageData["untitled"].getSession().setMode("ace/mode/xml");
+            self.addFileToGUI("", "untitled", "untitled");
 
             //for each plugin...
             $.each(window.meiEditorPlugins, function(index, curPlugin)

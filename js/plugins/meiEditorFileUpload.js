@@ -83,22 +83,9 @@
                     { 
                         fileNameOriginal = this.file.name;
                         fileNameStripped = this.file.name.replace(/\W+/g, ""); //this one strips spaces/periods so that it can be used as a jQuery selector
-
-                        //meiEditorSettings.whiteSpaceConversion[fileNameStripped] = fileNameOriginal;
-
+                        
                         meiEditor.events.publish("NewFile", [this.result, fileNameStripped, fileNameOriginal])
-                        
-                        //add a new tab to the editor
-                        $("#pagesList").append("<li><a href='#" + fileNameStripped + "'>" + fileNameOriginal + "</a></li>");
-                        $("#openPages").append("<div id='" + fileNameStripped + "' class='aceEditorPane'></div>");
-                        $("#openPages").tabs("refresh");
-                        
-                        //add the data to the pageData object
-                        meiEditorSettings.pageData[fileNameOriginal] = ace.edit(fileNameStripped); //add the file's data into a "pageData" array that will eventually feed into the ACE editor
-                        meiEditorSettings.pageData[fileNameOriginal].resize();
-                        meiEditorSettings.pageData[fileNameOriginal].setSession(new ace.EditSession(this.result));
-                        meiEditorSettings.pageData[fileNameOriginal].getSession().setMode("ace/mode/xml");
-                       
+
                         //close the modal
                         $("#fileLoadModal-close").trigger('click');
                     };
