@@ -5,7 +5,7 @@ window.meiEditorPlugins = [];
     var AceMeiEditor = function(element, options){
         var self = this;
         var settings = {
-            editor: "",
+            pageData: {},
             element: $(element)
         }
 
@@ -97,13 +97,18 @@ window.meiEditorPlugins = [];
             return newJsonObject;
         }
 
+        /*
+            Returns active panel of the jQuery tab object.
+        */
         var getActivePanel = function(){
             var tabIndex = $("#openPages").tabs("option", "active");
             var activeTab = $($("#pagesList > li > a")[tabIndex]).attr('href');
-            console.log(activeTab);
             return activeTab;
         }
 
+        /*
+            Function called when window is resized.
+        */
         var resizeComponents = function()
         {
             $("#mei-editor").height($(window).height());
@@ -111,20 +116,40 @@ window.meiEditorPlugins = [];
             $(activeTab).height($("#mei-editor").height() - $(activeTab).offset().top);
         }
 
-        this.createModal = function(modalClass, small, modalBody, primaryTitle){
+        /* 
+            Shorthand function for creating a bootstrap modal.
+            @param modalID String for a unique identifier for the modal
+            @param small Boolean to determine whether or not it is a bootstrap modal-sm
+            @param modalBody HTML string for the content of the modal
+            @param primaryTitle Text to put on the primary (not-"close") button at the bottom of the modal.
+        */
+        this.createModal = function(modalID, small, modalBody, primaryTitle){
             var modalSize = small ? "modal-sm" : "modal-lg";
-            settings.element.append("<div id='" + modalClass + "' class='modal fade'>"
+            settings.element.append("<div id='" + modalID + "' class='modal fade'>"
                 + '<div class="modal-dialog ' + modalSize + '">'
                     + '<div class="modal-content">'
                         + '<div class="modal-body">'
                             + modalBody
                         + '</div>'
                         + '<div class="modal-footer">'
-                            + '<button type="button" class="btn btn-default" id="' + modalClass + '-close" data-dismiss="modal">Close</button>'
-                            + '<button type="button" class="btn btn-primary" id="' + modalClass + '-primary">' + primaryTitle + '</button>'
+                            + '<button type="button" class="btn btn-default" id="' + modalID + '-close" data-dismiss="modal">Close</button>'
+                            + '<button type="button" class="btn btn-primary" id="' + modalID + '-primary">' + primaryTitle + '</button>'
                         + '</div>'
                     + '</div>'
                 + '</div>');
+        }
+
+        /*
+            Shorthand function for creating an HTML select object with the names of every file currently loaded.
+            @param idAppend A string to append to the ID of the select object to make it unique.
+
+        */
+        this.createFileSelect = function(idAppend){
+            var retString = "<select id='meiSelect" + idAppend + "'>";
+            for (curKey in settings.pageData){
+                retString += "<option id='" + curKey + "'>" + curKey + "</option>";
+            }
+            return retString + "</select>";
         }
 
         /*
@@ -142,11 +167,25 @@ window.meiEditorPlugins = [];
                 + '<div id="plugins-maximized-wrapper"></div>'
                 + '<div id="openPages">'
                 + '<ul id="pagesList">'
-                + '<li><a href="#editor">New Document</a></li>'
+                + '<li><a href="#editor">untitled</a></li>'
                 + '</ul>'
                 + '<div id="editor"></div>'
                 + '</div>'
                 );
+
+            //initializes tabs
+            $("#openPages").tabs({
+                activate: function(event, ui){
+                    //makes sure the new editor panes are sized correctly
+                    $("#mei-editor").height($(window).height());
+                    $(ui.newPanel).height($(window).height() - $(ui.newPanel).offset().top);
+                }
+            });
+
+            //create the initial ACE editor
+            settings.pageData["untitled"] = ace.edit("editor"); 
+            //settings.editor.setTheme("ace/theme/ambiance");
+            settings.pageData["untitled"].getSession().setMode("ace/mode/xml");
 
             //for each plugin...
             $.each(window.meiEditorPlugins, function(index, curPlugin)
@@ -162,19 +201,6 @@ window.meiEditorPlugins = [];
                     $("#dropdown-"+curPlugin.divName).append("<li><a onclick='" + optionClick + "'>" + optionName + "</a></li>");
                 }
 
-                /*$("#topbar").append("<div class='headerObject title'>"+curPlugin.minimizedTitle+"</div>");
-                $("#plugins-maximized-wrapper").append('<div id="' + curPlugin.divName + '" class="toolbar-object">' //creates toolbar object
-                    + '<div id="' + curPlugin.divName + '-title-wrapper" class="title-wrapper">'
-                    + '<span id="' + curPlugin.divName + '-minimized-title" class="plugin-title">' + curPlugin.minimizedTitle + '</span>'
-                    + curPlugin.minimizedAppearance //also user-settable
-                    + '<span class="dropdown" control="' + curPlugin.divName + '" id="' + curPlugin.divName + '-dropdown">&#x25bc;</span>' //maximize button
-                    + '</div>'
-                    + '<div id="' + curPlugin.divName + '-maximized-wrapper" class="maximized-wrapper">'
-                    + curPlugin.maximizedAppearance //user-settable
-                    + '</div>'
-                    + '</div>'
-                    );*/
-
                 // Call the init function and check return value
                 var pluginReturn = curPlugin.init(self, settings);
                 
@@ -185,33 +211,9 @@ window.meiEditorPlugins = [];
                     return;
                 }
 
-            });  
-
-            $(".dropdown").on('click', function(e)
-            {
-                controlledDiv = $(e.target).attr('control');
-                $("#" + controlledDiv + "-maximized-wrapper").slideToggle({'complete': function(){
-                    if($("#" + controlledDiv + "-maximized-wrapper").is(':visible'))
-                    {
-                        $("#" + controlledDiv + "-dropdown").html('&#x25b2;');
-                    } 
-                    else
-                    {
-                        $("#" + controlledDiv + "-dropdown").html('&#x25bc;');
-                    }
-                }});
-                $("")
             });        
-            $("#openPages").tabs({
-                activate: function(event, ui){
-                    $("#mei-editor").height($(window).height());
-                    $(ui.newPanel).height($(window).height() - $(ui.newPanel).offset().top);
-                }
-            });
-            settings.editor = ace.edit("editor"); //create the ACE editor
-            //settings.editor.setTheme("ace/theme/ambiance");
-            settings.editor.getSession().setMode("ace/mode/xml");
 
+            //graphics stuff
             resizeComponents();
             $(window).on('resize', resizeComponents);
         };
