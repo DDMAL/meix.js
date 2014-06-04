@@ -140,13 +140,13 @@ window.meiEditorPlugins = [];
         }
 
         /*
-            Shorthand function for creating an HTML select object with the names of every file currently loaded.
+            Shorthand function for creating an HTML select object from the keys of a JSON object.
             @param idAppend A string to append to the ID of the select object to make it unique.
 
         */
-        this.createFileSelect = function(idAppend){
+        this.createSelect = function(idAppend, jsonObject){
             var retString = "<select id='meiSelect" + idAppend + "'>";
-            for (curKey in settings.pageData){
+            for (curKey in jsonObject){
                 retString += "<option id='" + curKey + "'>" + curKey + "</option>";
             }
             return retString + "</select>";

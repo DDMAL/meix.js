@@ -100,21 +100,22 @@
                         meiEditorSettings.pageData[fileNameOriginal].resize();
                         meiEditorSettings.pageData[fileNameOriginal].setSession(new ace.EditSession(this.result));
                         meiEditorSettings.pageData[fileNameOriginal].getSession().setMode("ace/mode/xml");
-                        meiEditorSettings.orderedPageData.push(fileNameOriginal); //keep track of the page orders to push the right highlights to the right pages
-                        
+                       
                         //close the modal
                         $("#fileLoadModal-close").trigger('click');
-
-                        //add to the save modal
-                        $("#meiSelectSave").append("<option name='" + fileNameOriginal + "'>" + fileNameOriginal + "</option>");
                     };
                     reader.readAsText(reader.file);
                 };
 
                 meiEditor.createModal('fileLoadModal', true, '<input type="file" id="fileInput">', "Load file");
-                meiEditor.createModal('fileSaveModal', true, meiEditor.createFileSelect("Save"), "Save file");
+                meiEditor.createModal('fileSaveModal', true, meiEditor.createSelect("Save", meiEditorSettings.pageData), "Save file");
                 $("#fileLoadModal-primary").on('click', addPage);
                 $("#fileSaveModal-primary").on('click', function(){savePageToClient($("#meiSelectSave").find(":selected").text());});
+
+                meiEditor.events.subscribe("NewFile", function(a, b, fileNameOriginal)
+                {
+                    $("#meiSelectSave").append("<option name='" + fileNameOriginal + "'>" + fileNameOriginal + "</option>");
+                });
             }
         }
         return retval;
