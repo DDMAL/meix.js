@@ -8,7 +8,7 @@ window.meiEditorPlugins = [];
             pageData: {},
             element: $(element),
             aceTheme: "",
-            iconPane: {}
+            iconPane: {},
         }
 
         $.extend(settings, options);
@@ -176,11 +176,12 @@ window.meiEditorPlugins = [];
         {
             //these magic numbers are necessary for some reason to prevent a scrollbar. I'll look into this later when I have the time.
             $("#mei-editor").height($(window).height() - 5);
-            $("#openPages").height($("#mei-editor").height() - $("#openPages").offset().top - 5);
+            var editorConsoleHeight = $("#editorConsole").height();
+            $("#openPages").height($("#mei-editor").height() - $("#openPages").offset().top - 5 - editorConsoleHeight);
             var activeTab = self.getActivePanel().attr('href');
             $(activeTab).css('padding', '0px');
             $(activeTab).height($("#mei-editor").height() - $(activeTab).offset().top - 5);
-            $(activeTab+" > .aceEditorPane").height($("#mei-editor").height() - $(activeTab).offset().top - 5);
+            $(activeTab+" > .aceEditorPane").height($("#mei-editor").height() - $(activeTab).offset().top - 5 - editorConsoleHeight);
         }
 
         /*
@@ -336,8 +337,7 @@ window.meiEditorPlugins = [];
                 //if this name already exists (including if it's unchanged)
                 if(newInput.val() in settings.pageData)
                 {
-                    console.log("This page name already exists in this project. Please choose another.");
-
+                    settings.meiConsole.append("<br>This page name already exists in this project. Please choose another.");
                     //remove the input item and make the original link visible again
                     newInput.remove();
                     parentListItem.children("a").css('display', 'block');
@@ -447,7 +447,10 @@ window.meiEditorPlugins = [];
                 + '</ul>'
                 + '<div id="new-tab"></div>' //this will never be seen, but is needed to prevent a bug or two
                 + '</div>'
+                + '<div id="editorConsole">Console loaded!</div>'
                 );
+
+            settings.meiConsole = $("#editorConsole");
 
             //initializes tabs
             $("#openPages").tabs(

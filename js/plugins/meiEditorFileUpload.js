@@ -52,7 +52,7 @@
                         fileName = this.file.name;
                         if(fileName in meiEditorSettings.pageData)
                         {
-                            console.log("File name already in database. Please change a file's name and try reloading the file.");
+                            meiEditorSettings.meiConsole.append("<br>File name already in database. Please change a file's name and try reloading the file.");
                             return;
                         }
 
