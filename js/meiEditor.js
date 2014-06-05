@@ -7,7 +7,7 @@ window.meiEditorPlugins = [];
         var settings = {
             pageData: {},
             element: $(element),
-            aceTheme: "ace/theme/ambiance",
+            aceTheme: "",
             iconPane: []
         }
 
@@ -187,13 +187,18 @@ window.meiEditorPlugins = [];
         */
         var resetIconListeners = function()
         {
+            $(".remove").unbind('click');
+            $(".rename").unbind('click');
+            
             $(".tabIcon").css('cursor', 'pointer'); //can't do this in CSS file for some reason, likely because it's dynamic
+            
             $(".remove").on('click', function(e){
                 var pageName = $($(e.target).siblings("a")[0]).text();
-                self.removePageFromProject(pageName, e.target);
+                self.removePageFromProject(pageName);
             });
             $(".rename").on('click', function(e){
-                self.renameFile(e.target);
+                var pageName = $($(e.target).siblings("a")[0]).text();
+                self.renamePage(pageName); 
             });
         }
 
@@ -206,8 +211,8 @@ window.meiEditorPlugins = [];
         this.addFileToGUI = function(fileData, fileNameStripped, fileNameOriginal)
         {            
             //add a new tab to the editor
-            $("#pagesList").append("<li><a href='#" + fileNameStripped + "wrapper'>" + fileNameOriginal + "</a>" + settings.iconPane.join("") + "</li>");
-            $("#openPages").append("<div id='" + fileNameStripped + "wrapper'>" //necessary for CSS to work
+            $("#pagesList").append("<li id='" + fileNameStripped + "-listitem'><a href='#" + fileNameStripped + "-wrapper'>" + fileNameOriginal + "</a>" + settings.iconPane.join("") + "</li>");
+            $("#openPages").append("<div id='" + fileNameStripped + "-wrapper'>" //necessary for CSS to work
                 + "<div id='" + fileNameStripped + "' class='aceEditorPane'>"
                 + "</div></div>");
             $("#openPages").tabs("refresh");  
@@ -225,13 +230,12 @@ window.meiEditorPlugins = [];
         /*
             Removes from page without project without saving.
             @param pageName The page to remove.
-            @param clicked Remove icon that was clicked.
         */
-        this.removePageFromProject = function(pageName, clicked)
+        this.removePageFromProject = function(pageName)
         {
             var pageNameStripped = self.stripFilenameForJQuery(pageName);
 
-            //if removed panel is active, set it 
+            //if removed panel is active, set it to one less than the current or keep it at 0 if this is 0
             if(pageName == getActivePanel().text())
             {
                 var activeIndex = $("#openPages").tabs("option", "active");
@@ -241,19 +245,24 @@ window.meiEditorPlugins = [];
                 }
             }
 
-
-            $(clicked).parent().remove();
-            $("#"+self.stripFilenameForJQuery(pageName)).remove();
+            //remove the <li> item in the tab list
+            $("#" + pageNameStripped + "-listitem").remove();
+            //remove the editor div
+            $("#" + pageNameStripped + "-wrapper").remove();
+            //delete the pageData item
             delete settings.pageData[pageName];
 
+            //look through the selects...
             var curSelectIndex = $("select").length;
             while(curSelectIndex--)
             {
+                //...and their children...
                 var childArray = $($("select")[curSelectIndex]).children();
                 var curChildIndex = childArray.length;
                 while(curChildIndex--)
                 {
                     var curChild = $(childArray[curChildIndex]);
+                    //...for this page.
                     if(curChild.text() == pageName)
                     {
                         $(curChild).remove();
@@ -261,6 +270,7 @@ window.meiEditorPlugins = [];
                 }
             }
 
+            //if nothing else exists, create a new default page
             if($("#pagesList").children().length == 0)
             {
                 self.addFileToGUI("", "untitled", "untitled");
@@ -273,29 +283,39 @@ window.meiEditorPlugins = [];
             Renames a file
             @param clicked Rename icon that was clicked.
         */
-        this.renameFile = function(clicked)
+        this.renamePage = function(pageName)
         {
+            //used to commit file renaming
             var saveRename = function(parentListItem, originalName)
             {
                 var newInput = parentListItem.children("input");
-                if(newInput.val() == originalName)
+
+                //if this name already exists (including if it's unchanged)
+                if(newInput.val() in settings.pageData)
                 {
+                    console.log("This page name already exists in this project. Please choose another.");
+                    //remove the input item and make the original link visible again
                     newInput.remove();
                     parentListItem.children("a").css('display', 'block');
-                } 
+                }
                 else 
                 {
                     var newName = newInput.val();
+                    //change the link's text and href
                     parentListItem.children("a").text(newName);
                     parentListItem.children("a").attr('href', '#' + self.stripFilenameForJQuery(newName));
+                    
+                    //remove the input and make the original link visible again
                     newInput.remove();
                     parentListItem.children("a").css('display', 'block');
 
+                    //change this for the editor and wrapper as well
                     var editorDiv = $("#"+self.stripFilenameForJQuery(originalName))
                     editorDiv.attr('id', self.stripFilenameForJQuery(newName));
                     editorDiv.parent().attr('id', self.stripFilenameForJQuery(newName)+"wrapper");
+                    
+                    //change it in the pageData variable and in the select
                     settings.pageData[newName] = settings.pageData[originalName];
-
                     var curSelectIndex = $("select").length;
                     while(curSelectIndex--)
                     {
@@ -312,30 +332,33 @@ window.meiEditorPlugins = [];
                         }
                     }
                 }
+                //lastly, remove the old bindings and put the original ones back on
                 resetIconListeners();
             }
 
-
-            var parentListItem = $(clicked).parent();
+            //variables we may or may not need
+            var parentListItem = $("#" + pageName + "-listitem");
+            var clicked = parentListItem.children("span.rename");
             var containedLink = parentListItem.children("a");
             containedLink.css('display', 'none');
             var originalName = containedLink.text();
 
+            //create the input field on top of where the name was before
             parentListItem.append("<input class='input-ui-emulator' type='text' value='" + originalName + "''>");
 
+            //when the pencil is clicked again
             $(clicked).on('click', function(e)
             {
                 saveRename(parentListItem, originalName);
             });
 
+            //or when the enter key is pressed in the field
             $(parentListItem.children("input")).on('keyup', function(e)
             {
                 if(e.keyCode == 13){
                     saveRename(parentListItem, originalName);
                 }
             });
-
-            console.log(originalName);
         }
 
         /*
@@ -355,6 +378,7 @@ window.meiEditorPlugins = [];
                 + '<div id="plugins-maximized-wrapper"></div>'
                 + '<div id="openPages">'
                 + '<ul id="pagesList">'
+                //+ '<li><a onclick="addDefaultTab()">New tab</a></li>'
                 + '</ul>'
                 + '</div>'
                 );
