@@ -337,6 +337,7 @@ window.meiEditorPlugins = [];
                 if(newInput.val() in settings.pageData)
                 {
                     console.log("This page name already exists in this project. Please choose another.");
+
                     //remove the input item and make the original link visible again
                     newInput.remove();
                     parentListItem.children("a").css('display', 'block');
@@ -451,7 +452,13 @@ window.meiEditorPlugins = [];
             //initializes tabs
             $("#openPages").tabs(
             {
-                activate: self.resizeComponents //resize components to make sure the newly activated tab is the right size
+                activate: function(){
+                    //resize components to make sure the newly activated tab is the right size
+                    self.resizeComponents(); 
+
+                    //usually, the URL bar will change to the last tab visited because jQueryUI tabs use <a> href attributes; this prevents that by repalcing every URL change with "index.html" and no ID information
+                    window.history.replaceState("","", "index.html");
+                }
             });
 
             $("#newTabButton").attr('tabindex', -1); //make sure the new tab button isn't shown as default active
