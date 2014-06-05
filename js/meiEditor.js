@@ -105,8 +105,8 @@ window.meiEditorPlugins = [];
         var getActivePanel = function(){
             var tabIndex = $("#openPages").tabs("option", "active");
             if(!tabIndex){
-                $("#openPages").tabs("option", "active", 0);
-                tabIndex = 0;
+                $("#openPages").tabs("option", "active", 1);
+                tabIndex = 1;
             }
             var activeTab = $($("#pagesList > li > a")[tabIndex]);
             return activeTab;
@@ -120,6 +120,7 @@ window.meiEditorPlugins = [];
             $("#mei-editor").height($(window).height());
             var activeTab = getActivePanel().attr('href');
             $(activeTab).css('padding', '0px');
+            $(activeTab).height($("#mei-editor").height() - $(activeTab).offset().top);
             $(activeTab+" > .aceEditorPane").height($("#mei-editor").height() - $(activeTab).offset().top);
         }
 
@@ -205,26 +206,31 @@ window.meiEditorPlugins = [];
         /*
             Called to add file visually and in settings.pageData.
             @param fileData Data in the original file.
-            @param fileNameStripped Stripped file name for jQuery ID usage. May not be necessary.
-            @param fileNameOriginal Original file name for variable usage.
+            @param fileName Original file name.
         */
-        this.addFileToGUI = function(fileData, fileNameStripped, fileNameOriginal)
+        this.addFileToGUI = function(fileData, fileName)
         {            
+            var fileNameStripped = self.stripFilenameForJQuery(fileName);
+
             //add a new tab to the editor
-            $("#pagesList").append("<li id='" + fileNameStripped + "-listitem'><a href='#" + fileNameStripped + "-wrapper'>" + fileNameOriginal + "</a>" + settings.iconPane.join("") + "</li>");
+            $("#pagesList").append("<li id='" + fileNameStripped + "-listitem'><a href='#" + fileNameStripped + "-wrapper'>" + fileName + "</a>" + settings.iconPane.join("") + "</li>");
             $("#openPages").append("<div id='" + fileNameStripped + "-wrapper'>" //necessary for CSS to work
                 + "<div id='" + fileNameStripped + "' class='aceEditorPane'>"
                 + "</div></div>");
-            $("#openPages").tabs("refresh");  
-
+            
             resetIconListeners();
 
-            //add the data to the pageData object
-            settings.pageData[fileNameOriginal] = ace.edit(fileNameStripped); //add the file's data into a "pageData" array that will eventually feed into the ACE editor
-            settings.pageData[fileNameOriginal].resize();
-            settings.pageData[fileNameOriginal].setTheme(settings.aceTheme);
-            settings.pageData[fileNameOriginal].setSession(new ace.EditSession(fileData));
-            settings.pageData[fileNameOriginal].getSession().setMode("ace/mode/xml");
+            //add the data to the pageData object and initialize the editor
+            settings.pageData[fileName] = ace.edit(fileNameStripped); //add the file's data into a "pageData" array that will eventually feed into the ACE editor
+            settings.pageData[fileName].resize();
+            settings.pageData[fileName].setTheme(settings.aceTheme);
+            settings.pageData[fileName].setSession(new ace.EditSession(fileData));
+            settings.pageData[fileName].getSession().setMode("ace/mode/xml");
+
+            //refresh the tab list with the new one in mind
+            var numTabs = $("#pagesList li").length - 1;
+            $("#openPages").tabs("refresh");
+            $("#openPages").tabs({active: numTabs}); //load straight to the new one
         }
 
         /*
@@ -234,14 +240,25 @@ window.meiEditorPlugins = [];
         this.removePageFromProject = function(pageName)
         {
             var pageNameStripped = self.stripFilenameForJQuery(pageName);
+            var activeIndex = $("#openPages").tabs("option", "active");
 
             //if removed panel is active, set it to one less than the current or keep it at 0 if this is 0
             if(pageName == getActivePanel().text())
             {
                 var activeIndex = $("#openPages").tabs("option", "active");
-                if(activeIndex != 0)
+                var numTabs = $("#pagesList li").length - 1;
+                if(numTabs <= 2)
+                {
+                    $("#openPages").tabs("option", "active", 2);
+                }
+                else if(activeIndex == (numTabs))
                 {
                     $("#openPages").tabs("option", "active", activeIndex - 1);
+                }
+                else 
+                {
+                    $("#openPages").tabs("option", "active", activeIndex + 1);
+
                 }
             }
 
@@ -270,12 +287,15 @@ window.meiEditorPlugins = [];
                 }
             }
 
-            //if nothing else exists, create a new default page
-            if($("#pagesList").children().length == 0)
+            //if nothing else exists except the new tab button, create a new default page
+            if($("#pagesList li").length == 1)
             {
-                self.addFileToGUI("", "untitled", "untitled");
-            }
+                self.addDefaultPage();
+            }  
 
+            //reloads the tab list with this one deleted to make sure tab indices are correct
+            $("#openPages").tabs("refresh");
+ 
             self.events.publish("PageWasDeleted", [pageName]); //let whoever is interested know 
         }
 
@@ -361,13 +381,26 @@ window.meiEditorPlugins = [];
             });
         }
 
+        this.addDefaultPage = function()
+        {
+            //check for a new version of "untitled__" that's not in use
+            var newPageTitle = "untitled";
+            var suffixNumber = 1;
+            while(newPageTitle in settings.pageData)
+            {
+                suffixNumber += 1;
+                newPageTitle = "untitled" + suffixNumber;
+            }
+            self.addFileToGUI("", newPageTitle);
+        }
+
         /*
             Function ran on initialization.
         */
         var _init = function()
         {
             self.events.subscribe('NewFile', self.addFileToGUI);
-            settings.iconPane.push("<span class='rename tabIcon'>&#x270e;</span><span class='remove tabIcon'>&#x2573;</span>");
+            settings.iconPane.push("<span title='Rename file' class='rename tabIcon'>&#x270e;</span><span title='Remove file' class='remove tabIcon'>&#x2573;</span>");
 
             settings.element.append('<div class="navbar navbar-inverse navbar-sm" id="topbar">'
                 + '<div ckass="container-fluid">'
@@ -378,18 +411,22 @@ window.meiEditorPlugins = [];
                 + '<div id="plugins-maximized-wrapper"></div>'
                 + '<div id="openPages">'
                 + '<ul id="pagesList">'
-                //+ '<li><a onclick="addDefaultTab()">New tab</a></li>'
+                + '<li id="newTabButton"><a href="#new-tab" onclick="$(\'#mei-editor\').data(\'AceMeiEditor\').addDefaultPage()">New tab</a></li>'
                 + '</ul>'
+                + '<div id="new-tab"></div>' //this will never be seen, but is needed to prevent a bug or two
                 + '</div>'
                 );
 
             //initializes tabs
-            $("#openPages").tabs({
-                activate: resizeComponents
+            $("#openPages").tabs(
+            {
+                activate: resizeComponents //resize components to make sure the newly activated tab is the right size
             });
 
+            $("#newTabButton").attr('tabindex', -1); //make sure the new tab button isn't shown as default active
+
             //create the initial ACE editor
-            self.addFileToGUI("", "untitled", "untitled");
+            self.addDefaultPage();
 
             //graphics stuff
             resizeComponents();

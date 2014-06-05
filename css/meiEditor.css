@@ -44,3 +44,6 @@ input.input-ui-emulator{
     float:left;
     margin: .3em .8em;
 }
+#newTabButton{
+    float:right;
+}

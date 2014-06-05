@@ -49,10 +49,14 @@
                     //when the file is loaded as text
                     reader.onload = function(e) 
                     { 
-                        fileNameOriginal = this.file.name;
-                        fileNameStripped = meiEditor.stripFilenameForJQuery(fileNameOriginal); //this one strips spaces/periods so that it can be used as a jQuery selector
+                        fileName = this.file.name;
+                        if(fileName in meiEditorSettings.pageData)
+                        {
+                            console.log("File name already in database. Please change a file's name and try reloading the file.");
+                            return;
+                        }
 
-                        meiEditor.events.publish("NewFile", [this.result, fileNameStripped, fileNameOriginal])
+                        meiEditor.events.publish("NewFile", [this.result, fileName])
 
                         //close the modal
                         $("#fileLoadModal-close").trigger('click');
