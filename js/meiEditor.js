@@ -8,7 +8,7 @@ window.meiEditorPlugins = [];
             pageData: {},
             element: $(element),
             aceTheme: "",
-            iconPane: []
+            iconPane: {}
         }
 
         $.extend(settings, options);
@@ -84,47 +84,7 @@ window.meiEditorPlugins = [];
                     subscribe: subscribe,
                     unsubscribe: unsubscribe
             };
-        }());
-
-        /*
-            Stolen with no mercy from http://stackoverflow.com/questions/881510/jquery-sorting-json-by-properties
-        */
-        var jsonSort = function(jsonObject, prop, asc) 
-        {
-            newJsonObject = jsonObject.sort(function(a, b) 
-            {
-                if (asc) return (a[prop] > b[prop]);
-                else return (b[prop] > a[prop]);
-            });
-            return newJsonObject;
-        }
-
-        /*
-            Returns active panel of the jQuery tab object.
-        */
-        var getActivePanel = function(){
-            var tabIndex = $("#openPages").tabs("option", "active");
-            if(!tabIndex){
-                $("#openPages").tabs("option", "active", 1);
-                tabIndex = 1;
-            }
-            var activeTab = $($("#pagesList > li > a")[tabIndex]);
-            return activeTab;
-        }
-
-        /*
-            Function called when window is resized/editor pane is changed.
-        */
-        var resizeComponents = function()
-        {
-            //these magic numbers are necessary for some reason to prevent a scrollbar. I'll look into this later when I have the time.
-            $("#mei-editor").height($(window).height() - 5);
-            $("#openPages").height($("#mei-editor").height() - $("#openPages").offset().top - 5);
-            var activeTab = getActivePanel().attr('href');
-            $(activeTab).css('padding', '0px');
-            $(activeTab).height($("#mei-editor").height() - $(activeTab).offset().top - 5);
-            $(activeTab+" > .aceEditorPane").height($("#mei-editor").height() - $(activeTab).offset().top - 5);
-        }
+        }());   
 
         /* 
             Shorthand function for creating a bootstrap modal.
@@ -165,15 +125,6 @@ window.meiEditorPlugins = [];
         }
 
         /*
-            Strips a file name of characters that jQuery selectors may misinterpret.
-            @param fileName The filename to strip.
-        */
-        this.stripFilenameForJQuery = function(fileName)
-        {
-            return fileName.replace(/\W+/g, "");
-        }
-
-        /*
             Shorthand function for creating an HTML list object from the keys of a JSON object.
             @param jsonObject Source for the list object.
         */
@@ -186,15 +137,61 @@ window.meiEditorPlugins = [];
         }
 
         /*
+            Strips a file name of characters that jQuery selectors may misinterpret.
+            @param fileName The filename to strip.
+        */
+        this.stripFilenameForJQuery = function(fileName)
+        {
+            return fileName.replace(/\W+/g, "");
+        }
+
+        this.makeIconString = function()
+        {
+            var iconString = "";
+            for(curIcon in settings.iconPane)
+            {
+                var thisIcon = settings.iconPane[curIcon];
+                iconString += "<span class='tabIcon " + curIcon + "' title='" + thisIcon['title'] + "'>" + thisIcon['body'] + "</span>";
+            }
+            return iconString;
+        }
+
+        /*
+            Returns active panel of the jQuery tab object.
+        */
+        this.getActivePanel = function(){
+            var tabIndex = $("#openPages").tabs("option", "active");
+            if(!tabIndex){
+                $("#openPages").tabs("option", "active", 1);
+                tabIndex = 1;
+            }
+            var activeTab = $($("#pagesList > li > a")[tabIndex]);
+            return activeTab;
+        }
+
+        /*
+            Function called when window is resized/editor pane is changed.
+        */
+        this.resizeComponents = function()
+        {
+            //these magic numbers are necessary for some reason to prevent a scrollbar. I'll look into this later when I have the time.
+            $("#mei-editor").height($(window).height() - 5);
+            $("#openPages").height($("#mei-editor").height() - $("#openPages").offset().top - 5);
+            var activeTab = self.getActivePanel().attr('href');
+            $(activeTab).css('padding', '0px');
+            $(activeTab).height($("#mei-editor").height() - $(activeTab).offset().top - 5);
+            $(activeTab+" > .aceEditorPane").height($("#mei-editor").height() - $(activeTab).offset().top - 5);
+        }
+
+        /*
             Called to reset the listeners for icons on the tabs.
         */
-        var resetIconListeners = function()
+        this.resetIconListeners = function()
         {
+                        
+            /*
             $(".remove").unbind('click');
             $(".rename").unbind('click');
-            
-            $(".tabIcon").css('cursor', 'pointer'); //can't do this in CSS file for some reason, likely because it's dynamic
-            
             $(".remove").on('click', function(e){
                 var pageName = $($(e.target).siblings("a")[0]).text();
                 self.removePageFromProject(pageName);
@@ -202,7 +199,15 @@ window.meiEditorPlugins = [];
             $(".rename").on('click', function(e){
                 var pageName = $($(e.target).siblings("a")[0]).text();
                 self.renamePage(pageName); 
-            });
+            });*/
+            for(curIcon in settings.iconPane)
+            {
+                var thisIcon = settings.iconPane[curIcon];
+                $("." + curIcon).unbind('click');
+                $("." + curIcon).on('click', thisIcon['click']);
+            }
+            $(".tabIcon").css('cursor', 'pointer'); //can't do this in CSS file for some reason, likely because it's dynamic
+
         }
 
         /*
@@ -215,12 +220,12 @@ window.meiEditorPlugins = [];
             var fileNameStripped = self.stripFilenameForJQuery(fileName);
 
             //add a new tab to the editor
-            $("#pagesList").append("<li id='" + fileNameStripped + "-listitem'><a href='#" + fileNameStripped + "-wrapper'>" + fileName + "</a>" + settings.iconPane.join("") + "</li>");
+            $("#pagesList").append("<li id='" + fileNameStripped + "-listitem'><a href='#" + fileNameStripped + "-wrapper'>" + fileName + "</a>" + self.makeIconString() + "</li>");
             $("#openPages").append("<div id='" + fileNameStripped + "-wrapper'>" //necessary for CSS to work
                 + "<div id='" + fileNameStripped + "' class='aceEditorPane'>"
                 + "</div></div>");
             
-            resetIconListeners();
+            self.resetIconListeners();
 
             //add the data to the pageData object and initialize the editor
             settings.pageData[fileName] = ace.edit(fileNameStripped); //add the file's data into a "pageData" array that will eventually feed into the ACE editor
@@ -236,6 +241,22 @@ window.meiEditorPlugins = [];
         }
 
         /*
+            Called to add the next available "untitled" page to the GUI.
+        */
+        this.addDefaultPage = function()
+        {
+            //check for a new version of "untitled__" that's not in use
+            var newPageTitle = "untitled";
+            var suffixNumber = 1;
+            while(newPageTitle in settings.pageData)
+            {
+                suffixNumber += 1;
+                newPageTitle = "untitled" + suffixNumber;
+            }
+            self.addFileToGUI("", newPageTitle);
+        }
+
+        /*
             Removes from page without project without saving.
             @param pageName The page to remove.
         */
@@ -245,7 +266,7 @@ window.meiEditorPlugins = [];
             var activeIndex = $("#openPages").tabs("option", "active");
 
             //if removed panel is active, set it to one less than the current or keep it at 0 if this is 0
-            if(pageName == getActivePanel().text())
+            if(pageName == self.getActivePanel().text())
             {
                 var activeIndex = $("#openPages").tabs("option", "active");
                 var numTabs = $("#pagesList li").length - 1;
@@ -331,8 +352,10 @@ window.meiEditorPlugins = [];
                     newInput.remove();
                     parentListItem.children("a").css('display', 'block');
 
-                    //change this for the editor and wrapper as well
-                    var editorDiv = $("#"+self.stripFilenameForJQuery(originalName))
+                    //change this for the listitem, editor and wrapper as well
+                    var listitemDiv = $("#" + self.stripFilenameForJQuery(originalName) + "-listitem");
+                    listitemDiv.attr('id', self.stripFilenameForJQuery(newName) + "-listitem");
+                    var editorDiv = $("#" + self.stripFilenameForJQuery(originalName));
                     editorDiv.attr('id', self.stripFilenameForJQuery(newName));
                     editorDiv.parent().attr('id', self.stripFilenameForJQuery(newName)+"wrapper");
                     
@@ -355,11 +378,11 @@ window.meiEditorPlugins = [];
                     }
                 }
                 //lastly, remove the old bindings and put the original ones back on
-                resetIconListeners();
+                self.resetIconListeners();
             }
 
             //variables we may or may not need
-            var parentListItem = $("#" + pageName + "-listitem");
+            var parentListItem = $("#" + self.stripFilenameForJQuery(pageName) + "-listitem");
             var clicked = parentListItem.children("span.rename");
             var containedLink = parentListItem.children("a");
             containedLink.css('display', 'none');
@@ -369,6 +392,7 @@ window.meiEditorPlugins = [];
             parentListItem.append("<input class='input-ui-emulator' type='text' value='" + originalName + "''>");
 
             //when the pencil is clicked again
+            $(clicked).unbind('click');
             $(clicked).on('click', function(e)
             {
                 saveRename(parentListItem, originalName);
@@ -383,26 +407,31 @@ window.meiEditorPlugins = [];
             });
         }
 
-        this.addDefaultPage = function()
-        {
-            //check for a new version of "untitled__" that's not in use
-            var newPageTitle = "untitled";
-            var suffixNumber = 1;
-            while(newPageTitle in settings.pageData)
-            {
-                suffixNumber += 1;
-                newPageTitle = "untitled" + suffixNumber;
-            }
-            self.addFileToGUI("", newPageTitle);
-        }
-
         /*
             Function ran on initialization.
         */
         var _init = function()
         {
             self.events.subscribe('NewFile', self.addFileToGUI);
-            settings.iconPane.push("<span title='Rename file' class='rename tabIcon'>&#x270e;</span><span title='Remove file' class='remove tabIcon'>&#x2573;</span>");
+            var localIcons = {"rename": {
+                    'title': 'Rename file',
+                    'body': '&#x270e;',
+                    'click': function(e){
+                        var pageName = $($(e.target).siblings("a")[0]).text();
+                        self.renamePage(pageName); 
+                    }
+                },
+                "remove": {
+                    'title': 'Remove file',
+                    'body': '&#x2573;',
+                    'click': function(e){
+                        var pageName = $($(e.target).siblings("a")[0]).text();
+                        self.removePageFromProject(pageName);
+                    }
+                }
+            };
+
+            $.extend(settings.iconPane, localIcons);
 
             settings.element.append('<div class="navbar navbar-inverse navbar-sm" id="topbar">'
                 + '<div ckass="container-fluid">'
@@ -422,7 +451,7 @@ window.meiEditorPlugins = [];
             //initializes tabs
             $("#openPages").tabs(
             {
-                activate: resizeComponents //resize components to make sure the newly activated tab is the right size
+                activate: self.resizeComponents //resize components to make sure the newly activated tab is the right size
             });
 
             $("#newTabButton").attr('tabindex', -1); //make sure the new tab button isn't shown as default active
@@ -431,8 +460,8 @@ window.meiEditorPlugins = [];
             self.addDefaultPage();
 
             //graphics stuff
-            resizeComponents();
-            $(window).on('resize', resizeComponents);
+            self.resizeComponents();
+            $(window).on('resize', self.resizeComponents);
 
             //for each plugin...
             $.each(window.meiEditorPlugins, function(index, curPlugin)
