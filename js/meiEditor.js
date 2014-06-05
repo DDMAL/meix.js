@@ -117,11 +117,13 @@ window.meiEditorPlugins = [];
         */
         var resizeComponents = function()
         {
-            $("#mei-editor").height($(window).height());
+            //these magic numbers are necessary for some reason to prevent a scrollbar. I'll look into this later when I have the time.
+            $("#mei-editor").height($(window).height() - 5);
+            $("#openPages").height($("#mei-editor").height() - $("#openPages").offset().top - 5);
             var activeTab = getActivePanel().attr('href');
             $(activeTab).css('padding', '0px');
-            $(activeTab).height($("#mei-editor").height() - $(activeTab).offset().top);
-            $(activeTab+" > .aceEditorPane").height($("#mei-editor").height() - $(activeTab).offset().top);
+            $(activeTab).height($("#mei-editor").height() - $(activeTab).offset().top - 5);
+            $(activeTab+" > .aceEditorPane").height($("#mei-editor").height() - $(activeTab).offset().top - 5);
         }
 
         /* 
