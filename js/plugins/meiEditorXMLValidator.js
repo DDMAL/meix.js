@@ -60,7 +60,7 @@
                         schemaTitle: validatorName + ".rng",
                     }
 
-                    validateMEI(Module, {'pageName': pageName}, callbackFunction, "../js/xmllint.js");
+                    validateMEI(Module, {'pageName': pageName}, callbackFunction, meiEditorSettings.xmllintLoc);
 
                     meiEditor.localLog("Validating " + Module['xmlTitle'] + " with " + Module['schemaTitle'] + ".");
                     $("#fileValidateModal-close").trigger('click');
