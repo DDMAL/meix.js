@@ -5,10 +5,14 @@
     {
         var retval = 
         {
-            divName: "name-of-the-div",
-            maximizedAppearance: '<div>This HTML is what will show up when this plugin is maximized.</div>',
-            minimizedTitle: 'This string will show up when the plugin is minimized',
-            minimizedAppearance: '<div>This HTML is what will show up on the taskbar in addition to the title when the plugin is minimized.</div>', //can be empty
+            divName: "xml-validator", //id for the dropdown div
+            title: "Validator", //text for the dropdown div
+            dropdownOptions: 
+            {
+                'First dropdown...': 'console.log("You clicked the first dropdown!");',
+                'Second dropdown...': 'console.log("You clicked the second dropdown!");',
+                //'Dropdown title': 'onclick for dropdown'. NOTE: double quotes must be used inside the onclick bit - the two given examples will work.
+            },
             init: function(meiEditor, meiEditorSettings)
             {
                 $.extend(meiEditorSettings, {

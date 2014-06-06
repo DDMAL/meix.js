@@ -56,7 +56,7 @@
                             return;
                         }
 
-                        meiEditor.events.publish("NewFile", [this.result, fileName])
+                        meiEditor.addFileToGUI(this.result, fileName)
 
                         //close the modal
                         $("#fileLoadModal-close").trigger('click');

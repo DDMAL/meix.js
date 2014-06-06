@@ -8,8 +8,8 @@
             title: "Validator",
             dropdownOptions: 
             {
-                'Upload validator...': '$("#validatorLoadModal").modal();',
                 'Validate a file...': '$("#fileValidateModal").modal();',
+                'Upload validator...': '$("#validatorLoadModal").modal();',
             },
             init: function(meiEditor, meiEditorSettings){
                 $.extend(meiEditorSettings, {
@@ -62,7 +62,7 @@
 
                     validateMEI(Module, {'pageName': pageName}, callbackFunction);
 
-                    meiEditor.localLog("Validating " + Module['xmlTitle'] + " against " + Module['schemaTitle'] + ".");
+                    meiEditor.localLog("Validating " + Module['xmlTitle'] + " with " + Module['schemaTitle'] + ".");
                     $("#fileValidateModal-close").trigger('click');
                 }
 
@@ -98,9 +98,9 @@
                 $("#validatorLoadModal-primary").on('click', loadValidator);
 
                 //subscribe to some events
-                meiEditor.events.subscribe("NewFile", function(a, b, fileNameOriginal)
+                meiEditor.events.subscribe("NewFile", function(a, fileName)
                 {
-                    $("#selectValidate").append("<option name='" + fileNameOriginal + "'>" + fileNameOriginal + "</option>");
+                    $("#selectValidate").append("<option name='" + fileName + "'>" + fileName + "</option>");
                 });
                 meiEditor.events.subscribe("NewValidator", function(validatorName)
                 {

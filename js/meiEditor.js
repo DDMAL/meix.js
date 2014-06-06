@@ -414,7 +414,9 @@ window.meiEditorPlugins = [];
         */
         this.localLog = function(text)
         {
-            $("#consoleText").append("<br>> "+text);
+            var curDate = new Date();
+            var timeStr = curDate.getHours() + ":" + curDate.getMinutes() + ":" + curDate.getSeconds();
+            $("#consoleText").append("<br>" + timeStr + "> " + text);
 
             $("#editorConsole").switchClass("regularBorder", "alertBorder",
             {
