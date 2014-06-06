@@ -74,7 +74,7 @@
                     {
                         $.ajax(
                         {
-                            url: '../validation/'+curValidator+'.rng',
+                            url: meiEditorSettings.validatorLink+curValidator+'.rng',
                             success: function(data)
                             {
                                 meiEditorSettings.validators[curValidator] = data;

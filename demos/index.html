@@ -27,7 +27,10 @@
 
         $(function() 
         {
-            meiEditor = $("#mei-editor").AceMeiEditor({});
+            meiEditor = $("#mei-editor").AceMeiEditor(
+                {
+                    'validatorLink': '../validation/',
+                });
         });
 
         </script>

@@ -184,13 +184,15 @@ window.meiEditorPlugins = [];
         {
             //these magic numbers are necessary for some reason to prevent a scrollbar. I'll look into this later when I have the time.
             $("#mei-editor").height($(window).height() - 5);
-            var editorConsoleHeight = $("#editorConsole").height();
-            $("#openPages").height($("#mei-editor").height() - $("#openPages").offset().top - 5 - editorConsoleHeight);
             var activeTab = self.getActivePanel().attr('href');
+            var editorConsoleHeight = $("#editorConsole").height();
             
             $(activeTab).css('padding', '0px');
             $(activeTab).height($("#mei-editor").height() - $(activeTab).offset().top - 5);
             $(activeTab + " > .aceEditorPane").height($("#mei-editor").height() - $(activeTab).offset().top - 5 - editorConsoleHeight);
+
+            $("#openPages").height($("#mei-editor").height() - $("#openPages").offset().top - 5 - editorConsoleHeight);
+            $("#openPages").width($("#mei-editor").width() - 8);
         }
 
         /*
@@ -505,7 +507,8 @@ window.meiEditorPlugins = [];
                     self.resizeComponents(); 
 
                     //usually, the URL bar will change to the last tab visited because jQueryUI tabs use <a> href attributes; this prevents that by repalcing every URL change with "index.html" and no ID information
-                    window.history.replaceState("","", "index.html");
+                    var urlArr = document.URL.split("/");
+                    window.history.replaceState("","", urlArr[urlArr.length - 1]);
                 }
             });
 
@@ -513,10 +516,6 @@ window.meiEditorPlugins = [];
 
             //create the initial ACE editor
             self.addDefaultPage();
-
-            //graphics stuff
-            self.resizeComponents();
-            $(window).on('resize', self.resizeComponents);
 
             //for each plugin...
             $.each(window.meiEditorPlugins, function(index, curPlugin)
@@ -542,7 +541,11 @@ window.meiEditorPlugins = [];
                     return;
                 }
 
-            });        
+            });   
+
+            //graphics stuff
+            self.resizeComponents();
+            $(window).on('resize', self.resizeComponents);     
         };
 
         _init();
