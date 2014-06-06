@@ -16,7 +16,8 @@ window.meiEditorPlugins = [];
         //for topbar plugins
         var previousSizes = {};
 
-        this.events = (function (){
+        this.events = (function ()
+        {
             var cache = {},
             /**
              *      Events.publish
@@ -118,7 +119,8 @@ window.meiEditorPlugins = [];
         this.createSelect = function(idAppend, jsonObject)
         {
             var retString = "<select id='select" + idAppend + "'>";
-            for (curKey in jsonObject){
+            for (curKey in jsonObject)
+            {
                 retString += "<option name='" + curKey + "'>" + curKey + "</option>";
             }
             return retString + "</select>";
@@ -128,9 +130,11 @@ window.meiEditorPlugins = [];
             Shorthand function for creating an HTML list object from the keys of a JSON object.
             @param jsonObject Source for the list object.
         */
-        this.createList = function(idAppend, jsonObject){
+        this.createList = function(idAppend, jsonObject)
+        {
             var retString = "<ul id='list" + idAppend + "'>";
-            for (curKey in jsonObject){
+            for (curKey in jsonObject)
+            {
                 retString += "<li id='" + curKey + "'>" + curKey + "</li>";
             }
             return retString + "</ul>";
@@ -145,6 +149,9 @@ window.meiEditorPlugins = [];
             return fileName.replace(/\W+/g, "");
         }
 
+        /*
+            Makes a string formatted for the tab header out of the iconPane object.
+        */
         this.makeIconString = function()
         {
             var iconString = "";
@@ -159,7 +166,8 @@ window.meiEditorPlugins = [];
         /*
             Returns active panel of the jQuery tab object.
         */
-        this.getActivePanel = function(){
+        this.getActivePanel = function()
+        {
             var tabIndex = $("#openPages").tabs("option", "active");
             if(!tabIndex){
                 $("#openPages").tabs("option", "active", 1);
@@ -179,9 +187,10 @@ window.meiEditorPlugins = [];
             var editorConsoleHeight = $("#editorConsole").height();
             $("#openPages").height($("#mei-editor").height() - $("#openPages").offset().top - 5 - editorConsoleHeight);
             var activeTab = self.getActivePanel().attr('href');
+            
             $(activeTab).css('padding', '0px');
             $(activeTab).height($("#mei-editor").height() - $(activeTab).offset().top - 5);
-            $(activeTab+" > .aceEditorPane").height($("#mei-editor").height() - $(activeTab).offset().top - 5 - editorConsoleHeight);
+            $(activeTab + " > .aceEditorPane").height($("#mei-editor").height() - $(activeTab).offset().top - 5 - editorConsoleHeight);
         }
 
         /*
@@ -189,18 +198,7 @@ window.meiEditorPlugins = [];
         */
         this.resetIconListeners = function()
         {
-                        
-            /*
-            $(".remove").unbind('click');
-            $(".rename").unbind('click');
-            $(".remove").on('click', function(e){
-                var pageName = $($(e.target).siblings("a")[0]).text();
-                self.removePageFromProject(pageName);
-            });
-            $(".rename").on('click', function(e){
-                var pageName = $($(e.target).siblings("a")[0]).text();
-                self.renamePage(pageName); 
-            });*/
+
             for(curIcon in settings.iconPane)
             {
                 var thisIcon = settings.iconPane[curIcon];
@@ -239,6 +237,8 @@ window.meiEditorPlugins = [];
             var numTabs = $("#pagesList li").length - 1;
             $("#openPages").tabs("refresh");
             $("#openPages").tabs({active: numTabs}); //load straight to the new one
+        
+            self.events.publish("NewFile", [fileData, fileName]);
         }
 
         /*
@@ -271,14 +271,20 @@ window.meiEditorPlugins = [];
             {
                 var activeIndex = $("#openPages").tabs("option", "active");
                 var numTabs = $("#pagesList li").length - 1;
+                
+                //if there's 2 or less tabs open, it's only one and the "new-tab" tab, which we don't want open
                 if(numTabs <= 2)
                 {
                     $("#openPages").tabs("option", "active", 2);
                 }
+
+                //else if the rightmost tab is open, switch to the one to the left
                 else if(activeIndex == (numTabs))
                 {
                     $("#openPages").tabs("option", "active", activeIndex - 1);
                 }
+
+                //else switch to one left of the open one
                 else 
                 {
                     $("#openPages").tabs("option", "active", activeIndex + 1);
@@ -338,6 +344,7 @@ window.meiEditorPlugins = [];
                 if(newInput.val() in settings.pageData)
                 {
                     self.localLog("This page name already exists in this project. Please choose another.");
+                    
                     //remove the input item and make the original link visible again
                     newInput.remove();
                     parentListItem.children("a").css('display', 'block');
@@ -358,7 +365,7 @@ window.meiEditorPlugins = [];
                     listitemDiv.attr('id', self.stripFilenameForJQuery(newName) + "-listitem");
                     var editorDiv = $("#" + self.stripFilenameForJQuery(originalName));
                     editorDiv.attr('id', self.stripFilenameForJQuery(newName));
-                    editorDiv.parent().attr('id', self.stripFilenameForJQuery(newName)+"wrapper");
+                    editorDiv.parent().attr('id', self.stripFilenameForJQuery(newName) + "wrapper");
                     
                     //change it in the pageData variable and in the select
                     settings.pageData[newName] = settings.pageData[originalName];
@@ -414,10 +421,23 @@ window.meiEditorPlugins = [];
         */
         this.localLog = function(text)
         {
+            //this takes care of some random lines xmllint spits out that aren't useful
+            if(text.length < 2)
+            {
+                return;
+            }
             var curDate = new Date();
-            var timeStr = curDate.getHours() + ":" + curDate.getMinutes() + ":" + curDate.getSeconds();
+            var curHours = curDate.getHours();
+            var curMinutes = curDate.getMinutes();
+            var curSeconds = curDate.getSeconds();
+
+            //make sure it prints out with two digit minutes/seconds; JavaScript defaults to 11:4:4 instead of 11:04:04
+            var timeStr = curHours + ":" 
+                + (curMinutes > 9 ? curMinutes : "0" + curMinutes) + ":" 
+                + (curSeconds > 9 ? curSeconds : "0" + curSeconds);
             $("#consoleText").append("<br>" + timeStr + "> " + text);
 
+            //highlight the border quickly then switch back
             $("#editorConsole").switchClass("regularBorder", "alertBorder",
             {
                 duration: 400,
@@ -441,7 +461,6 @@ window.meiEditorPlugins = [];
         */
         var _init = function()
         {
-            self.events.subscribe('NewFile', self.addFileToGUI);
             var localIcons = {"rename": {
                     'title': 'Rename file',
                     'body': '&#x270e;',
@@ -510,7 +529,7 @@ window.meiEditorPlugins = [];
 
                 for(optionName in curPlugin.dropdownOptions){
                     optionClick = curPlugin.dropdownOptions[optionName];
-                    $("#dropdown-"+curPlugin.divName).append("<li><a onclick='" + optionClick + "'>" + optionName + "</a></li>");
+                    $("#dropdown-" + curPlugin.divName).append("<li><a onclick='" + optionClick + "'>" + optionName + "</a></li>");
                 }
 
                 // Call the init function and check return value

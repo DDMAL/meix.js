@@ -29,7 +29,7 @@
                     reader.onload = function(e) 
                     { 
                         //file name with no extension
-                        fileName = this.file.name.split(".")[0]
+                        fileName = this.file.name.split(".")[0];
 
                         meiEditorSettings.validators[fileName] = this.result;
                         meiEditor.events.publish("NewValidator", [fileName]);
@@ -94,7 +94,10 @@
 
                 meiEditor.createModal('fileValidateModal', true, "Select a file: " + fileSelectString + "<br>Select a validator: " + validatorSelectString, "Validate file");
                 meiEditor.createModal('validatorLoadModal', true, "Validators currently uploaded: " + validatorListString + "<br>Upload a new validator: <br><input type='file' id='validatorInput'>", "Load validator")
-                $("#fileValidateModal-primary").on('click', function(){meiEditor.validateMei($("#selectValidate").find(":selected").text(), $("#selectValidators").find(":selected").text())});
+                $("#fileValidateModal-primary").on('click', function()
+                    {
+                        meiEditor.validateMei($("#selectValidate").find(":selected").text(), $("#selectValidators").find(":selected").text());
+                    });
                 $("#validatorLoadModal-primary").on('click', loadValidator);
 
                 //subscribe to some events
