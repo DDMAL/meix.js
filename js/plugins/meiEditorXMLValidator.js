@@ -49,7 +49,7 @@
                 {
                     callbackFunction = function(event)
                     {
-                        meiEditorSettings.meiConsole.append(event.data);
+                        meiEditor.localLog(event.data);
                     }
 
                     var Module = 
@@ -62,7 +62,7 @@
 
                     validateMEI(Module, {'pageName': pageName}, callbackFunction);
 
-                    meiEditorSettings.meiConsole.append("<br>Validating " + Module['xmlTitle'] + " against " + Module['schemaTitle'] + ".");
+                    meiEditor.localLog("Validating " + Module['xmlTitle'] + " against " + Module['schemaTitle'] + ".");
                     $("#fileValidateModal-close").trigger('click');
                 }
 

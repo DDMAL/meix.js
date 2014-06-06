@@ -337,7 +337,7 @@ window.meiEditorPlugins = [];
                 //if this name already exists (including if it's unchanged)
                 if(newInput.val() in settings.pageData)
                 {
-                    settings.meiConsole.append("<br>This page name already exists in this project. Please choose another.");
+                    self.localLog("This page name already exists in this project. Please choose another.");
                     //remove the input item and make the original link visible again
                     newInput.remove();
                     parentListItem.children("a").css('display', 'block');
@@ -409,6 +409,32 @@ window.meiEditorPlugins = [];
         }
 
         /*
+            Adds text to the meiEditor console.
+            @param text Text to add. Gets a line break and a ">" character to signal a new line by default.
+        */
+        this.localLog = function(text)
+        {
+            $("#consoleText").append("<br>> "+text);
+
+            $("#editorConsole").switchClass("regularBorder", "alertBorder",
+            {
+                duration: 400,
+                complete: function(){
+                    $("#editorConsole").switchClass("alertBorder", "regularBorder", 400);
+                },
+            });
+
+            //inner div serves to float on bottom; when its height is bigger, snap it to the same height as the parent div
+            if($("#consoleText").height() > $("#editorConsole").height())
+            {
+                $("#consoleText").height($("#editorConsole").height() - 6); //6 for padding
+            }
+
+            //automatically scroll to bottom when new text is added
+            document.getElementById("consoleText").scrollTop = document.getElementById("consoleText").scrollHeight;
+        }
+
+        /*
             Function ran on initialization.
         */
         var _init = function()
@@ -447,10 +473,8 @@ window.meiEditorPlugins = [];
                 + '</ul>'
                 + '<div id="new-tab"></div>' //this will never be seen, but is needed to prevent a bug or two
                 + '</div>'
-                + '<div id="editorConsole">Console loaded!</div>'
+                + '<div id="editorConsole" class="regularBorder"><div id="consoleText">Console loaded!</div></div>'
                 );
-
-            settings.meiConsole = $("#editorConsole");
 
             //initializes tabs
             $("#openPages").tabs(
