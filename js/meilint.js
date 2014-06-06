@@ -7,11 +7,12 @@
 		moduleIn['schemaTitle'] (optional) - same as xmlTitle, but for the schema. If this is empty, "in.rng" will be used.
 	@param workerAttributes A JSON object used to extend the validationWorker for variables to be accessed in the callback function
 	@param onMessage A function called when xmllint.js produces a new diagnostic message.
+	@param xmllintLoc Location of xmllint.js
 
 */
-function validateMEI(moduleIn, workerAttributes, onMessage)
+function validateMEI(moduleIn, workerAttributes, onMessage, xmllintLoc)
 {
-    var validationWorker = new Worker("../js/xmllint.js");
+    var validationWorker = new Worker(xmllintLoc);
     $.extend(validationWorker, workerAttributes);
     validationWorker.onmessage = onMessage;
     validationWorker.postMessage(moduleIn);
