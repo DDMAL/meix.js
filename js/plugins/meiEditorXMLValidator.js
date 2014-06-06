@@ -108,7 +108,6 @@
                 //subscribe to some events
                 meiEditor.events.subscribe("NewFile", function(a, fileName)
                 {
-                    console.log("got a new file", fileName);
                     $("#selectValidate").append("<option name='" + fileName + "'>" + fileName + "</option>");
                 });
                 meiEditor.events.subscribe("NewValidator", function(validatorName)
