@@ -8,13 +8,20 @@
             title: "Validator",
             dropdownOptions: 
             {
-                'Validate a file...': '$("#fileValidateModal").modal();',
-                'Upload validator...': '$("#validatorLoadModal").modal();',
+                'Validate a file...': 'file-validate-dropdown',
+                'Upload validator...': 'validator-load-dropdown',
             },
             init: function(meiEditor, meiEditorSettings){
                 $.extend(meiEditorSettings, {
                     validatorNames: ["mei-all", "mei-all_anyStart", "mei-CMN", "mei-Mensural", "mei-Neumes"],
                     validators: {},
+                });
+
+                $("#file-validate-dropdown").on('click', function(){
+                    $("#fileValidateModal").modal();
+                });
+                $("#validator-load-dropdown").on('click', function(){
+                    $("#validatorLoadModal").modal();
                 });
 
                 /* 
@@ -90,8 +97,6 @@
                 var validatorSelectString = meiEditor.createSelect("Validators", meiEditorSettings.validators);
                 var validatorListString = meiEditor.createList("Validators", meiEditorSettings.validators);
 
-
-
                 meiEditor.createModal('fileValidateModal', true, "Select a file: " + fileSelectString + "<br>Select a validator: " + validatorSelectString, "Validate file");
                 meiEditor.createModal('validatorLoadModal', true, "Validators currently uploaded: " + validatorListString + "<br>Upload a new validator: <br><input type='file' id='validatorInput'>", "Load validator")
                 $("#fileValidateModal-primary").on('click', function()
@@ -103,6 +108,7 @@
                 //subscribe to some events
                 meiEditor.events.subscribe("NewFile", function(a, fileName)
                 {
+                    console.log("got a new file", fileName);
                     $("#selectValidate").append("<option name='" + fileName + "'>" + fileName + "</option>");
                 });
                 meiEditor.events.subscribe("NewValidator", function(validatorName)

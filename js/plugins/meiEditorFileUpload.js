@@ -8,12 +8,18 @@
             title: 'Files',
             dropdownOptions: 
             {
-                'Upload a file...': '$("#fileLoadModal").modal();',
-                'Save a file...': '$("#fileSaveModal").modal();',
+                'Upload a file...': 'file-load-dropdown',
+                'Save a file...': 'file-save-dropdown',
             },
             minimizedAppearance: '',
             init: function(meiEditor, meiEditorSettings)
             {
+                $("#file-load-dropdown").on('click', function(){
+                    $("#fileLoadModal").modal();
+                });
+                $("#file-save-dropdown").on('click', function(){
+                    $("#fileSaveModal").modal();
+                });
                 //$.extend(meiEditorSettings, {});
 
                 /*
@@ -72,9 +78,9 @@
                         savePageToClient($("#selectSave").find(":selected").text());
                     });
 
-                meiEditor.events.subscribe("NewFile", function(a, b, fileNameOriginal)
+                meiEditor.events.subscribe("NewFile", function(a, fileName)
                 {
-                    $("#selectSave").append("<option name='" + fileNameOriginal + "'>" + fileNameOriginal + "</option>");
+                    $("#selectSave").append("<option name='" + fileName + "'>" + fileName + "</option>");
                 });
             }
         }

@@ -9,14 +9,18 @@
             title: "Validator", //text for the dropdown div
             dropdownOptions: 
             {
-                'First dropdown...': 'console.log("You clicked the first dropdown!");',
-                'Second dropdown...': 'console.log("You clicked the second dropdown!");',
-                //'Dropdown title': 'onclick for dropdown'. NOTE: double quotes must be used inside the onclick bit - the two given examples will work.
+                'First dropdown...': 'first-dropdown',
+                'Second dropdown...': 'second-dropdown',
+                //'Dropdown title': 'id for dropdown'
             },
             init: function(meiEditor, meiEditorSettings)
             {
                 $.extend(meiEditorSettings, {
                     newSettings: 'newVal',
+                });
+
+                $("#first-dropdown").on('click', function(){
+                    //...
                 });
 
                 var thisFunctionIsOnlyLocal = function()
