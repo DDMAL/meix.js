@@ -2,11 +2,6 @@ body{
     margin:0px;
     padding:0px;
 }
-.overlay-box{
-    border: thin black solid;
-    position: absolute;
-    cursor: default;
-}
 #openPages{
     height:100%;
 }

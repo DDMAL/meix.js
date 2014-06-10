@@ -9,6 +9,8 @@ window.meiEditorPlugins = [];
             element: $(element),
             aceTheme: "",
             iconPane: {},
+            undoManager: new UndoStack(),
+            editTimeout: "",
         }
 
         $.extend(settings, options);
@@ -96,7 +98,7 @@ window.meiEditorPlugins = [];
         */
         this.createModal = function(modalID, small, modalBody, primaryTitle)
         {
-            var modalSize = small ? "modal-sm" : "modal-lg";
+            var modalSize = small ? "modal-sm" : "modal-md";
             var primaryTitleString = primaryTitle ? '<button type="button" class="btn btn-primary" id="' + modalID + '-primary">' + primaryTitle + '</button>' : "";
             settings.element.append("<div id='" + modalID + "' class='modal fade'>"
                 + '<div class="modal-dialog ' + modalSize + '">'
@@ -244,6 +246,23 @@ window.meiEditorPlugins = [];
             $("#openPages").tabs({active: numTabs}); //load straight to the new one
         
             self.events.publish("NewFile", [fileData, fileName]);
+            settings.pageData[fileName].on('change', function(delta, editor){
+                var curKey;
+                for(curKey in settings.pageData) 
+                {
+                    if(this.hasOwnProperty(curKey)) 
+                    {
+                        if(this[curKey] === editor)
+                            break;
+                    }
+                }
+
+                window.clearTimeout(settings.editTimeout);
+                settings.editTimeout = setTimeout(function(){
+                    settings.undoManager.save('PageChanged', [curKey, editor.session.doc.getAllLines()]);
+                }, 1000); //after no edits have been done for a second, save the page in the undo stack
+            });
+            settings.undoManager.save('PageChanged', [fileName, fileData]);
         }
 
         /*
@@ -485,6 +504,15 @@ window.meiEditorPlugins = [];
             };
 
             $.extend(settings.iconPane, localIcons);
+
+            settings.undoManager.newAction('PageChanged', function(title, text)
+            {
+                var newSess = new ace.EditSession(text)
+                var length = settings.pageData[title].setSession(newSess);
+                self.events.publish("PageChanged");
+                //move cursor
+                //switch tabs
+            });
 
             settings.element.append('<div class="navbar navbar-inverse navbar-sm" id="topbar">'
                 + '<div ckass="container-fluid">'
