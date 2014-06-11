@@ -75,6 +75,7 @@ var UndoStack = function()
         }
 
         var poppedObject = self.undoStack.pop();
+        poppedObject.parameters.push(self.currentState);
         self.actions[poppedObject.title].undo.apply(this, poppedObject.parameters);
 
         self.redoStack.push(self.currentState);
@@ -95,6 +96,7 @@ var UndoStack = function()
         }
 
         var poppedObject = self.redoStack.pop();
+        poppedObject.parameters.push(self.currentState);
         self.actions[poppedObject.title].redo.apply(this, poppedObject.parameters);
 
         self.undoStack.push(self.currentState);

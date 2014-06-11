@@ -11,6 +11,8 @@ window.meiEditorPlugins = [];
             iconPane: {},
             undoManager: new UndoStack(),
             editTimeout: "",
+            initCursor: "",
+            initDoc: "",
         }
 
         $.extend(settings, options);
@@ -254,15 +256,31 @@ window.meiEditorPlugins = [];
                 window.clearTimeout(settings.editTimeout);
                 var cursor = editor.getCursorPosition();
                 var activeDoc = $("#openPages").tabs('option', 'active');
+                var newText = delta.data.text;
+
+                if(!/[^a-zA-Z0-9]/.test(newText))
+                {
+                    if(!settings.initCursor)
+                    {
+                        settings.initCursor = editor.getCursorPosition();
+                        console.log("setting now to", settings.initCursor);
+                    }
+                    if(!settings.initDoc)
+                    {
+                        settings.initDoc = $("#openPages").tabs('option', 'active');
+                    }    
+                }
 
                 settings.editTimeout = setTimeout(function(arr)
                 {
+                    settings.initCursor = undefined;
+                    settings.activeDoc = undefined;
                     //if it's been 500ms since the last change, get the current text, cursor position, and active document number, then save that as an undo
                     var texts = arr[0];
                     var cursorPos = arr[1];
                     var activeDoc = arr[2];
                     settings.undoManager.save('PageEdited', [texts, cursorPos, activeDoc]);
-                }, 500, [self.getAllTexts(), cursor, activeDoc]); //after no edits have been done for a second, save the page in the undo stack
+                }, 500, [self.getAllTexts(), settings.initCursor, settings.initDoc]); //after no edits have been done for a second, save the page in the undo stack
             });
             settings.undoManager.save('PageEdited', [self.getAllTexts(), [{'row':0, 'column':0}], numTabs]);
         }
@@ -518,7 +536,7 @@ window.meiEditorPlugins = [];
             $.extend(settings.iconPane, localIcons);
 
             //when editor pane changes are undone
-            settings.undoManager.newAction('PageEdited', function(texts, cursor, doc, id)
+            settings.undoManager.newAction('PageEdited', function(texts, cursor, doc, currentState)
             {
                 //replace the editsession for that title
                 for(curTitle in texts)
@@ -533,9 +551,10 @@ window.meiEditorPlugins = [];
                 //swap back to that tab
                 $("#openPages").tabs('option', 'active', doc);
 
-                //move cursor
+                //move cursor to before first alpha-numberic character of most recent change
                 var title = self.getActivePanel().text();
-                settings.pageData[title].gotoLine(cursor['row'] + 1, cursor['column'] + 1); //because 1-indexing is always the right choice
+                var newCursor = currentState.parameters[1];
+                settings.pageData[title].gotoLine(newCursor['row'] + 1, newCursor['column'], true); //because 1-indexing is always the right choice
                 settings.pageData[title].resize();
             });
 
