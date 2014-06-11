@@ -246,23 +246,35 @@ window.meiEditorPlugins = [];
             $("#openPages").tabs({active: numTabs}); //load straight to the new one
         
             self.events.publish("NewFile", [fileData, fileName]);
-            settings.pageData[fileName].on('change', function(delta, editor){
-                var curKey;
-                for(curKey in settings.pageData) 
-                {
-                    if(this.hasOwnProperty(curKey)) 
-                    {
-                        if(this[curKey] === editor)
-                            break;
-                    }
-                }
-
+        
+            //when each document changes
+            settings.pageData[fileName].on('change', function(delta, editor)
+            {
+                //clear the previous doc and get the current cursor/document settings
                 window.clearTimeout(settings.editTimeout);
-                settings.editTimeout = setTimeout(function(){
-                    settings.undoManager.save('PageChanged', [curKey, editor.session.doc.getAllLines()]);
-                }, 1000); //after no edits have been done for a second, save the page in the undo stack
+                var cursor = editor.getCursorPosition();
+                var activeDoc = $("#openPages").tabs('option', 'active');
+
+                settings.editTimeout = setTimeout(function(arr)
+                {
+                    //if it's been 500ms since the last change, get the current text, cursor position, and active document number, then save that as an undo
+                    var texts = arr[0];
+                    var cursorPos = arr[1];
+                    var activeDoc = arr[2];
+                    settings.undoManager.save('PageEdited', [texts, cursorPos, activeDoc]);
+                }, 500, [self.getAllTexts(), cursor, activeDoc]); //after no edits have been done for a second, save the page in the undo stack
             });
-            settings.undoManager.save('PageChanged', [fileName, fileData]);
+            settings.undoManager.save('PageEdited', [self.getAllTexts(), [{'row':0, 'column':0}], numTabs]);
+        }
+
+        this.getAllTexts = function()
+        {
+            var textArr = {};
+            for(curPageTitle in settings.pageData)
+            {
+                textArr[curPageTitle] = settings.pageData[curPageTitle].session.doc.getAllLines();
+            }
+            return textArr;
         }
 
         /*
@@ -505,13 +517,26 @@ window.meiEditorPlugins = [];
 
             $.extend(settings.iconPane, localIcons);
 
-            settings.undoManager.newAction('PageChanged', function(title, text)
+            //when editor pane changes are undone
+            settings.undoManager.newAction('PageEdited', function(texts, cursor, doc, id)
             {
-                var newSess = new ace.EditSession(text)
-                var length = settings.pageData[title].setSession(newSess);
-                self.events.publish("PageChanged");
+                //replace the editsession for that title
+                for(curTitle in texts)
+                {
+                    settings.pageData[curTitle].setSession(new ace.EditSession(texts[curTitle]));
+                    settings.pageData[curTitle].resize();
+                    settings.pageData[curTitle].focus();
+                }
+
+                self.events.publish("PageEdited");
+
+                //swap back to that tab
+                $("#openPages").tabs('option', 'active', doc);
+
                 //move cursor
-                //switch tabs
+                var title = self.getActivePanel().text();
+                settings.pageData[title].gotoLine(cursor['row'] + 1, cursor['column'] + 1); //because 1-indexing is always the right choice
+                settings.pageData[title].resize();
             });
 
             settings.element.append('<div class="navbar navbar-inverse navbar-sm" id="topbar">'
@@ -533,9 +558,13 @@ window.meiEditorPlugins = [];
             //initializes tabs
             $("#openPages").tabs(
             {
-                activate: function(){
+                activate: function(e, ui)
+                {
+                    var activePage = $("#" + ui.newTab.attr('id') + " > a").text();
                     //resize components to make sure the newly activated tab is the right size
                     self.resizeComponents(); 
+                    settings.pageData[activePage].resize();
+                    settings.pageData[activePage].focus();
 
                     //usually, the URL bar will change to the last tab visited because jQueryUI tabs use <a> href attributes; this prevents that by repalcing every URL change with "index.html" and no ID information
                     var urlArr = document.URL.split("/");
@@ -577,6 +606,28 @@ window.meiEditorPlugins = [];
             //graphics stuff
             self.resizeComponents();
             $(window).on('resize', self.resizeComponents);     
+            $(document).on('keydown', function(e)
+            {
+                if (e.ctrlKey)
+                {
+                    if (e.keyCode == 90)
+                    {
+                        var retVal = settings.undoManager.undo();
+                        if(!retVal)
+                        {
+                            meiEditor.localLog("Nothing to undo.");
+                        }
+                    }
+                    else if (e.keyCode == 89)
+                    {
+                        var retVal = settings.undoManager.redo();
+                        if(!retVal)
+                        {
+                            meiEditor.localLog("Nothing to redo.");
+                        }
+                    }
+                }
+            });
         };
 
         _init();
