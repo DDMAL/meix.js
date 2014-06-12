@@ -567,7 +567,15 @@ window.meiEditorPlugins = [];
                 + '<div ckass="container-fluid">'
                 + '<div class="collapse navbar-collapse">'
                 + '<ul class="nav navbar-nav" id="topbarContent">'
-                + '<div class="navbar-brand">ACE MEI Editor</div>'
+                + '<li class="dropdown">'
+                + '<a href="#" class="dropdown-toggle navbar-brand" data-toggle="dropdown"> ACE MEI Editor <b class="caret"></b></a>'
+                //+ '<li class="navbar-brand dropdown">ACE MEI Editor</li>'
+                + '<ul class="dropdown-menu" id="dropdown-main">'
+                + '<li><a id="undo-dropdown">Undo</a></li>'
+                + '<li><a id="redo-dropdown">Redo</a></li>'
+                + '<li><a id="main-help-dropdown">Help...</a></li>'
+                + '</ul>'     
+                + '</li>'
                 + '</ul></div></div></div></div>'
                 + '<div id="plugins-maximized-wrapper"></div>'
                 + '<div id="openPages">'
@@ -578,6 +586,33 @@ window.meiEditorPlugins = [];
                 + '</div>'
                 + '<div id="editorConsole" class="regularBorder"><div id="consoleText">Console loaded!</div></div>'
                 );
+
+            $("#undo-dropdown").on('click', function()
+            {
+                var retVal = settings.undoManager.undo();
+                if(!retVal)
+                {
+                    self.localLog("Nothing to undo.");
+                }
+            });
+
+            $("#redo-dropdown").on('click', function()
+            {
+                var retVal = settings.undoManager.redo();
+                if(!retVal)
+                {
+                    self.localLog("Nothing to redo.");
+                }
+            });
+
+            $("#main-help-dropdown").on('click', function()
+            {
+                $("#mainHelpModal").modal();
+            });
+
+            self.createModal('mainHelpModal', false, 
+                '<li>Press ctrl+z to undo or click on the undo option of the main dropdown.</li>'
+                + '<li>Press ctrl+y to redo or click on the redo option of the main dropdown.</li>');
 
             //initializes tabs
             $("#openPages").tabs(
