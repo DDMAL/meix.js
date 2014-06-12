@@ -8,7 +8,7 @@
             title: 'Files',
             dropdownOptions: 
             {
-                'Upload a file...': 'file-load-dropdown',
+                'Upload files...': 'file-load-dropdown',
                 'Save a file...': 'file-save-dropdown',
             },
             minimizedAppearance: '',
@@ -20,7 +20,6 @@
                 $("#file-save-dropdown").on('click', function(){
                     $("#fileSaveModal").modal();
                 });
-                //$.extend(meiEditorSettings, {});
 
                 /*
                     Prompts local download of a page.
@@ -49,28 +48,39 @@
                 */
                 var addPage = function()
                 {
-                    var reader = new FileReader();
-                    reader.file = document.getElementById("fileInput").files[0];
-
-                    //when the file is loaded as text
-                    reader.onload = function(e) 
-                    { 
-                        fileName = this.file.name;
-                        if(fileName in meiEditorSettings.pageData)
+                    var readerArr = [];
+                    var readerLength = $(".fileInput").length;
+                    while(readerLength--)
+                    {
+                        var readerArrLength = readerArr.push(new FileReader()) - 1;
+                        var reader = readerArr[readerArrLength];
+                        console.log(readerArrLength, reader, $(".fileInput")[readerLength].files[0]);
+                        if($(".fileInput")[readerLength].files[0] !== undefined)
                         {
-                            meiEditor.localLog("File name already in database. Please change a file's name and try reloading the file.");
-                            return;
+                            reader.file = $(".fileInput")[readerLength].files[0];
+
+                            //when the file is loaded as text
+                            reader.onload = function(e) 
+                            { 
+                                fileName = this.file.name;
+                                if(fileName in meiEditorSettings.pageData)
+                                {
+                                    meiEditor.localLog("File name already in database. Please change a file's name and try reloading the file.");
+                                    return;
+                                }
+
+                                meiEditor.addFileToGUI(this.result, fileName)
+                            };
+                            reader.readAsText(reader.file);
                         }
-
-                        meiEditor.addFileToGUI(this.result, fileName)
-
-                        //close the modal
-                        $("#fileLoadModal-close").trigger('click');
-                    };
-                    reader.readAsText(reader.file);
+                    }
+                    //close the modal
+                    $("#fileLoadModal-close").trigger('click');
                 };
 
-                meiEditor.createModal('fileLoadModal', true, '<input type="file" id="fileInput">', "Load file");
+                meiEditor.createModal('fileLoadModal', true, '<div id="newFiles">'
+                + '<input type="file" class="fileInput" id="fileInput">'
+                + '</div>', "Load file");
                 meiEditor.createModal('fileSaveModal', true, meiEditor.createSelect("Save", meiEditorSettings.pageData), "Save file");
                 $("#fileLoadModal-primary").on('click', addPage);
                 $("#fileSaveModal-primary").on('click', function()
@@ -81,6 +91,14 @@
                 meiEditor.events.subscribe("NewFile", function(a, fileName)
                 {
                     $("#selectSave").append("<option name='" + fileName + "'>" + fileName + "</option>");
+                });
+
+                //this is necessary as we need to apply the listener to the new input item
+                $(".fileInput").on('change', function(){
+                    $("#newFiles").append("<input type='file' class='fileInput' id='fileInput" + $(".fileInput").length + "'>");
+                    $(".fileInput").on('change', function(){
+                        $("#newFiles").append("<input type='file' class='fileInput' id='fileInput" + $(".fileInput").length + "'>");
+                    });
                 });
             }
         }
