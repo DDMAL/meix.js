@@ -190,16 +190,24 @@ window.meiEditorPlugins = [];
         this.resizeComponents = function()
         {
             //these magic numbers are necessary for some reason to prevent a scrollbar. I'll look into this later when I have the time.
-            $("#mei-editor").height($(window).height() - 5);
-            var activeTab = self.getActivePanel().attr('href');
-            var editorConsoleHeight = $("#editorConsole").height();
-            
-            $(activeTab).css('padding', '0px');
-            $(activeTab).height($("#mei-editor").height() - $(activeTab).offset().top - 5);
-            $(activeTab + " > .aceEditorPane").height($("#mei-editor").height() - $(activeTab).offset().top - 5 - editorConsoleHeight);
+            $("#mei-editor").offset({'top': '0'});
+            $("#mei-editor").height($(window).height());
+            var editorConsoleHeight = $("#editorConsole").outerHeight();
+            var topbarHeight = $("#topbar").outerHeight();
+            var workableHeight = $("#mei-editor").height() - editorConsoleHeight - topbarHeight;
+            var heightDiff = $("#openPages").outerHeight() - $("#openPages").height();
 
-            $("#openPages").height($("#mei-editor").height() - $("#openPages").offset().top - 5 - editorConsoleHeight);
-            $("#openPages").width($("#mei-editor").width() - 8);
+            $("#openPages").height(workableHeight - heightDiff);
+
+            var activeTab = self.getActivePanel().attr('href');
+            $(activeTab).css('padding', '0px');
+            $(activeTab).height($("#mei-editor").height() - $(activeTab).offset().top - heightDiff);
+            $(activeTab + " > .aceEditorPane").height($("#mei-editor").height() - $(activeTab).offset().top - heightDiff - editorConsoleHeight);
+
+            var innerComponentWidth = $("#mei-editor").width() - $("#openPages").css('padding-left') - $("#openPages").css('padding-right');
+            $("#openPages").width(innerComponentWidth);
+            $(".aceEditorPane").width(innerComponentWidth);
+            $(".aceEditorPane").parent().width(innerComponentWidth);
         }
 
         /*
@@ -254,8 +262,6 @@ window.meiEditorPlugins = [];
             {
                 //clear the previous doc and get the current cursor/document settings
                 window.clearTimeout(settings.editTimeout);
-                var cursor = editor.getCursorPosition();
-                var activeDoc = $("#openPages").tabs('option', 'active');
                 var newText = delta.data.text;
 
                 if(!/[^a-zA-Z0-9]/.test(newText))
@@ -263,7 +269,6 @@ window.meiEditorPlugins = [];
                     if(!settings.initCursor)
                     {
                         settings.initCursor = editor.getCursorPosition();
-                        console.log("setting now to", settings.initCursor);
                     }
                     if(!settings.initDoc)
                     {
