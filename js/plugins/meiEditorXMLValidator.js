@@ -13,7 +13,6 @@
             },
             init: function(meiEditor, meiEditorSettings){
                 $.extend(meiEditorSettings, {
-                    validatorNames: ["mei-all", "mei-all_anyStart", "mei-CMN", "mei-Mensural", "mei-Neumes"],
                     validators: {},
                 });
 
@@ -64,33 +63,61 @@
                         xml: meiEditorSettings.pageData[pageName].getSession().doc.getAllLines().join("\n"),
                         schema: meiEditorSettings.validators[validatorName],
                         xmlTitle: pageName,
-                        schemaTitle: validatorName + ".rng",
+                        schemaTitle: validatorName,
                     }
-
-                    validateMEI(Module, {'pageName': pageName}, callbackFunction, meiEditorSettings.xmllintLoc);
-
+                    try
+                    {
+                        validateMEI(Module, {'pageName': pageName}, callbackFunction, meiEditorSettings.xmllintLoc);
+                    }
+                    catch(err)
+                    {
+                        console.log(err);
+                    }
                     meiEditor.localLog("Validating " + Module['xmlTitle'] + " with " + Module['schemaTitle'] + ".");
                     $("#fileValidateModal-close").trigger('click');
                 }
 
                 //load in the XML validator
-                curValidatorCount = meiEditorSettings.validatorNames.length;
-                while(curValidatorCount--)
+                var validatorNames = [];
+                $.ajax(
                 {
-                    function singleAjax(curValidator)
+                    url: meiEditorSettings.validatorLink,
+                    success: function(data)
                     {
-                        $.ajax(
+                        var dataArr = data.split("\n");
+                        var dataLength = dataArr.length;
+                        while(dataLength--)
                         {
-                            url: meiEditorSettings.validatorLink+curValidator+'.rng',
-                            success: function(data)
+                            if(!dataArr[dataLength])
                             {
-                                meiEditorSettings.validators[curValidator] = data;
-                                meiEditor.events.publish("NewValidator", [curValidator]);
+                                continue;
                             }
-                        });
+                            var foundLink = dataArr[dataLength].match(/<a href=".*">/g);
+                            if(foundLink)
+                            {
+                                validatorNames.push(foundLink[0].slice(9, -2));
+                            }
+                        }
+                        curValidatorCount = validatorNames.length;
+                        while(curValidatorCount--)
+                        {
+                            function singleAjax(curValidator)
+                            {
+                                $.ajax(
+                                {
+                                    url: meiEditorSettings.validatorLink + curValidator,
+                                    success: function(data)
+                                    {
+                                        meiEditorSettings.validators[curValidator] = data;
+                                        meiEditor.events.publish("NewValidator", [curValidator]);
+                                    }
+                                });
+                            }
+                            singleAjax(validatorNames[curValidatorCount]);
+                        }
                     }
-                    singleAjax(meiEditorSettings.validatorNames[curValidatorCount]);
-                }
+                });
+
 
                 //create some modals
                 var fileSelectString = meiEditor.createSelect("Validate", meiEditorSettings.pageData);
