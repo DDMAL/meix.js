@@ -15,13 +15,35 @@
             },
             init: function(meiEditor, meiEditorSettings)
             {
+                var localIcons = {
+                    "className": {
+                        'title': 'What shows on hover',
+                        'src': 'img/backgroundImageSource',
+                        'click': function(e){
+                            whatHappensWhenYouClickTheIcon();
+                        }
+                    },
+                    "class2name": //...
+                };
+
+                $.extend(meiEditorSettings.iconPane, localIcons);
+
                 $.extend(meiEditorSettings, {
                     newSettings: 'newVal',
                 });
 
-                $("#first-dropdown").on('click', function(){
+                $("#first-dropdown").on('click', function()
+                {
                     //...
                 });
+
+                $("#second-dropdown").on('click', function()
+                {
+                    $("#idForTheModal").modal();
+                });
+
+                meiEditor.createModal('idForTheModal', (iWantTheModalToBeSmall ? true : false), 'Body of the modal', 'Primary Button On Modal');
+
 
                 var thisFunctionIsOnlyLocal = function()
                 {
@@ -30,7 +52,7 @@
 
                 meiEditor.newFunction = function()
                 {
-                    thisFunctionIsOnlyLocal();
+
                 }
                 return true;
             }
