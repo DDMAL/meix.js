@@ -4,6 +4,15 @@ html, body{
 #openPages{
     height:100%;
 }
+#pagesList > li > span{
+    margin-top:2px;
+    margin-right:2px;
+    width:15px;
+    height:15px;
+    display:inline-block;
+    background-size:100%;
+    background-repeat: no-repeat;
+}
 .aceEditorPane{
     float:left;
     width:100%;
@@ -44,13 +53,13 @@ input.input-ui-emulator{
 #editorConsole{
     height: 200px;
     position: relative;
-    border-radius: 4px; /*matches jQueryUI/Bootstrap */
+    /*border-radius: 4px; /*matches jQueryUI/Bootstrap */
 }
 #consoleText{
     position: absolute;
     width:100%;
     bottom: 0;
-    overflow-y: scroll;
+    overflow-y: auto;
     padding: 4px;
 }
 #consoleText::-webkit-scrollbar{

@@ -165,7 +165,7 @@ window.meiEditorPlugins = [];
             for(curIcon in settings.iconPane)
             {
                 var thisIcon = settings.iconPane[curIcon];
-                iconString += "<span class='tabIcon " + curIcon + "' title='" + thisIcon['title'] + "'>" + thisIcon['body'] + "</span>";
+                iconString += "<span class='tabIcon " + curIcon + "' title='" + thisIcon['title'] + "' style='background-image:url(" + thisIcon['src'] + ")'></span>";
             }
             return iconString;
         }
@@ -219,8 +219,8 @@ window.meiEditorPlugins = [];
             for(curIcon in settings.iconPane)
             {
                 var thisIcon = settings.iconPane[curIcon];
-                $("." + curIcon).unbind('click');
-                $("." + curIcon).on('click', thisIcon['click']);
+                $("." + curIcon + " > img").unbind('click');
+                $("." + curIcon + " > img").on('click', thisIcon['click']);
             }
             $(".tabIcon").css('cursor', 'pointer'); //can't do this in CSS file for some reason, likely because it's dynamic
 
@@ -499,16 +499,16 @@ window.meiEditorPlugins = [];
             //highlight the border quickly then switch back
             $("#editorConsole").switchClass("regularBorder", "alertBorder",
             {
-                duration: 400,
+                duration: 200,
                 complete: function(){
-                    $("#editorConsole").switchClass("alertBorder", "regularBorder", 400);
+                    $("#editorConsole").switchClass("alertBorder", "regularBorder", 200);
                 },
             });
 
             //inner div serves to float on bottom; when its height is bigger, snap it to the same height as the parent div
             if($("#consoleText").height() > $("#editorConsole").height())
             {
-                $("#consoleText").height($("#editorConsole").height() - 6); //6 for padding
+                $("#consoleText").height($("#editorConsole").height() - parseInt($("#consoleText").css('padding-top')) - parseInt($("#consoleText").css('padding-bottom'))); 
             }
 
             //automatically scroll to bottom when new text is added
@@ -522,7 +522,7 @@ window.meiEditorPlugins = [];
         {
             var localIcons = {"rename": {
                     'title': 'Rename file',
-                    'body': '&#x270e;',
+                    'src': 'img/glyphicons_030_pencil.png',
                     'click': function(e){
                         var pageName = $($(e.target).siblings("a")[0]).text();
                         self.renamePage(pageName); 
@@ -530,7 +530,7 @@ window.meiEditorPlugins = [];
                 },
                 "remove": {
                     'title': 'Remove file',
-                    'body': '&#x2573;',
+                    'src': 'img/glyphicons_207_remove_2.png',
                     'click': function(e){
                         var pageName = $($(e.target).siblings("a")[0]).text();
                         self.removePageFromProject(pageName);
@@ -674,7 +674,7 @@ window.meiEditorPlugins = [];
                         var retVal = settings.undoManager.undo();
                         if(!retVal)
                         {
-                            meiEditor.localLog("Nothing to undo.");
+                            self.localLog("Nothing to undo.");
                         }
                     }
                     else if (e.keyCode == 89)
@@ -682,7 +682,7 @@ window.meiEditorPlugins = [];
                         var retVal = settings.undoManager.redo();
                         if(!retVal)
                         {
-                            meiEditor.localLog("Nothing to redo.");
+                            self.localLog("Nothing to redo.");
                         }
                     }
                 }

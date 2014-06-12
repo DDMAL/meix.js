@@ -54,7 +54,6 @@
                     {
                         var readerArrLength = readerArr.push(new FileReader()) - 1;
                         var reader = readerArr[readerArrLength];
-                        console.log(readerArrLength, reader, $(".fileInput")[readerLength].files[0]);
                         if($(".fileInput")[readerLength].files[0] !== undefined)
                         {
                             reader.file = $(".fileInput")[readerLength].files[0];
