@@ -1,6 +1,9 @@
 html, body{
     overflow:hidden;
 }
+#topbarContent > li > a{
+    cursor: pointer;
+}
 #openPages{
     height:100%;
 }

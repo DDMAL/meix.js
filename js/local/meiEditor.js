@@ -656,17 +656,26 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
                     }
                 }
 
-                //append a formattable structure
-                $("#topbarContent").append('<li class="dropdown">'
-                    + '<a href="#" class="dropdown-toggle" data-toggle="dropdown">' + curPlugin.title + ' <b class="caret"></b></a>'
-                    + '<ul class="dropdown-menu" id="dropdown-' + curPlugin.divName + '">'
-                    + '</ul></li>');
+                //append a dropdown menu to the navbar
+                if(curPlugin.dropdownOptions !== undefined)
+                {
+                    $("#topbarContent").append('<li class="dropdown">'
+                        + '<a href="#" class="dropdown-toggle" data-toggle="dropdown">' + curPlugin.title + ' <b class="caret"></b></a>'
+                        + '<ul class="dropdown-menu" id="dropdown-' + curPlugin.divName + '">'
+                        + '</ul></li>');
 
-                for(optionName in curPlugin.dropdownOptions){
-                    optionClick = curPlugin.dropdownOptions[optionName];
-                    $("#dropdown-" + curPlugin.divName).append("<li><a id='" + optionClick + "'>" + optionName + "</a></li>");
+                    for(optionName in curPlugin.dropdownOptions)
+                    {
+                        optionClick = curPlugin.dropdownOptions[optionName];
+                        $("#dropdown-" + curPlugin.divName).append("<li><a id='" + optionClick + "'>" + optionName + "</a></li>");
+                    }
+                } 
+                //and if dropdownOptions doesn't exist, just append a button
+                else 
+                {                    
+                    $("#topbarContent").append('<li><a id="' + curPlugin.divName + '">' + curPlugin.title + '</a></li>');
                 }
-
+                
                 // Call the init function and check return value
                 var pluginReturn = curPlugin.init(self, settings);
                 

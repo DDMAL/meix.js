@@ -12,7 +12,6 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/FileSaver'], function()
                 'Upload files...': 'file-load-dropdown',
                 'Save a file...': 'file-save-dropdown',
             },
-            minimizedAppearance: '',
             init: function(meiEditor, meiEditorSettings)
             {
                 $("#file-load-dropdown").on('click', function(){
@@ -21,7 +20,7 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/FileSaver'], function()
                 $("#file-save-dropdown").on('click', function(){
                     $("#fileSaveModal").modal();
                 });
-
+                
                 /*
                     Prompts local download of a page.
                     @param pageName The page to download.
@@ -100,6 +99,7 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/FileSaver'], function()
                         $("#newFiles").append("<input type='file' class='fileInput' id='fileInput" + $(".fileInput").length + "'>");
                     });
                 });
+                return true;
             }
         }
         return retval;
