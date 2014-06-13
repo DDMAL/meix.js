@@ -133,14 +133,17 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
         }
 
         /*
-            Shorthand function for creating an HTML list object from the keys of a JSON object.
+            Shorthand function for creating an HTML list object from the keys of a JSON object/values of an array.
+            @param idAppend A string to append to the ID of the list object to make it unique.
             @param jsonObject Source for the list object.
+            @param isArr [optional] Set to true if jsonObject is actually an array; will use values
         */
-        this.createList = function(idAppend, jsonObject)
+        this.createList = function(idAppend, jsonObject, isArr)
         {
             var retString = "<ul id='list" + idAppend + "'>";
             for (curKey in jsonObject)
             {
+                var curKey = (isArr ? jsonObject[curKeyIndex] : curKeyIndex);
                 retString += "<li id='" + curKey + "'>" + curKey + "</li>";
             }
             return retString + "</ul>";
@@ -636,7 +639,6 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
             self.addDefaultPage();
 
             //for each plugin...
-            console.log(window.meiEditorPlugins);
             $.each(window.meiEditorPlugins, function(index, curPlugin)
             {
                 //append a formattable structure
