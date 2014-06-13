@@ -2,39 +2,26 @@
 <html lang="en">
     <head>
         <meta charset="utf-8" />
-        <title>MEI Editor Demo Page - No DIVA</title>
+        <title>MEI Editor Demo Page</title>
 
         <link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/themes/smoothness/jquery-ui.css" />
         <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
         <link rel="stylesheet" href="css/meiEditor.css" />
-        <!--foreign libraries -->
-        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js" ></script>
-        <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min.js"></script>
-        <script src="js/FileSaver.js"></script> <!-- Thanks to http://eligrey.com/demos/FileSaver.js/FileSaver.js -->
-        <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
-        <script src="https://x2js.googlecode.com/hg/xml2json.js"></script>
 
-        <!--local libraries -->
-        <script src="ace/src/ace.js" type="text/javascript" charset="utf-8"></script>
+        <script data-main="js/preloader" src="js/lib/require.js"></script>
 
-        <!--project-specific code -->
-        <script src="js/meiEditor.js"></script>
-        <script src="js/plugins/meiEditorFileUpload.js"></script>
-        <script src="js/plugins/meiEditorXMLValidator.js"></script>
-        <script src="js/meilint.js"></script>
-        <script src="js/UndoStack.js"></script>
         <script>
-
-        $(function() 
+        var init = function()
         {
             meiEditor = $("#mei-editor").AceMeiEditor(
                 {
                     'validatorLink': '../validation/',
-                    'xmllintLoc': '../js/xmllint.js'
+                    'xmllintLoc': 'js/lib/xmllint.js'
                 });
-        });
-
+        }
+        var plugins = ["js/local/plugins/meiEditorFileUpload.js", "js/local/plugins/meiEditorXMLValidator.js"];
         </script>
+
     </head>
     <body>
         <div id="mei-editor"></div>

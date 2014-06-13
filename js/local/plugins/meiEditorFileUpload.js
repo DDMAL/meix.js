@@ -1,3 +1,4 @@
+require(['meiEditor'], function(){
 (function ($)
 {
     window.meiEditorPlugins.push((function()
@@ -103,4 +104,7 @@
         }
         return retval;
     })());
+    pluginLoader.pluginLoaded();
 })(jQuery);
+
+});

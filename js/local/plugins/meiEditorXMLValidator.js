@@ -1,3 +1,4 @@
+require(['meiEditor', 'js/local/meilint', 'js/lib/FileSaver'], function(){
 (function ($)
 {
     window.meiEditorPlugins.push((function()
@@ -150,4 +151,7 @@
         }
         return retval;
     })());
+    pluginLoader.pluginLoaded();
 })(jQuery);
+
+});
