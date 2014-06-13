@@ -11,7 +11,27 @@ var MeiEditor = function(element, settings, plugins){
         'meiEditorLocation': 'meix.js/',
     }
 
+    //Checking for jQuery, jQueryUI, and Bootstrap 3+
+    if(window.jQuery === undefined)
+    {
+        console.error("The ACE MEI Editor requires jQuery to function. Please make sure it is included above meiEditorPreloader.js and require.js.");
+        return;
+    }
+
+    if($.ui === undefined)
+    {
+        console.error("The ACE MEI Editor requires jQueryUI to function. Please make sure it is included above meiEditorPreloader.js and require.js.");
+        return;
+    }
+
+    if(!(typeof $().emulateTransitionEnd === 'function'))
+    {
+        console.error("The ACE MEI Editor requires Twitter's Bootstrap library (version 3+) to function. Please make sure its JavaScript file is included above meiEditorPreloader.js and require.js.");
+        return;
+    }
+
     $.extend(localSettings, settings);
+
     /*
         Used to asynchronously monitor loading plugins.
 
