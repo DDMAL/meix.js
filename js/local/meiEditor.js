@@ -1,5 +1,5 @@
+require(['ace/src/ace', 'js/lib/UndoStack'], function(){
 window.meiEditorPlugins = [];
-
 (function ($)
 {
     var AceMeiEditor = function(element, options){
@@ -713,3 +713,4 @@ window.meiEditorPlugins = [];
     };
 
 })(jQuery);
+});
