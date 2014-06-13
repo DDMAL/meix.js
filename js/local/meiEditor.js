@@ -641,6 +641,21 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
             //for each plugin...
             $.each(window.meiEditorPlugins, function(index, curPlugin)
             {
+                //go through requiredSettings for each plugin
+                if(curPlugin.requiredSettings !== undefined)
+                {
+                    var requirementsLength = curPlugin.requiredSettings.length;
+                    while(requirementsLength--)
+                    {
+                        //if we don't find the plugin, throw an error and break (throwing an exception would stop everything, this only stops this plugin)
+                        if(settings[curPlugin.requiredSettings[requirementsLength]] === undefined)
+                        {
+                            console.error("The " + curPlugin.title + " plugin could not find the '" + curPlugin.requiredSettings[requirementsLength] + "' setting. Disabling plugin.");
+                            break;
+                        }
+                    }
+                }
+
                 //append a formattable structure
                 $("#topbarContent").append('<li class="dropdown">'
                     + '<a href="#" class="dropdown-toggle" data-toggle="dropdown">' + curPlugin.title + ' <b class="caret"></b></a>'

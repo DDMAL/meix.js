@@ -3,11 +3,15 @@
 
     MeiEditor class requires three parameters:
     @param element The DOM element which the AceMeiEditor data will be appended to. Presented as a jQuery selector string. (for example "#mei-editor")
-    @param options A JSON object with options for both the MeiEditor class and AceMeiEditor class. Documented in meiEditor.js.
+    @param settings A JSON object with settings for both the MeiEditor class and AceMeiEditor class. Documented in meiEditor.js.
     @param plugins A list of filepaths for plugins (other than the default FileUpload and XMLValidator) to include.
 */
-var MeiEditor = function(element, options, plugins){
+var MeiEditor = function(element, settings, plugins){
+    var localSettings = {
+        'meiEditorLocation': 'meix.js/',
+    }
 
+    $.extend(localSettings, settings);
     /*
         Used to asynchronously monitor loading plugins.
 
@@ -27,7 +31,7 @@ var MeiEditor = function(element, options, plugins){
             //once completed is the same length as plugins
             if(completed.length == plugins.length){
                 //initialize the editor
-                meiEditor = $(element).AceMeiEditor(options);
+                meiEditor = $(element).AceMeiEditor(settings);
 
                 //trigger a resize event to finalize layout of the screen
                 $(window).trigger('resize');
@@ -36,8 +40,7 @@ var MeiEditor = function(element, options, plugins){
     }
 
     //various variables
-    options.meiEditorLocation = (options.meiEditorLocation || 'meix.js/');
-    window.meiEditorLocation = options.meiEditorLocation;
+    window.meiEditorLocation = settings.meiEditorLocation;
     window.meiEditorPlugins = [];
     plugins.push(window.meiEditorLocation + "js/local/plugins/meiEditorXMLValidator.js");
     plugins.push(window.meiEditorLocation + "js/local/plugins/meiEditorFileUpload.js");
@@ -46,7 +49,7 @@ var MeiEditor = function(element, options, plugins){
     //standardize the meiEditor path for require.js
     require.config({
         paths: {
-            'meiEditor': options.meiEditorLocation + 'js/local/meiEditor',
+            'meiEditor': window.meiEditorLocation + 'js/local/meiEditor',
         }
     });
 

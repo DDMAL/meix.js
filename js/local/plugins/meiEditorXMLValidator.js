@@ -12,6 +12,7 @@ require(['meiEditor', window.meiEditorLocation + 'js/local/meilint'], function()
                 'Validate a file...': 'file-validate-dropdown',
                 'Upload validator...': 'validator-load-dropdown',
             },
+            requiredSettings: ['validatorLink', 'xmllintLoc'],
             init: function(meiEditor, meiEditorSettings){
                 $.extend(meiEditorSettings, {
                     validators: {},

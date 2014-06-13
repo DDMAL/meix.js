@@ -41,6 +41,10 @@ navbar.
     event on it to be able to provide functionality. This parameter is optional,
     and if you choose not to use it, the navbar object will be only a button and
     will not dropdown on click.
+-requiredSettings is a list of all parameters that the plugin expects to be 
+    passed in via the meiEditorSettings object. If one of these is not included,
+    the editor will pass a console.error() message and the plugin will be 
+    disabled for that pageload. This is optional.
 -init is where the functionality of your plugin is imported into the 
     AceMeiEditor class. It will be called with two parameters: meiEditor, a 
     pointer to all functions that are a part of the AceMeiEditor class, and 
@@ -57,6 +61,7 @@ navbar.
                 'Second dropdown...': 'second-dropdown',
                 //'Dropdown title': 'id for dropdown'
             },
+            requiredSettings: ['setting1', 'setting2'],
             init: function(meiEditor, meiEditorSettings)
             {
 /*
