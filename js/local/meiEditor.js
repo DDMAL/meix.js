@@ -221,8 +221,8 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
             for(curIcon in settings.iconPane)
             {
                 var thisIcon = settings.iconPane[curIcon];
-                $("." + curIcon + " > img").unbind('click');
-                $("." + curIcon + " > img").on('click', thisIcon['click']);
+                $("." + curIcon).unbind('click');
+                $("." + curIcon).on('click', thisIcon['click']);
             }
             $(".tabIcon").css('cursor', 'pointer'); //can't do this in CSS file for some reason, likely because it's dynamic
 
@@ -675,7 +675,6 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
                 {                    
                     $("#topbarContent").append('<li><a id="' + curPlugin.divName + '">' + curPlugin.title + '</a></li>');
                 }
-                
                 // Call the init function and check return value
                 var pluginReturn = curPlugin.init(self, settings);
                 

@@ -9,9 +9,9 @@ html, body{
 }
 #pagesList > li > span{
     margin-top:2px;
-    margin-right:2px;
-    width:15px;
-    height:15px;
+    margin-right:4px;
+    width:12px;
+    height:12px;
     display:inline-block;
     background-size:100%;
     background-repeat: no-repeat;
@@ -75,7 +75,7 @@ input.input-ui-emulator{
     -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
 }
 .regularBorder{
-    border: thin #aaaaaa solid;
+    border: thin #AAAAAA solid;
 }
 .alertBorder{
     border: thin #000000 solid;
