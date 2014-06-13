@@ -1,4 +1,4 @@
-require(['meiEditor'], function(){
+require(['meiEditor', window.meiEditorLocation + 'js/lib/FileSaver'], function(){
 (function ($)
 {
     window.meiEditorPlugins.push((function()
@@ -104,7 +104,7 @@ require(['meiEditor'], function(){
         }
         return retval;
     })());
-    pluginLoader.pluginLoaded();
+    window.pluginLoader.pluginLoaded();
 })(jQuery);
 
 });

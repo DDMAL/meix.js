@@ -1,5 +1,4 @@
-require(['ace/src/ace', 'js/lib/UndoStack'], function(){
-window.meiEditorPlugins = [];
+define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js/lib/UndoStack'], function(){
 (function ($)
 {
     var AceMeiEditor = function(element, options){
@@ -522,7 +521,7 @@ window.meiEditorPlugins = [];
         {
             var localIcons = {"rename": {
                     'title': 'Rename file',
-                    'src': 'img/glyphicons_030_pencil.png',
+                    'src': options.meiEditorLocation + 'img/glyphicons_030_pencil.png',
                     'click': function(e){
                         var pageName = $($(e.target).siblings("a")[0]).text();
                         self.renamePage(pageName); 
@@ -530,7 +529,7 @@ window.meiEditorPlugins = [];
                 },
                 "remove": {
                     'title': 'Remove file',
-                    'src': 'img/glyphicons_207_remove_2.png',
+                    'src': options.meiEditorLocation + 'img/glyphicons_207_remove_2.png',
                     'click': function(e){
                         var pageName = $($(e.target).siblings("a")[0]).text();
                         self.removePageFromProject(pageName);
@@ -637,6 +636,7 @@ window.meiEditorPlugins = [];
             self.addDefaultPage();
 
             //for each plugin...
+            console.log(window.meiEditorPlugins);
             $.each(window.meiEditorPlugins, function(index, curPlugin)
             {
                 //append a formattable structure

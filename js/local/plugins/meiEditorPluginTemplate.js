@@ -1,4 +1,4 @@
-require(['meiEditor', 'link/to/other/includes'], function(){
+require(['link/to/other/includes'], function(){
 
 //add a new plugin to the AceMeiEditor constructor in the main HTML page.
 (function ($)
@@ -61,7 +61,7 @@ require(['meiEditor', 'link/to/other/includes'], function(){
         }
         return retval;
     })());
-    pluginLoader.pluginLoaded();
+    window.pluginLoader.pluginLoaded();
 })(jQuery);
 
 });

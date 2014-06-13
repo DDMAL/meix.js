@@ -12,18 +12,20 @@
         <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min.js"></script>
         <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
 
-        <script data-main="preloader" src="js/lib/require.js"></script>
+        <script src="js/lib/require.js"></script>
+        <script src="js/local/meiEditorPreloader.js"></script>
 
         <script>
-        var init = function()
+        var element = "#mei-editor";
+        var options = 
         {
-            meiEditor = $("#mei-editor").AceMeiEditor(
-                {
-                    'validatorLink': '../validation/',
-                    'xmllintLoc': 'js/lib/xmllint.js'
-                });
-        }
-        var plugins = ["js/local/plugins/meiEditorFileUpload.js", "js/local/plugins/meiEditorXMLValidator.js"];
+            'meiEditorLocation': './',
+            'validatorLink': 'validation/',
+            'xmllintLoc': 'js/lib/xmllint.js'
+        };
+        var plugins = [];
+
+        var meiEditor = new MeiEditor(element, options, plugins);
         </script>
 
     </head>
