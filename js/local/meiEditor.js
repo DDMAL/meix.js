@@ -404,8 +404,11 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
                 //if this name already exists (including if it's unchanged)
                 if(newInput.val() in settings.pageData)
                 {
-                    self.localLog("This page name already exists in this project. Please choose another.");
-                    
+                    //if it's not the same as it was
+                    if(newInput.val() !== parentListItem.children("a").css('display', 'block').text())
+                    {
+                        self.localLog("This page name already exists in this project. Please choose another.");
+                    }
                     //remove the input item and make the original link visible again
                     newInput.remove();
                     parentListItem.children("a").css('display', 'block');
@@ -582,7 +585,7 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
                 + '<div id="plugins-maximized-wrapper"></div>'
                 + '<div id="openPages">'
                 + '<ul id="pagesList">'
-                + '<li id="newTabButton"><a href="#new-tab" onclick="$(\'#mei-editor\').data(\'AceMeiEditor\').addDefaultPage()">New tab</a></li>'
+                + '<li id="newTabButton"><a href="#new-tab" onclick="$(\'#mei-editor\').data(\'AceMeiEditor\').addDefaultPage()">+</a></li>'
                 + '</ul>'
                 + '<div id="new-tab"></div>' //this will never be seen, but is needed to prevent a bug or two
                 + '</div>'

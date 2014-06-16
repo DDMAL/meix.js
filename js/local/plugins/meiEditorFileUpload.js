@@ -9,7 +9,7 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/FileSaver'], function()
             title: 'Files',
             dropdownOptions: 
             {
-                'Upload files...': 'file-load-dropdown',
+                'Open files...': 'file-load-dropdown',
                 'Save a file...': 'file-save-dropdown',
             },
             init: function(meiEditor, meiEditorSettings)
@@ -79,7 +79,7 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/FileSaver'], function()
 
                 meiEditor.createModal('fileLoadModal', true, '<div id="newFiles">'
                 + '<input type="file" class="fileInput" id="fileInput">'
-                + '</div>', "Load file");
+                + '</div>', "Open file");
                 meiEditor.createModal('fileSaveModal', true, meiEditor.createSelect("Save", meiEditorSettings.pageData), "Save file");
                 $("#fileLoadModal-primary").on('click', addPage);
                 $("#fileSaveModal-primary").on('click', function()
