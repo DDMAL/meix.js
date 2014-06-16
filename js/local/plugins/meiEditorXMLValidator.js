@@ -14,6 +14,7 @@ require(['meiEditor', window.meiEditorLocation + 'js/local/meilint'], function()
             },
             requiredSettings: ['validatorLink', 'xmllintLoc'],
             init: function(meiEditor, meiEditorSettings){
+                var aceRange = ace.require('ace/range').Range;
                 $.extend(meiEditorSettings, {
                     validators: {},
                 });
@@ -57,7 +58,36 @@ require(['meiEditor', window.meiEditorLocation + 'js/local/meilint'], function()
                 {
                     callbackFunction = function(event)
                     {
-                        meiEditor.localLog(event.data);
+                        var resultsString = event.data;
+                        meiEditor.localLog(resultsString);
+                        var resultsArray = resultsString.split(":");
+                        var rowNumber = resultsArray[1];
+                        var pageName = resultsArray[0];
+                        
+                        //if the second block of text is an integer (if it's a line number)
+                        if(parseInt(rowNumber) == rowNumber)
+                        {
+                            var zeroedRowNumber = rowNumber - 1; //0-indexing!
+                            //if the line number is in, but not the word "error", it's less important so it's colored yellow
+                            var gutterClass = resultsString.match(/error/) ? "gutterError" : "gutterWarning";
+
+                            //if it already exists and it's an error, do nothing
+                            if(zeroedRowNumber in meiEditorSettings.pageData[pageName].getSession().$decorations)
+                            {
+                                //if it was a warning and is now an error, replace it
+                                if((gutterClass == "gutterError") && (meiEditorSettings.pageData[pageName].getSession().$decorations[rowNumber] == "gutterWarning"))
+                                {
+                                    meiEditorSettings.pageData[pageName].getSession().removeGutterDecoration(zeroedRowNumber, meiEditorSettings.pageData[pageName].highlightedLines[docRow]);
+                                    meiEditorSettings.pageData[pageName].getSession().addGutterDecoration(zeroedRowNumber, gutterClass);
+                                }
+                            }
+
+                            //if it doesn't know there's an error already, put it in
+                            else
+                            {
+                                meiEditorSettings.pageData[pageName].getSession().addGutterDecoration(zeroedRowNumber, gutterClass);
+                            }
+                        }
                     }
 
                     var Module = 

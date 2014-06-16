@@ -240,7 +240,7 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
             //add a new tab to the editor
             $("#pagesList").append("<li id='" + fileNameStripped + "-listitem'><a href='#" + fileNameStripped + "-wrapper'>" + fileName + "</a>" + self.makeIconString() + "</li>");
             $("#openPages").append("<div id='" + fileNameStripped + "-wrapper'>" //necessary for CSS to work
-                + "<div id='" + fileNameStripped + "' class='aceEditorPane'>"
+                + "<div id='" + fileNameStripped + "' originalName='" + fileName + "' class='aceEditorPane'>"
                 + "</div></div>");
             
             self.resetIconListeners();
@@ -251,12 +251,26 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
             settings.pageData[fileName].setTheme(settings.aceTheme);
             settings.pageData[fileName].setSession(new ace.EditSession(fileData));
             settings.pageData[fileName].getSession().setMode("ace/mode/xml");
+            settings.pageData[fileName].highlightedLines = {};
 
             //refresh the tab list with the new one in mind
             var numTabs = $("#pagesList li").length - 1;
             $("#openPages").tabs("refresh");
             $("#openPages").tabs({active: numTabs}); //load straight to the new one
         
+            //when the document is clicked
+            $("#" + fileNameStripped).on('click', function(e)
+            {
+                var pageName = $($(e.target).parent()).parent().attr('originalName');
+                var docRow = settings.pageData[pageName].getCursorPosition().row; //0-index to 1-index
+
+                //if the document row that was clicked on has a gutter decoration, remove it
+                if(docRow in settings.pageData[pageName].getSession().$decorations)
+                {
+                    settings.pageData[pageName].getSession().removeGutterDecoration(parseInt(docRow), settings.pageData[pageName].getSession().$decorations[docRow].substring(1));
+                } 
+            });
+
             self.events.publish("NewFile", [fileData, fileName]);
         
             //when each document changes
@@ -266,7 +280,7 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
                 window.clearTimeout(settings.editTimeout);
                 var newText = delta.data.text;
 
-                if(!/[^a-zA-Z0-9]/.test(newText))
+                if(!/\s/.test(newText))
                 {
                     if(!settings.initCursor)
                     {
@@ -289,6 +303,7 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
                     settings.undoManager.save('PageEdited', [texts, cursorPos, activeDoc]);
                 }, 500, [self.getAllTexts(), settings.initCursor, settings.initDoc]); //after no edits have been done for a second, save the page in the undo stack
             });
+
             settings.undoManager.save('PageEdited', [self.getAllTexts(), [{'row':0, 'column':0}], numTabs]);
         }
 
