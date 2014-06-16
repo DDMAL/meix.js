@@ -191,7 +191,6 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
         */
         this.resizeComponents = function()
         {
-            //these magic numbers are necessary for some reason to prevent a scrollbar. I'll look into this later when I have the time.
             $("#mei-editor").offset({'top': '0'});
             $("#mei-editor").height($(window).height());
             var editorConsoleHeight = $("#editorConsole").outerHeight();
@@ -604,8 +603,63 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
                 + '</ul>'
                 + '<div id="new-tab"></div>' //this will never be seen, but is needed to prevent a bug or two
                 + '</div>'
-                + '<div id="editorConsole" class="regularBorder"><div id="consoleText">Console loaded!</div></div>'
+                + '<div id="editorConsole" class="regularBorder">'
+                + '<div id="consoleResizeDiv"></div>'
+                + '<div id="consoleText">Console loaded!</div></div>'
                 );
+
+
+
+            $("#consoleResizeDiv").on('mousedown', function()
+            {
+                $(document).on('mousemove', function(e)
+                {
+                    var oldHeight = $("#openPages").height();
+                    var heightDiff = oldHeight + $("#openPages").offset().top - e.pageY;
+                    var editorConsoleHeight = $("#editorConsole").outerHeight();
+                    $("#openPages").height(oldHeight - heightDiff);
+
+                    //taken from resizeComponents() as it was all I needed from there
+                    var activePanel = self.getActivePanel();
+                    var activeTab = activePanel.attr('href');
+                    var pageName = activePanel.text();
+                    $(activeTab).css('padding', '0px');
+                    $(activeTab).height($("#mei-editor").height() - $(activeTab).offset().top - heightDiff);
+                    $(activeTab + " > .aceEditorPane").height($("#mei-editor").height() - $(activeTab).offset().top - heightDiff - editorConsoleHeight);
+
+                    settings.pageData[pageName].resize();
+
+                    $("#editorConsole").offset({'top': $("#openPages").outerHeight() + $("#openPages").offset().top});
+                    $("#editorConsole").height(window.innerHeight - $("#openPages").outerHeight() - $("#openPages").offset().top);
+                    $("#editorConsole").css('bottom', window.innerHeight);
+                    
+                    var textHeightDiff = $("#consoleText").outerHeight() - $("#consoleText").height();
+                    var consoleHeight = parseInt($("#editorConsole").height());
+
+                    if($("#consoleText").outerHeight() > consoleHeight)
+                    {
+                        console.log("popping in here a sec");
+                        $("#consoleText").height(consoleHeight - textHeightDiff); 
+                    }
+                    else
+                    {
+                        if(document.getElementById("consoleText").scrollHeight > $("#consoleText").height())
+                        {
+                            console.log(document.getElementById("consoleText").scrollHeight, consoleHeight, textHeightDiff);
+                            $("#consoleText").height(Math.min(document.getElementById("consoleText").scrollHeight - textHeightDiff, consoleHeight - textHeightDiff));
+                            console.log($("#consoleText").height(), document.getElementById("consoleText").scrollHeight, );
+                        } 
+                    }
+
+                    $("#consoleText").css('bottom', 0);
+                    document.getElementById("consoleText").scrollTop = document.getElementById("consoleText").scrollHeight;
+                });
+                $(document).on('mouseup', function()
+                {
+                    $(document).unbind('mousemove');
+                    $(document).unbind('mouseup');
+                });
+            });
 
             $("#undo-dropdown").on('click', function()
             {
