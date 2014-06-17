@@ -1,3 +1,26 @@
+$.fn.toEm = function(settings){
+    settings = jQuery.extend({
+        scope: 'body'
+    }, settings);
+    var that = parseInt(this[0],10),
+        scopeTest = jQuery('<div style="display: none; font-size: 1em; margin: 0; padding:0; height: auto; line-height: 1; border:0;">&nbsp;</div>').appendTo(settings.scope),
+        scopeVal = scopeTest.height();
+    scopeTest.remove();
+    return that / scopeVal;
+};
+
+
+$.fn.toPx = function(settings){
+    settings = jQuery.extend({
+        scope: 'body'
+    }, settings);
+    var that = parseFloat(this[0]),
+        scopeTest = jQuery('<div style="display: none; font-size: 1em; margin: 0; padding:0; height: auto; line-height: 1; border:0;">&nbsp;</div>').appendTo(settings.scope),
+        scopeVal = scopeTest.height();
+    scopeTest.remove();
+    return that * scopeVal;
+};
+
 define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js/lib/UndoStack'], function(){
 (function ($)
 {
@@ -12,6 +35,7 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
             editTimeout: "",
             initCursor: "",
             initDoc: "",
+            oldPageY: "",
         }
 
         $.extend(settings, options);
@@ -201,9 +225,9 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
             $("#openPages").height(workableHeight - heightDiff);
 
             var activeTab = self.getActivePanel().attr('href');
-            $(activeTab).css('padding', '0px');
-            $(activeTab).height($("#mei-editor").height() - $(activeTab).offset().top - heightDiff);
-            $(activeTab + " > .aceEditorPane").height($("#mei-editor").height() - $(activeTab).offset().top - heightDiff - editorConsoleHeight);
+            $(activeTab).css('padding', '0em');
+            $(activeTab).height($("#openPages").height() - $("#pagesList").height() - heightDiff);
+            $(activeTab + " > .aceEditorPane").height($(activeTab).height());
 
             var innerComponentWidth = $("#mei-editor").width() - $("#openPages").css('padding-left') - $("#openPages").css('padding-right');
             $("#openPages").width(innerComponentWidth);
@@ -529,6 +553,10 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
             {
                 $("#consoleText").height($("#editorConsole").height() - parseInt($("#consoleText").css('padding-top')) - parseInt($("#consoleText").css('padding-bottom'))); 
             }
+            else
+            {
+                $("#consoleText").height("auto");
+            }
 
             //automatically scroll to bottom when new text is added
             document.getElementById("consoleText").scrollTop = document.getElementById("consoleText").scrollHeight;
@@ -588,7 +616,6 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
                 + '<ul class="nav navbar-nav" id="topbarContent">'
                 + '<li class="dropdown">'
                 + '<a href="#" class="dropdown-toggle navbar-brand" data-toggle="dropdown"> ACE MEI Editor <b class="caret"></b></a>'
-                //+ '<li class="navbar-brand dropdown">ACE MEI Editor</li>'
                 + '<ul class="dropdown-menu" id="dropdown-main">'
                 + '<li><a id="undo-dropdown">Undo</a></li>'
                 + '<li><a id="redo-dropdown">Redo</a></li>'
@@ -596,7 +623,6 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
                 + '</ul>'     
                 + '</li>'
                 + '</ul></div></div></div></div>'
-                + '<div id="plugins-maximized-wrapper"></div>'
                 + '<div id="openPages">'
                 + '<ul id="pagesList">'
                 + '<li id="newTabButton"><a href="#new-tab" onclick="$(\'#mei-editor\').data(\'AceMeiEditor\').addDefaultPage()">+</a></li>'
@@ -608,56 +634,60 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
                 + '<div id="consoleText">Console loaded!</div></div>'
                 );
 
-
-
+            $("#consoleText").css('bottom', $(($("#editorConsole").outerHeight() - $("#editorConsole").height())/2).toEm().toString() + 'em');
             $("#consoleResizeDiv").on('mousedown', function()
             {
+                $("mei-editor").css('cursor', 'ns-resize');
+                //most of this was taken from resizeComponents(), as was the top-down idea
                 $(document).on('mousemove', function(e)
                 {
-                    var oldHeight = $("#openPages").height();
-                    var heightDiff = oldHeight + $("#openPages").offset().top - e.pageY;
+                    //this prevents horizontal movement from triggering this event, hopefully saving some time
+                    if(settings.oldPageY == e.pageY)
+                    {
+                        return;
+                    }
+                    //set up the tab container to the right e.pageY height first
                     var editorConsoleHeight = $("#editorConsole").outerHeight();
-                    $("#openPages").height(oldHeight - heightDiff);
+                    var topbarHeight = $("#topbar").outerHeight();
+                    var heightDiff = $("#openPages").outerHeight() - $("#openPages").height(); 
+                    var newHeight = e.pageY - topbarHeight - heightDiff;
+                    $("#openPages").height(newHeight);
 
-                    //taken from resizeComponents() as it was all I needed from there
+                    //make the active child of openPages and its subcomponents match above
                     var activePanel = self.getActivePanel();
                     var activeTab = activePanel.attr('href');
-                    var pageName = activePanel.text();
-                    $(activeTab).css('padding', '0px');
-                    $(activeTab).height($("#mei-editor").height() - $(activeTab).offset().top - heightDiff);
-                    $(activeTab + " > .aceEditorPane").height($("#mei-editor").height() - $(activeTab).offset().top - heightDiff - editorConsoleHeight);
+                    $(activeTab).css('padding', '0em');
+                    $(activeTab).height($("#openPages").height() - $("#pagesList").height() - heightDiff);
+                    $(activeTab + " > .aceEditorPane").height($(activeTab).height());
 
+                    //reload the editor to fit
+                    var pageName = activePanel.text();
                     settings.pageData[pageName].resize();
 
-                    $("#editorConsole").offset({'top': $("#openPages").outerHeight() + $("#openPages").offset().top});
-                    $("#editorConsole").height(window.innerHeight - $("#openPages").outerHeight() - $("#openPages").offset().top);
-                    $("#editorConsole").css('bottom', window.innerHeight);
-                    
-                    var textHeightDiff = $("#consoleText").outerHeight() - $("#consoleText").height();
-                    var consoleHeight = parseInt($("#editorConsole").height());
+                    //resize console to take up rest of the screen
+                    var consoleDiff = $("#editorConsole").outerHeight() - $("#editorConsole").height();
+                    $("#editorConsole").offset({'top': $("#openPages").outerHeight() + $("#topbar").outerHeight()});
+                    var newHeight = parseInt(window.innerHeight - $("#openPages").outerHeight() - topbarHeight - consoleDiff + 1);
+                    $("#editorConsole").height(newHeight);
 
-                    if($("#consoleText").outerHeight() > consoleHeight)
-                    {
-                        console.log("popping in here a sec");
-                        $("#consoleText").height(consoleHeight - textHeightDiff); 
-                    }
-                    else
-                    {
-                        if(document.getElementById("consoleText").scrollHeight > $("#consoleText").height())
-                        {
-                            console.log(document.getElementById("consoleText").scrollHeight, consoleHeight, textHeightDiff);
-                            $("#consoleText").height(Math.min(document.getElementById("consoleText").scrollHeight - textHeightDiff, consoleHeight - textHeightDiff));
-                            console.log($("#consoleText").height(), document.getElementById("consoleText").scrollHeight, );
-                        } 
-                    }
+                    //make sure that the child of the console that holds the text is at the right size
+                    var consoleDiff = $("#editorConsole").outerHeight() - $("#editorConsole").height();
+                    $("#consoleText").css('bottom', $(consoleDiff/2).toEm().toString() + 'em');
+                    //var currentHeight = document.getElementById("consoleText").scrollHeight;
+                    //var maxHeight = window.innerHeight - $("#topbar").outerHeight() - $("#openPages").outerHeight() - consoleDiff;
+                    $("#consoleText").height(Math.min(document.getElementById("consoleText").scrollHeight, $("#editorConsole").height()));                    
 
-                    $("#consoleText").css('bottom', 0);
-                    document.getElementById("consoleText").scrollTop = document.getElementById("consoleText").scrollHeight;
+                    //this prevents horizontal movement from triggering this event with the if statement at the top
+                    settings.oldPageY = e.pageY;
                 });
+
                 $(document).on('mouseup', function()
                 {
+                    settings.oldPageY = 0;
+                    $("mei-editor").css('cursor', 'default');
                     $(document).unbind('mousemove');
                     $(document).unbind('mouseup');
+                    //document.getElementById("consoleText").scrollTop = document.getElementById("consoleText").scrollHeight;
                 });
             });
 
