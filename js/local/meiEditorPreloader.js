@@ -64,8 +64,9 @@ var MeiEditor = function(element, settings, plugins){
     window.meiEditorPlugins = [];
     plugins.push(window.meiEditorLocation + "js/local/plugins/meiEditorXMLValidator.js");
     plugins.push(window.meiEditorLocation + "js/local/plugins/meiEditorFileUpload.js");
+    plugins.push(window.meiEditorLocation + "js/local/plugins/meiEditorEditPane.js");
     window.pluginLoader = new meiEditorPluginLoader(plugins);
-    
+
     //standardize the meiEditor path for require.js
     require.config({
         paths: {

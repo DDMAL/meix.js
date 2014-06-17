@@ -617,9 +617,6 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
                 + '<li class="dropdown">'
                 + '<a href="#" class="dropdown-toggle navbar-brand" data-toggle="dropdown"> ACE MEI Editor <b class="caret"></b></a>'
                 + '<ul class="dropdown-menu" id="dropdown-main">'
-                + '<li><a id="undo-dropdown">Undo</a></li>'
-                + '<li><a id="redo-dropdown">Redo</a></li>'
-                + '<li><a id="main-help-dropdown">Help...</a></li>'
                 + '</ul>'     
                 + '</li>'
                 + '</ul></div></div></div></div>'
@@ -691,24 +688,6 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
                 });
             });
 
-            $("#undo-dropdown").on('click', function()
-            {
-                var retVal = settings.undoManager.undo();
-                if(!retVal)
-                {
-                    self.localLog("Nothing to undo.");
-                }
-            });
-
-            $("#redo-dropdown").on('click', function()
-            {
-                var retVal = settings.undoManager.redo();
-                if(!retVal)
-                {
-                    self.localLog("Nothing to redo.");
-                }
-            });
-
             $("#main-help-dropdown").on('click', function()
             {
                 $("#mainHelpModal").modal();
@@ -747,14 +726,21 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
                 if(curPlugin.requiredSettings !== undefined)
                 {
                     var requirementsLength = curPlugin.requiredSettings.length;
+                    var requirementSkip = false;
                     while(requirementsLength--)
                     {
                         //if we don't find the plugin, throw an error and break (throwing an exception would stop everything, this only stops this plugin)
                         if(settings[curPlugin.requiredSettings[requirementsLength]] === undefined)
                         {
-                            console.error("The " + curPlugin.title + " plugin could not find the '" + curPlugin.requiredSettings[requirementsLength] + "' setting. Disabling plugin.");
-                            break;
+                            console.error("MEI Editor error: the " + curPlugin.title + " plugin could not find the '" + curPlugin.requiredSettings[requirementsLength] + "' setting. Disabling plugin.");
+                            requirementSkip = true;
                         }
+                    }
+
+                    //this has to be thrown down here so that it breaks the $.each, not the while. further, $.each needs "return", not "break"
+                    if(requirementSkip)
+                    {
+                        return;
                     }
                 }
 
