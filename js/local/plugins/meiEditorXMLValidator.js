@@ -25,6 +25,13 @@ require(['meiEditor', window.meiEditorLocation + 'js/local/meilint'], function()
                 $("#validator-load-dropdown").on('click', function(){
                     $("#validatorLoadModal").modal();
                 });
+                $("#xml-validator-help").on('click', function(){
+                    $("#validatorHelpModal").modal();
+                });
+
+                meiEditor.createModal('validatorHelpModal', false, '<h4>Help for "Validator" menu:</h4>'  
+                + '<li>The "Validate a file" option will bring you to a list of files in the editor and a list of validators loaded automatically. Choosing "validate a file" will run in the background and update you on its progress in both the console pane and highlight errors or warnings in the file.</li>'
+                + '<li>The "Upload validator" option allows you to upload a custom validator other than the five that are included normally.</li>');
 
                 /* 
                     Function called to reapply button listeners

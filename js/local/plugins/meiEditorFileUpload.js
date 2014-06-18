@@ -20,6 +20,9 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/FileSaver'], function()
                 $("#file-save-dropdown").on('click', function(){
                     $("#fileSaveModal").modal();
                 });
+                $("#file-upload-help").on('click', function(){
+                    $("#fileHelpModal").modal();
+                })
                 
                 /*
                     Prompts local download of a page.
@@ -77,10 +80,15 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/FileSaver'], function()
                     $("#fileLoadModal-close").trigger('click');
                 };
 
-                meiEditor.createModal('fileLoadModal', true, '<div id="newFiles">'
-                + '<input type="file" class="fileInput" id="fileInput">'
-                + '</div>', "Open file");
-                meiEditor.createModal('fileSaveModal', true, meiEditor.createSelect("Save", meiEditorSettings.pageData), "Save file");
+                meiEditor.createModal('fileLoadModal', true, '<h4>Open files:</h4>'
+                    + '<div id="newFiles">'
+                    + '<input type="file" class="fileInput" id="fileInput">'
+                    + '</div>', "Open file");
+                meiEditor.createModal('fileSaveModal', true, '<h4>Save a file:</h4>'
+                    + meiEditor.createSelect("Save", meiEditorSettings.pageData), "Save file");
+                meiEditor.createModal('fileHelpModal', false, '<h4>Help for "Files" menu:</h4>'
+                    + '<li>The "Open files..." option will let you load files into the project as new tabs in the editor. You can only select one file per input, but more spaces for uploading files will appear as you use existing ones.</li>'
+                    + '<li>The "Save file..." option will let you save a file that you have edited locally. It will save to the folder your browser automatically points to (likely your local Downloads folder).</li>');
                 $("#fileLoadModal-primary").on('click', addPage);
                 $("#fileSaveModal-primary").on('click', function()
                     {

@@ -29,9 +29,6 @@ extend the AceMeiEditor class.
         {
 /*
 
-All four of these values (divName, title, dropdownOptions, and init) are
-required and are automatically implemented by the AceMeiEditor class. 
-
 Each plugin is displayed as a Bootstrap dropdown menu/button along the top 
 navbar. 
 -divName is the id given to the navbar object. 
@@ -45,6 +42,11 @@ navbar.
     passed in via the meiEditorSettings object. If one of these is not included,
     the editor will pass a console.error() message and the plugin will be 
     disabled for that pageload. This is optional.
+-skipHelp refers to the right-most dropdown menu; by default, the meiEditor.js 
+    file will automatically add a dropdown with the id curPlugin.divName and the
+    text curPlugin.title that should be used with a custom listener as a help
+    popup. Setting skipHelp to true will skip adding this; if skipHelp == false
+    or skipHelp == undefined, the dropdown option will be added.
 -init is where the functionality of your plugin is imported into the 
     AceMeiEditor class. It will be called with two parameters: meiEditor, a 
     pointer to all functions that are a part of the AceMeiEditor class, and 
@@ -62,6 +64,7 @@ navbar.
                 //'Dropdown title': 'id for dropdown'
             },
             requiredSettings: ['setting1', 'setting2'],
+            skipHelp: false,
             init: function(meiEditor, meiEditorSettings)
             {
 /*

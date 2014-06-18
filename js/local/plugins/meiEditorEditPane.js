@@ -40,6 +40,14 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/UndoStack'], function()
                     }
                 });
 
+                $("#edit-pane-help").on('click', function(){
+                    $("#editHelpModal").modal();
+                });
+
+                meiEditor.createModal('fileHelpModal', false, '<h4>Help for "Edit" menu:</h4>'  
+                + '<li>The undo option (also accessible by pressing ctrl+z) will undo the last action performed.</li>'
+                + '<li>The redo option (also accessible by pressing ctrl+y) will redo the last action performed.</li>');
+
                 meiEditor.reloadUndoListeners = function(fileName)
                 {                    
                     //when each document changes

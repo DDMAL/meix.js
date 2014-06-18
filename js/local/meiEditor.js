@@ -556,6 +556,11 @@ define([window.meiEditorLocation + 'ace/src/ace'], function(){
                         + '<div class="collapse navbar-collapse">'
                             + '<ul class="nav navbar-nav" id="topbarContent">'
                                 + '<li class="navbar-brand"> ACE MEI Editor </li>'
+                                + '<li class="dropdown navbar-right">'
+                                    + '<a href="#" class="dropdown-toggle navbar" data-toggle="dropdown"> Help <b class="caret"></b></a>'
+                                    + '<ul class="dropdown-menu" id="help-dropdown">'
+                                    + '</ul>'     
+                                + '</li>'
                             + '</ul>'
                         + '</div>'
                     + '</div>'
@@ -634,10 +639,6 @@ define([window.meiEditorLocation + 'ace/src/ace'], function(){
                 $("#mainHelpModal").modal();
             });
 
-            self.createModal('mainHelpModal', false, 
-                '<li>Press ctrl+z to undo or click on the undo option of the main dropdown.</li>'
-                + '<li>Press ctrl+y to redo or click on the redo option of the main dropdown.</li>');
-
             //initializes tabs
             $("#openPages").tabs(
             {
@@ -683,6 +684,11 @@ define([window.meiEditorLocation + 'ace/src/ace'], function(){
                     {
                         return;
                     }
+                }
+
+                if(curPlugin.skipHelp !== true)
+                {
+                    $("#help-dropdown").append("<li><a id='" + curPlugin.divName + "-help'>" + curPlugin.title + "</a></li>");
                 }
 
                 //append a dropdown menu to the navbar
