@@ -29,7 +29,7 @@ require(['meiEditor', window.meiEditorLocation + 'js/local/meilint'], function()
                     $("#validatorHelpModal").modal();
                 });
 
-                meiEditor.createModal('validatorHelpModal', false, '<h4>Help for "Validator" menu:</h4>'  
+                createModal(meiEditorSettings.element, 'validatorHelpModal', false, '<h4>Help for "Validator" menu:</h4>'  
                 + '<li>The "Validate a file" option will bring you to a list of files in the editor and a list of validators loaded automatically. Choosing "validate a file" will run in the background and update you on its progress in both the console pane and highlight errors or warnings in the file.</li>'
                 + '<li>The "Upload validator" option allows you to upload a custom validator other than the five that are included normally.</li>');
 
@@ -159,12 +159,12 @@ require(['meiEditor', window.meiEditorLocation + 'js/local/meilint'], function()
 
 
                 //create some modals
-                var fileSelectString = meiEditor.createSelect("Validate", meiEditorSettings.pageData);
-                var validatorSelectString = meiEditor.createSelect("Validators", meiEditorSettings.validators);
-                var validatorListString = meiEditor.createList("Validators", meiEditorSettings.validators);
+                var fileSelectString = createSelect("Validate", meiEditorSettings.pageData);
+                var validatorSelectString = createSelect("Validators", meiEditorSettings.validators);
+                var validatorListString = createList("Validators", meiEditorSettings.validators);
 
-                meiEditor.createModal('fileValidateModal', true, "Select a file: " + fileSelectString + "<br>Select a validator: " + validatorSelectString, "Validate file");
-                meiEditor.createModal('validatorLoadModal', true, "Validators currently uploaded: " + validatorListString + "<br>Upload a new validator: <br><input type='file' id='validatorInput'>", "Load validator")
+                createModal(meiEditorSettings.element, 'fileValidateModal', true, "Select a file: " + fileSelectString + "<br>Select a validator: " + validatorSelectString, "Validate file");
+                createModal(meiEditorSettings.element, 'validatorLoadModal', true, "Validators currently uploaded: " + validatorListString + "<br>Upload a new validator: <br><input type='file' id='validatorInput'>", "Load validator")
                 $("#fileValidateModal-primary").on('click', function()
                     {
                         meiEditor.validateMei($("#selectValidate").find(":selected").text(), $("#selectValidators").find(":selected").text());

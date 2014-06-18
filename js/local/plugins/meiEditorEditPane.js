@@ -44,7 +44,7 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/UndoStack'], function()
                     $("#editHelpModal").modal();
                 });
 
-                meiEditor.createModal('fileHelpModal', false, '<h4>Help for "Edit" menu:</h4>'  
+                createModal(meiEditorSettings.element, 'fileHelpModal', false, '<h4>Help for "Edit" menu:</h4>'  
                 + '<li>The undo option (also accessible by pressing ctrl+z) will undo the last action performed.</li>'
                 + '<li>The redo option (also accessible by pressing ctrl+y) will redo the last action performed.</li>');
 

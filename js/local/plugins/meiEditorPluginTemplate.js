@@ -123,9 +123,10 @@ selector instead of the dropdown option's ID.
 /*
 
 An example of a streamlined way to spawn a modal off a dropdown/navbar object.
-The meiEditor class contains a function, createModal, to build a Bootstrap modal
+The utils.js file contains a function, createModal, to build a Bootstrap modal
 automatically and avoid adding ~15 lines of HTML manually. The parameters are:
 
+-A jQuery selector for the element(s) to attach it to (the parent element is fine)
 -The id for the modal so it can be displayed (see below)
 -A boolean value where true spawns a small modal and false spawns a larger modal
 -The body of the modal, in plain text or html.
@@ -133,7 +134,7 @@ automatically and avoid adding ~15 lines of HTML manually. The parameters are:
 
 */
 
-                meiEditor.createModal('idForTheModal', smallModal, 'Body of the modal', 'Primary Button On Modal');
+                createModal(meiEditorSettings.element, 'idForTheModal', smallModal, 'Body of the modal', 'Primary Button On Modal');
 
 /*
 

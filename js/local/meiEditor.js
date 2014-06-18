@@ -1,27 +1,4 @@
-$.fn.toEm = function(settings){
-    settings = jQuery.extend({
-        scope: 'body'
-    }, settings);
-    var that = parseInt(this[0],10),
-        scopeTest = jQuery('<div style="display: none; font-size: 1em; margin: 0; padding:0; height: auto; line-height: 1; border:0;">&nbsp;</div>').appendTo(settings.scope),
-        scopeVal = scopeTest.height();
-    scopeTest.remove();
-    return that / scopeVal;
-};
-
-
-$.fn.toPx = function(settings){
-    settings = jQuery.extend({
-        scope: 'body'
-    }, settings);
-    var that = parseFloat(this[0]),
-        scopeTest = jQuery('<div style="display: none; font-size: 1em; margin: 0; padding:0; height: auto; line-height: 1; border:0;">&nbsp;</div>').appendTo(settings.scope),
-        scopeVal = scopeTest.height();
-    scopeTest.remove();
-    return that * scopeVal;
-};
-
-define([window.meiEditorLocation + 'ace/src/ace'], function(){
+define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js/local/utils'], function(){
 (function ($)
 {
     var AceMeiEditor = function(element, options){
@@ -109,65 +86,6 @@ define([window.meiEditorLocation + 'ace/src/ace'], function(){
                     unsubscribe: unsubscribe
             };
         }());   
-
-        /* 
-            Shorthand function for creating a bootstrap modal.
-            @param modalID String for a unique identifier for the modal
-            @param small Boolean to determine whether or not it is a bootstrap modal-sm
-            @param modalBody HTML string for the content of the modal
-            @param primaryTitle [Optional] Text to put on the primary (not-"close") button at the bottom of the modal. Will only have a close button if not included.
-        */
-        this.createModal = function(modalID, small, modalBody, primaryTitle)
-        {
-            var modalSize = small ? "modal-sm" : "modal-md";
-            var primaryTitleString = primaryTitle ? '<button type="button" class="btn btn-primary" id="' + modalID + '-primary">' + primaryTitle + '</button>' : "";
-            settings.element.append("<div id='" + modalID + "' class='modal fade'>"
-                + '<div class="modal-dialog ' + modalSize + '">'
-                    + '<div class="modal-content">'
-                        + '<div class="modal-body">'
-                            + modalBody
-                        + '</div>'
-                        + '<div class="modal-footer">'
-                            + '<button type="button" class="btn btn-default" id="' + modalID + '-close" data-dismiss="modal">Close</button>'    
-                            +  primaryTitleString
-                        + '</div>'
-                    + '</div>'
-                + '</div>');
-        }
-
-        /*
-            Shorthand function for creating an HTML select object from the keys of a JSON object/values of an array.
-            @param idAppend A string to append to the ID of the select object to make it unique.
-            @param jsonObject Source for the select object.
-            @param isArr [optional] Set to true if jsonObject is actually an array; will use values
-        */
-        this.createSelect = function(idAppend, jsonObject, isArr)
-        {
-            var retString = "<select id='select" + idAppend + "'>";
-            for (curKeyIndex in jsonObject)
-            {
-                var curKey = (isArr ? jsonObject[curKeyIndex] : curKeyIndex);
-                retString += "<option name='" + curKey + "'>" + curKey + "</option>";
-            }
-            return retString + "</select>";
-        }
-
-        /*
-            Shorthand function for creating an HTML list object from the keys of a JSON object/values of an array.
-            @param idAppend A string to append to the ID of the list object to make it unique.
-            @param jsonObject Source for the list object.
-            @param isArr [optional] Set to true if jsonObject is actually an array; will use values
-        */
-        this.createList = function(idAppend, jsonObject, isArr)
-        {
-            var retString = "<ul id='list" + idAppend + "'>";
-            for (curKey in jsonObject)
-            {
-                var curKey = (isArr ? jsonObject[curKeyIndex] : curKeyIndex);
-                retString += "<li id='" + curKey + "'>" + curKey + "</li>";
-            }
-            return retString + "</ul>";
-        }
 
         /*
             Strips a file name of characters that jQuery selectors may misinterpret.
