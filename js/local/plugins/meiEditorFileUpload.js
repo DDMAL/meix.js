@@ -47,9 +47,9 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/FileSaver'], function()
                 };
 
                 /*
-                    Adds the currently selected page of the fileLoadModal input to the database
+                    Adds all currently selected pages of the fileLoadModal input to the database
                 */
-                var addPage = function()
+                var addPages = function()
                 {
                     var readerArr = [];
                     var readerLength = $(".fileInput").length;
@@ -80,16 +80,28 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/FileSaver'], function()
                     $("#fileLoadModal-close").trigger('click');
                 };
 
+                /*
+                    Adds a new fileInput object, removes the change event from all previously existing ones, and adds a new event listener to the newly created one.
+                */
+
+                var addNewFileInput = function()
+                {
+                    var initialLength = $(".fileInput").length;
+                    $(".fileInput").unbind('change');
+                    $("#newFiles").append("<input type='file' class='fileInput' id='fileInput" + initialLength + "'>");
+                    $("#fileInput" + initialLength).on('change', addNewFileInput);
+                }
+
                 createModal(meiEditorSettings.element, 'fileLoadModal', true, '<h4>Open files:</h4>'
                     + '<div id="newFiles">'
-                    + '<input type="file" class="fileInput" id="fileInput">'
                     + '</div>', "Open file");
+                addNewFileInput();
                 createModal(meiEditorSettings.element, 'fileSaveModal', true, '<h4>Save a file:</h4>'
                     + createSelect("Save", meiEditorSettings.pageData), "Save file");
                 createModal(meiEditorSettings.element, 'fileHelpModal', false, '<h4>Help for "Files" menu:</h4>'
                     + '<li>The "Open files..." option will let you load files into the project as new tabs in the editor. You can only select one file per input, but more spaces for uploading files will appear as you use existing ones.</li>'
                     + '<li>The "Save file..." option will let you save a file that you have edited locally. It will save to the folder your browser automatically points to (likely your local Downloads folder).</li>');
-                $("#fileLoadModal-primary").on('click', addPage);
+                $("#fileLoadModal-primary").on('click', addPages);
                 $("#fileSaveModal-primary").on('click', function()
                     {
                         savePageToClient($("#selectSave").find(":selected").text());
@@ -100,13 +112,12 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/FileSaver'], function()
                     $("#selectSave").append("<option name='" + fileName + "'>" + fileName + "</option>");
                 });
 
-                //this is necessary as we need to apply the listener to the new input item
-                $(".fileInput").on('change', function(){
-                    $("#newFiles").append("<input type='file' class='fileInput' id='fileInput" + $(".fileInput").length + "'>");
-                    $(".fileInput").on('change', function(){
-                        $("#newFiles").append("<input type='file' class='fileInput' id='fileInput" + $(".fileInput").length + "'>");
-                    });
+                $("#fileLoadModal-close").on('click', function()
+                {
+                    $(".fileInput").remove();
+                    addNewFileInput();
                 });
+
                 return true;
             }
         }
