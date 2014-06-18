@@ -66,7 +66,6 @@ require(['meiEditor', window.meiEditorLocation + 'js/local/meilint'], function()
                     callbackFunction = function(event)
                     {
                         var resultsString = event.data;
-                        meiEditor.localLog(resultsString);
                         var resultsArray = resultsString.split(":");
                         var rowNumber = resultsArray[1];
                         var pageName = resultsArray[0];
@@ -75,8 +74,16 @@ require(['meiEditor', window.meiEditorLocation + 'js/local/meilint'], function()
                         if(parseInt(rowNumber) == rowNumber)
                         {
                             var zeroedRowNumber = rowNumber - 1; //0-indexing!
-                            //if the line number is in, but not the word "error", it's less important so it's colored yellow
                             var gutterClass = resultsString.match(/error/) ? "gutterError" : "gutterWarning";
+                            if(gutterClass == "gutterError")
+                            {
+                                meiEditor.localError(resultsString);
+                            }
+                            else 
+                            {
+                                meiEditor.localWarn(resultsString);
+                            }
+                            //if the line number is in, but not the word "error", it's less important so it's colored yellow
 
                             //if it already exists and it's an error, do nothing
                             if(zeroedRowNumber in meiEditorSettings.pageData[pageName].getSession().$decorations)
@@ -94,6 +101,11 @@ require(['meiEditor', window.meiEditorLocation + 'js/local/meilint'], function()
                             {
                                 meiEditorSettings.pageData[pageName].getSession().addGutterDecoration(zeroedRowNumber, gutterClass);
                             }
+                        }
+                        //it's not an error
+                        else 
+                        {
+                            meiEditor.localLog(resultsString);
                         }
                     }
 

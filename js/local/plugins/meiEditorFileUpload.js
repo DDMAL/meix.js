@@ -44,6 +44,7 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/FileSaver'], function()
                     var pageBlob = new Blob(formattedData, {type: "text/plain;charset=utf-8"}); //create a blob
                     saveAs(pageBlob, pageName); //download it! from FileSaver.js
                     $("#fileSaveModal-close").trigger('click');
+                    meiEditor.localLog("Saved " + pageName + " to your computer.");
                 };
 
                 /*
@@ -67,11 +68,12 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/FileSaver'], function()
                                 fileName = this.file.name;
                                 if(fileName in meiEditorSettings.pageData)
                                 {
-                                    meiEditor.localLog("File name already in database. Please change a file's name and try reloading the file.");
+                                    meiEditor.localError("Error in adding " + fileName + ": a file with the same name is already in the project. Please change a file's name and try readding the file.");
                                     return;
                                 }
 
                                 meiEditor.addFileToGUI(this.result, fileName)
+                                meiEditor.localLog("Added " + fileName + " to project.")
                             };
                             reader.readAsText(reader.file);
                         }

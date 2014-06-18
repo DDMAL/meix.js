@@ -166,6 +166,22 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
         }
 
         /*
+            Called to add the next available "untitled" page to the GUI.
+        */
+        this.addDefaultPage = function()
+        {
+            //check for a new version of "untitled__" that's not in use
+            var newPageTitle = "untitled";
+            var suffixNumber = 1;
+            while(newPageTitle in settings.pageData)
+            {
+                suffixNumber += 1;
+                newPageTitle = "untitled" + suffixNumber;
+            }
+            self.addFileToGUI("", newPageTitle);
+        }
+
+        /*
             Called to add file visually and in settings.pageData.
             @param fileData Data in the original file.
             @param fileName Original file name.
@@ -219,22 +235,6 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
                 textArr[curPageTitle] = settings.pageData[curPageTitle].session.doc.getAllLines();
             }
             return textArr;
-        }
-
-        /*
-            Called to add the next available "untitled" page to the GUI.
-        */
-        this.addDefaultPage = function()
-        {
-            //check for a new version of "untitled__" that's not in use
-            var newPageTitle = "untitled";
-            var suffixNumber = 1;
-            while(newPageTitle in settings.pageData)
-            {
-                suffixNumber += 1;
-                newPageTitle = "untitled" + suffixNumber;
-            }
-            self.addFileToGUI("", newPageTitle);
         }
 
         /*
@@ -319,22 +319,34 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
             var saveRename = function(parentListItem, originalName)
             {
                 var newInput = parentListItem.children("input");
+                var newName = newInput.val();
 
                 //if this name already exists (including if it's unchanged)
                 if(newInput.val() in settings.pageData)
                 {
                     //if it's not the same as it was
-                    if(newInput.val() !== parentListItem.children("a").css('display', 'block').text())
+                    if(newName !== parentListItem.children("a").css('display', 'block').text())
                     {
-                        self.localLog("This page name already exists in this project. Please choose another.");
+                        self.localError("Error in renaming " + originalName + ": this page name already exists in this project. Please choose another.");
                     }
                     //remove the input item and make the original link visible again
                     newInput.remove();
                     parentListItem.children("a").css('display', 'block');
                 }
+                else if(self.stripFilenameForJQuery(newName) === "")
+                {
+                    self.localError("Error in renaming " + originalName + ": please choose a filename that contains alphanumeric characters.");
+                    newInput.remove();
+                    parentListItem.children("a").css('display', 'block');
+                }
+                else if($("#"+self.stripFilenameForJQuery(newName)).length)
+                {
+                    self.localError("Error in renaming " + originalName + ": this filename is too similar to one that already exists in this project. Please close the other or choose a different name.");
+                    newInput.remove();
+                    parentListItem.children("a").css('display', 'block');   
+                }
                 else 
                 {
-                    var newName = newInput.val();
                     //change the link's text and href
                     parentListItem.children("a").text(newName);
                     parentListItem.children("a").attr('href', '#' + self.stripFilenameForJQuery(newName));
@@ -352,6 +364,7 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
                     
                     //change it in the pageData variable and in the select
                     settings.pageData[newName] = settings.pageData[originalName];
+                    delete settings.pageData[originalName];
                     var curSelectIndex = $("select").length;
                     while(curSelectIndex--)
                     {
@@ -367,8 +380,9 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
                             }
                         }
                     }
+                    self.localLog("Renamed " + originalName + " to " + newName + ".");
                 }
-                //lastly, remove the old bindings and put the original ones back on
+                //lastly, remove the old bindings for the icons and put the original ones back on
                 self.resetIconListeners();
             }
 
@@ -404,6 +418,23 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
         */
         this.localLog = function(text)
         {
+            localMessage(text, "log");
+        }
+        this.localWarn = function(text)
+        {
+            localMessage(text, "warn");
+        }
+        this.localError = function(text)
+        {
+            localMessage(text, "error");
+        }
+        /*
+            The previous three are a wrapper for this.
+            @param style Determines color to flash (green, yellow, or red) depending on severity of message.
+        */
+        localMessage = function(text, style)
+        {
+            var newClass = style + "Border";
             //this takes care of some random lines xmllint spits out that aren't useful
             if(text.length < 2)
             {
@@ -420,12 +451,12 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
                 + (curSeconds > 9 ? curSeconds : "0" + curSeconds);
             $("#consoleText").append("<br>" + timeStr + "> " + text);
 
-            //highlight the border quickly then switch back
-            $("#editorConsole").switchClass("regularBorder", "alertBorder",
+            //highlight the div quickly then switch back
+            $("#editorConsole").switchClass("regularBorder", newClass,
             {
-                duration: 200,
+                duration: 100,
                 complete: function(){
-                    $("#editorConsole").switchClass("alertBorder", "regularBorder", 200);
+                    $("#editorConsole").switchClass(newClass, "regularBorder", 100);
                 },
             });
 

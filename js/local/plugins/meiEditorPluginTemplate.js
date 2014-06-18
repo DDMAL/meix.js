@@ -187,11 +187,15 @@ the meiEditor.js file.
 /*
 
 Finally, meix.js comes with a console interface. To write to this console, use 
-the meiEditor.localLog() function. This only takes one parameter - make sure to
-manually concatenate strings into one string before or while calling it.
+one of three functions - meiEditor.localLog, .localWarn, or .localError. These 
+will make the console flash green, yellow, and red, respectively. Also keep in 
+mind that, unlike console.log, these only takes one parameter - make sure to
+manually concatenate strings into one string before or while calling them.
 
 */
                 meiEditor.localLog("Text!");
+                meiEditor.localWarn("Text!");
+                meiEditor.localError("Text!");
 
 /*
 

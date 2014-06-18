@@ -28,7 +28,7 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/UndoStack'], function()
                     var retVal = meiEditorSettings.undoManager.undo();
                     if(!retVal)
                     {
-                        meiEditor.localLog("Nothing to undo.");
+                        meiEditor.localWarn("Nothing to undo.");
                     }
                 });
 
@@ -37,7 +37,7 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/UndoStack'], function()
                     var retVal = meiEditorSettings.undoManager.redo();
                     if(!retVal)
                     {
-                        meiEditor.localLog("Nothing to redo.");
+                        meiEditor.localWarn("Nothing to redo.");
                     }
                 });
 
@@ -107,20 +107,16 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/UndoStack'], function()
                         if (e.keyCode == 90)
                         {
                             e.preventDefault();
-                            var retVal = meiEditorSettings.undoManager.undo();
-                            if(!retVal)
-                            {
-                                meiEditor.localLog("Nothing to undo.");
-                            }
+
+                            //shorthand for triggering an undo
+                            $("#undo-dropdown").trigger('click');
                         }
                         else if (e.keyCode == 89)
                         {
                             e.preventDefault();
-                            var retVal = meiEditorSettings.undoManager.redo();
-                            if(!retVal)
-                            {
-                                meiEditor.localLog("Nothing to redo.");
-                            }
+
+                            //shorthand for triggering an redo
+                            $("#redo-dropdown").trigger('click');
                         }
                     }
                 });
