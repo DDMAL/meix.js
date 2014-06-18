@@ -178,15 +178,15 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
                 suffixNumber += 1;
                 newPageTitle = "untitled" + suffixNumber;
             }
-            self.addFileToGUI("", newPageTitle);
+            self.addFileToProject("", newPageTitle);
         }
 
         /*
-            Called to add file visually and in settings.pageData.
+            Called to add file to settings.pageData.
             @param fileData Data in the original file.
             @param fileName Original file name.
         */
-        this.addFileToGUI = function(fileData, fileName)
+        this.addFileToProject = function(fileData, fileName)
         {            
             var fileNameStripped = self.stripFilenameForJQuery(fileName);
 
@@ -212,7 +212,7 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
             $("#openPages").tabs({active: numTabs}); //load straight to the new one
         
             //when the document is clicked
-            $("#" + fileNameStripped).on('click', function(e)
+            $("#" + fileNameStripped).on('click', function(e) //parent of editorPane
             {
                 var pageName = $($(e.target).parent()).parent().attr('originalName');
                 var docRow = settings.pageData[pageName].getCursorPosition().row; //0-index to 1-index
@@ -347,6 +347,7 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
                 }
                 else 
                 {
+                    var activeHold = $("#openPages").tabs("option", "active");
                     //change the link's text and href
                     parentListItem.children("a").text(newName);
                     parentListItem.children("a").attr('href', '#' + self.stripFilenameForJQuery(newName));
@@ -358,9 +359,16 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
                     //change this for the listitem, editor and wrapper as well
                     var listitemDiv = $("#" + self.stripFilenameForJQuery(originalName) + "-listitem");
                     listitemDiv.attr('id', self.stripFilenameForJQuery(newName) + "-listitem");
+                    $(listitemDiv.children("a")[0]).attr("href", "#" + self.stripFilenameForJQuery(newName) + "-wrapper")
                     var editorDiv = $("#" + self.stripFilenameForJQuery(originalName));
                     editorDiv.attr('id', self.stripFilenameForJQuery(newName));
-                    editorDiv.parent().attr('id', self.stripFilenameForJQuery(newName) + "wrapper");
+                    editorDiv.attr('originalName', newName);
+                    var wrapperDiv = $("#" + self.stripFilenameForJQuery(originalName) + "-wrapper");
+                    wrapperDiv.attr('id', self.stripFilenameForJQuery(newName) + "-wrapper");
+
+                    //refresh to make sure all these IDs are set
+                    $("#openPages").tabs("refresh");
+                    $("#openPages").tabs("option", "active", activeHold);
                     
                     //change it in the pageData variable and in the select
                     settings.pageData[newName] = settings.pageData[originalName];
@@ -516,7 +524,9 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
                 + '</div>'
                 + '<div id="openPages">'
                     + '<ul id="pagesList">'
-                        + '<li id="newTabButton"><a href="#new-tab" onclick="$(\'#mei-editor\').data(\'AceMeiEditor\').addDefaultPage()">+</a></li>'
+                        + '<li id="newTabButton">'
+                            + '<a href="#new-tab" onclick="$(\'#mei-editor\').data(\'AceMeiEditor\').addDefaultPage()">+</a>'
+                        + '</li>'
                     + '</ul>'
                     + '<div id="new-tab"></div>' //this will never be seen, but is needed to prevent a bug or two
                 + '</div>'

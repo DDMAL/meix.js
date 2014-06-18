@@ -72,7 +72,7 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/FileSaver'], function()
                                     return;
                                 }
 
-                                meiEditor.addFileToGUI(this.result, fileName)
+                                meiEditor.addFileToProject(this.result, fileName)
                                 meiEditor.localLog("Added " + fileName + " to project.")
                             };
                             reader.readAsText(reader.file);
