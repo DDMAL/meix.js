@@ -21,7 +21,7 @@ $.fn.toPx = function(settings){
     return that * scopeVal;
 };
 
-define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js/lib/UndoStack'], function(){
+define([window.meiEditorLocation + 'ace/src/ace'], function(){
 (function ($)
 {
     var AceMeiEditor = function(element, options){
@@ -31,10 +31,6 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
             element: $(element),
             aceTheme: "",
             iconPane: {},
-            undoManager: new UndoStack(),
-            editTimeout: "",
-            initCursor: "",
-            initDoc: "",
             oldPageY: "",
         }
 
@@ -295,39 +291,6 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
             });
 
             self.events.publish("NewFile", [fileData, fileName]);
-        
-            //when each document changes
-            settings.pageData[fileName].on('change', function(delta, editor)
-            {
-                //clear the previous doc and get the current cursor/document settings
-                window.clearTimeout(settings.editTimeout);
-                var newText = delta.data.text;
-
-                if(!/\s/.test(newText))
-                {
-                    if(!settings.initCursor)
-                    {
-                        settings.initCursor = editor.getCursorPosition();
-                    }
-                    if(!settings.initDoc)
-                    {
-                        settings.initDoc = $("#openPages").tabs('option', 'active');
-                    }    
-                }
-
-                settings.editTimeout = setTimeout(function(arr)
-                {
-                    settings.initCursor = undefined;
-                    settings.activeDoc = undefined;
-                    //if it's been 500ms since the last change, get the current text, cursor position, and active document number, then save that as an undo
-                    var texts = arr[0];
-                    var cursorPos = arr[1];
-                    var activeDoc = arr[2];
-                    settings.undoManager.save('PageEdited', [texts, cursorPos, activeDoc]);
-                }, 500, [self.getAllTexts(), settings.initCursor, settings.initDoc]); //after no edits have been done for a second, save the page in the undo stack
-            });
-
-            settings.undoManager.save('PageEdited', [self.getAllTexts(), [{'row':0, 'column':0}], numTabs]);
         }
 
         this.getAllTexts = function()
@@ -587,48 +550,26 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
 
             $.extend(settings.iconPane, localIcons);
 
-            //when editor pane changes are undone
-            settings.undoManager.newAction('PageEdited', function(texts, cursor, doc, currentState)
-            {
-                //replace the editsession for that title
-                for(curTitle in texts)
-                {
-                    settings.pageData[curTitle].setSession(new ace.EditSession(texts[curTitle]));
-                    settings.pageData[curTitle].resize();
-                    settings.pageData[curTitle].focus();
-                }
-
-                self.events.publish("PageEdited");
-
-                //swap back to that tab
-                $("#openPages").tabs('option', 'active', doc);
-
-                //move cursor to before first alpha-numberic character of most recent change
-                var title = self.getActivePanel().text();
-                var newCursor = currentState.parameters[1];
-                settings.pageData[title].gotoLine(newCursor['row'] + 1, newCursor['column'], true); //because 1-indexing is always the right choice
-                settings.pageData[title].resize();
-            });
-
-            settings.element.append('<div class="navbar navbar-inverse navbar-sm" id="topbar">'
-                + '<div ckass="container-fluid">'
-                + '<div class="collapse navbar-collapse">'
-                + '<ul class="nav navbar-nav" id="topbarContent">'
-                + '<li class="dropdown">'
-                + '<a href="#" class="dropdown-toggle navbar-brand" data-toggle="dropdown"> ACE MEI Editor <b class="caret"></b></a>'
-                + '<ul class="dropdown-menu" id="dropdown-main">'
-                + '</ul>'     
-                + '</li>'
-                + '</ul></div></div></div></div>'
+            settings.element.append(
+                '<div class="navbar navbar-inverse navbar-sm" id="topbar">'
+                    + '<div class="container-fluid">'
+                        + '<div class="collapse navbar-collapse">'
+                            + '<ul class="nav navbar-nav" id="topbarContent">'
+                                + '<li class="navbar-brand"> ACE MEI Editor </li>'
+                            + '</ul>'
+                        + '</div>'
+                    + '</div>'
+                + '</div>'
                 + '<div id="openPages">'
-                + '<ul id="pagesList">'
-                + '<li id="newTabButton"><a href="#new-tab" onclick="$(\'#mei-editor\').data(\'AceMeiEditor\').addDefaultPage()">+</a></li>'
-                + '</ul>'
-                + '<div id="new-tab"></div>' //this will never be seen, but is needed to prevent a bug or two
+                    + '<ul id="pagesList">'
+                        + '<li id="newTabButton"><a href="#new-tab" onclick="$(\'#mei-editor\').data(\'AceMeiEditor\').addDefaultPage()">+</a></li>'
+                    + '</ul>'
+                    + '<div id="new-tab"></div>' //this will never be seen, but is needed to prevent a bug or two
                 + '</div>'
                 + '<div id="editorConsole" class="regularBorder">'
-                + '<div id="consoleResizeDiv"></div>'
-                + '<div id="consoleText">Console loaded!</div></div>'
+                    + '<div id="consoleResizeDiv"></div>'
+                    + '<div id="consoleText">Console loaded!</div>'
+                + '</div>'
                 );
 
             $("#consoleText").css('bottom', $(($("#editorConsole").outerHeight() - $("#editorConsole").height())/2).toEm().toString() + 'em');
@@ -737,7 +678,7 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
                         }
                     }
 
-                    //this has to be thrown down here so that it breaks the $.each, not the while. further, $.each needs "return", not "break"
+                    //this has to be thrown down here so that it breaks the $.each, not the while. $.each also needs "return", not "break"
                     if(requirementSkip)
                     {
                         return;
@@ -772,34 +713,11 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
                     $("#" + curPlugin.divName).remove();
                     return;
                 }
-
             });   
 
             //graphics stuff
             self.resizeComponents();
             $(window).on('resize', self.resizeComponents);     
-            $(document).on('keydown', function(e)
-            {
-                if (e.ctrlKey)
-                {
-                    if (e.keyCode == 90)
-                    {
-                        var retVal = settings.undoManager.undo();
-                        if(!retVal)
-                        {
-                            self.localLog("Nothing to undo.");
-                        }
-                    }
-                    else if (e.keyCode == 89)
-                    {
-                        var retVal = settings.undoManager.redo();
-                        if(!retVal)
-                        {
-                            self.localLog("Nothing to redo.");
-                        }
-                    }
-                }
-            });
         };
 
         _init();
