@@ -1,3 +1,4 @@
+//Various imports - run npm install body-parser and express to get those two, other three should be included. Install xmllint (the C version, not the Emscripten version) to run this.
 var http = require('http');
 var express = require('express');
 var bodyParser = require('body-parser');
@@ -5,6 +6,7 @@ var fs = require('fs');
 var exec = require('child_process').exec;
 app = express();
 
+//Allow cross-origin requests as necessary.
 app.use(function (req, res, next) {
     // Website you wish to allow to connect
     res.setHeader('Access-Control-Allow-Origin', 'http://127.0.0.1:8000');
@@ -18,16 +20,13 @@ app.use(function (req, res, next) {
     // Pass to next layer of middleware
     next();
 });
+
+//Limit is needed to transfer both large files.
 app.use(bodyParser({limit: '50mb'}));
 
-app.get('/', function(req, res){
-    console.log('GET /');
-    res.writeHead(200, {'Content-Type': 'text/html'});
-    res.end('get got');
-});
-
+//On receiving a post...
 app.post('/', function(req, res){
-    console.log('POST /');
+    //Get the expected parameters...
     var xmlTitle = req.body.xmlTitle;
     var schemaTitle = req.body.schemaTitle;
     var xmlText = req.body.xml;
@@ -42,6 +41,7 @@ app.post('/', function(req, res){
 
         this.loaded = function(which, status, error)
         {
+            //if one file fails to write for some reason, send an error.
             if(!status)
             {
                 res.writeHead(500, {'Content-Type': 'text/html'});
@@ -49,17 +49,25 @@ app.post('/', function(req, res){
             }
             else
             {
+                //otherwise if it worked, keep going
                 ready[which] = true;
+                console.log("Loaded ", which, ".");
             }
 
+            //once both have loaded...
             if(ready['xml'] && ready['schema']){
                 function puts(error, stdout, stderr) { 
-                    console.log("here", stdout.replace("\n", "<br>"), "err", stderr.replace("\n", "<br>"));
+                    //print and send the output
+                    console.log((stdout || stderr));
                     res.writeHead(200, {'Content-Type': 'text/html'});
                     res.end((stdout || stderr));
+
+                    //delete the files
                     fs.unlink(schemaTitle);
                     fs.unlink(xmlTitle);
                 }
+
+                //execute the command on the server
                 string = "xmllint --noout --relaxng " + schemaTitle + " " + xmlTitle;
                 console.log(string);
                 exec(string, puts);
@@ -67,8 +75,10 @@ app.post('/', function(req, res){
         }
     }
 
+    //create an asynch monitor class
     var preloader = new xmllintPreloader();
 
+    //write the files to disk
     fs.writeFile(xmlTitle, xmlText, function (err) {
         err ? preloader.loaded('xml', false, err) : preloader.loaded('xml', true);
     });
@@ -77,5 +87,5 @@ app.post('/', function(req, res){
     });
 });
  
-app.listen(8008, "132.206.14.122");
-console.log('Server running at http://132.206.14.122:8008/');
+app.listen(8008);
+console.log('Server running at http://localhost:8008/');
