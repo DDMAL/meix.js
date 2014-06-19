@@ -9,6 +9,7 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
             aceTheme: "",
             iconPane: {},
             oldPageY: "",
+            recentDelete: "",
         }
 
         $.extend(settings, options);
@@ -116,7 +117,7 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
         this.getActivePanel = function()
         {
             var tabIndex = $("#openPages").tabs("option", "active");
-            if(!tabIndex){
+            if(tabIndex == 0){
                 $("#openPages").tabs("option", "active", 1);
                 tabIndex = 1;
             }
@@ -191,7 +192,7 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
             var fileNameStripped = self.stripFilenameForJQuery(fileName);
 
             //add a new tab to the editor
-            $("#pagesList").append("<li id='" + fileNameStripped + "-listitem'><a href='#" + fileNameStripped + "-wrapper'>" + fileName + "</a>" + self.makeIconString() + "</li>");
+            $("#pagesList").append("<li id='" + fileNameStripped + "-listitem'><a href='#" + fileNameStripped + "-wrapper' class='linkWrapper'>" + fileName + "</a>" + self.makeIconString() + "</li>");
             $("#openPages").append("<div id='" + fileNameStripped + "-wrapper'>" //necessary for CSS to work
                 + "<div id='" + fileNameStripped + "' originalName='" + fileName + "' class='aceEditorPane'>"
                 + "</div></div>");
@@ -243,70 +244,95 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
         */
         this.removePageFromProject = function(pageName)
         {
-            var pageNameStripped = self.stripFilenameForJQuery(pageName);
-            var activeIndex = $("#openPages").tabs("option", "active");
-
-            //if removed panel is active, set it to one less than the current or keep it at 0 if this is 0
-            if(pageName == self.getActivePanel().text())
+            saveDelete = function(pageName)
             {
+                var pageNameStripped = self.stripFilenameForJQuery(pageName);
                 var activeIndex = $("#openPages").tabs("option", "active");
-                var numTabs = $("#pagesList li").length - 1;
-                
-                //if there's 2 or less tabs open, it's only one and the "new-tab" tab, which we don't want open
-                if(numTabs <= 2)
+
+                //if removed panel is active, set it to one less than the current or keep it at 0 if this is 0
+                if(pageName == self.getActivePanel().text())
                 {
-                    $("#openPages").tabs("option", "active", 2);
-                }
-
-                //else if the rightmost tab is open, switch to the one to the left
-                else if(activeIndex == (numTabs))
-                {
-                    $("#openPages").tabs("option", "active", activeIndex - 1);
-                }
-
-                //else switch to one left of the open one
-                else 
-                {
-                    $("#openPages").tabs("option", "active", activeIndex + 1);
-
-                }
-            }
-
-            //remove the <li> item in the tab list
-            $("#" + pageNameStripped + "-listitem").remove();
-            //remove the editor div
-            $("#" + pageNameStripped + "-wrapper").remove();
-            //delete the pageData item
-            delete settings.pageData[pageName];
-
-            //look through the selects...
-            var curSelectIndex = $("select").length;
-            while(curSelectIndex--)
-            {
-                //...and their children...
-                var childArray = $($("select")[curSelectIndex]).children();
-                var curChildIndex = childArray.length;
-                while(curChildIndex--)
-                {
-                    var curChild = $(childArray[curChildIndex]);
-                    //...for this page.
-                    if(curChild.text() == pageName)
+                    var activeIndex = $("#openPages").tabs("option", "active");
+                    var numTabs = $("#pagesList li").length - 1;
+                    
+                    //if there's 2 or less tabs open, it's only one and the "new-tab" tab, which we don't want open
+                    if(numTabs <= 2)
                     {
-                        $(curChild).remove();
+                        $("#openPages").tabs("option", "active", 2);
+                    }
+
+                    //else if the rightmost tab is open, switch to the one to the left
+                    else if(activeIndex == (numTabs))
+                    {
+                        $("#openPages").tabs("option", "active", activeIndex - 1);
+                    }
+
+                    //else switch to one left of the open one
+                    else 
+                    {
+                        $("#openPages").tabs("option", "active", activeIndex + 1);
+
                     }
                 }
+
+                //remove the <li> item in the tab list
+                $("#" + pageNameStripped + "-listitem").remove();
+                //remove the editor div
+                $("#" + pageNameStripped + "-wrapper").remove();
+                //delete the pageData item
+                delete settings.pageData[pageName];
+
+                //look through the selects...
+                var curSelectIndex = $("select").length;
+                while(curSelectIndex--)
+                {
+                    //...and their children...
+                    var childArray = $($("select")[curSelectIndex]).children();
+                    var curChildIndex = childArray.length;
+                    while(curChildIndex--)
+                    {
+                        var curChild = $(childArray[curChildIndex]);
+                        //...for this page.
+                        if(curChild.text() == pageName)
+                        {
+                            $(curChild).remove();
+                        }
+                    }
+                }
+
+                self.events.publish("PageWasDeleted", [pageName]); //let whoever is interested know 
+                self.localLog("Removed " + pageName + " from the project.")
+
+                //if nothing else exists except the new tab button, create a new default page
+                if($("#pagesList li").length == 1)
+                {
+                    self.addDefaultPage();
+                }  
+
+                //reloads the tab list with this one deleted to make sure tab indices are correct
+                $("#openPages").tabs("refresh");
+     
             }
 
-            //if nothing else exists except the new tab button, create a new default page
-            if($("#pagesList li").length == 1)
-            {
-                self.addDefaultPage();
-            }  
+            //turn on the confirmation modal
+            $("#fileRemoveModal").modal();
+            $("#deletionName").text(pageName);
+            settings.recentDelete = pageName;
 
-            //reloads the tab list with this one deleted to make sure tab indices are correct
-            $("#openPages").tabs("refresh");
- 
-            self.events.publish("PageWasDeleted", [pageName]); //let whoever is interested know 
+            $("#fileRemoveModal-close").on('click', function()
+            {
+                $("#deletionName").text();
+                settings.recentDelete = "";
+                //so that these events don't stack
+                $("#fileRemoveModal-primary").unbind('click');
+            });
+
+            $("#fileRemoveModal-primary").on('click', function()
+            {
+                //actually delete it, then close the modal.
+                saveDelete(settings.recentDelete);
+                $("#fileRemoveModal-close").trigger('click');
+            });
         }
 
         /*
@@ -537,6 +563,7 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
                 );
 
             $("#consoleText").css('bottom', $(($("#editorConsole").outerHeight() - $("#editorConsole").height())/2).toEm().toString() + 'em');
+
             $("#consoleResizeDiv").on('mousedown', function()
             {
                 $("mei-editor").css('cursor', 'ns-resize');
@@ -603,11 +630,16 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
             {
                 activate: function(e, ui)
                 {
-                    var activePage = $("#" + ui.newTab.attr('id') + " > a").text();
+                    //close all open renaming boxes and return to the default
+                    $("input.input-ui-emulator").remove();
+                    $(".linkWrapper").css('display', 'inline-block');
+
+                    var activePage = self.getActivePanel().text();
+                    
                     //resize components to make sure the newly activated tab is the right size
-                    self.resizeComponents(); 
                     settings.pageData[activePage].resize();
                     settings.pageData[activePage].focus();
+                    self.resizeComponents(); 
 
                     //usually, the URL bar will change to the last tab visited because jQueryUI tabs use <a> href attributes; this prevents that by repalcing every URL change with "index.html" and no ID information
                     var urlArr = document.URL.split("/");
@@ -679,6 +711,9 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
                     return;
                 }
             });   
+
+            //deletion conformation modal
+            createModal(settings.element, 'fileRemoveModal', true, 'Are you sure you want to remove "<span id="deletionName"></span>" from this project?', 'Remove file');
 
             //graphics stuff
             self.resizeComponents();
