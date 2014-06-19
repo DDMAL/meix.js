@@ -10,7 +10,7 @@
 
 # Production
 sudo emcc -O1 --minify 1 -s ASM_JS=0 -s SAFE_HEAP=1 libxml2-2.7.8/xmllint.o libxml2-2.7.8/.libs/libxml2.a libz.a -o xmllint.raw.js --pre-js pre.js
-echo "function validateXML(Module) {" > xmllint.js
+#echo "function validateXML(Module) {" > xmllint.js
 #echo "  Module['preRun'] = function(){" >> xmllint.js
 #echo "    FS.createDataFile('/', Module['title'], Module['intArrayFromString'](Module['xml']), true, true);" >> xmllint.js
 #echo "    FS.createDataFile('/', 'test.rng', Module['intArrayFromString'](Module['schema']), true, true);" >> xmllint.js
