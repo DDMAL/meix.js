@@ -63,9 +63,10 @@ require(['meiEditor', window.meiEditorLocation + 'js/local/meilint'], function()
                 */
                 meiEditor.validateMei = function(pageName, validatorName)
                 {
-                    callbackFunction = function(event)
+                    validateCallback = function(source, res)
                     {
-                        var resultsString = event.data;
+                        //if they're using the ajax version, this will be called with 'web', else it'll be called with 'browser'
+                        var resultsString = source == "web" ? res : res.data;
                         var resultsArray = resultsString.split(":");
                         var rowNumber = resultsArray[1];
                         var pageName = resultsArray[0];
@@ -116,9 +117,28 @@ require(['meiEditor', window.meiEditorLocation + 'js/local/meilint'], function()
                         xmlTitle: pageName,
                         schemaTitle: validatorName,
                     }
+
                     try
                     {
-                        validateMEI(Module, {'pageName': pageName}, callbackFunction, meiEditorSettings.xmllintLoc);
+                        $.ajax({
+                            url: "http://132.206.14.122:8008",
+                            type: 'POST', 
+                            contentType: 'application/json',
+                            data: JSON.stringify(Module),
+                            processData: false,
+                            success: function(e){
+                                var eArr = e.split("\n");
+                                for(curLine in eArr)
+                                {
+                                    console.log(eArr[curLine], e);
+                                    validateCallback("web", eArr[curLine]);
+                                } 
+                            },
+                            error: function(a, b, c){
+                                meiEditor.localError("Error in validating " + Module[xmlTitle] + ": " + b + ", " + c);
+                            }
+                        });
+                        //validateMEI(Module, {'pageName': pageName}, function(res){callbackFunction('browser', res);}, , meiEditorSettings.xmllintLoc);
                     }
                     catch(err)
                     {
