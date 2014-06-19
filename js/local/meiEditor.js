@@ -10,6 +10,7 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
             iconPane: {},
             oldPageY: "",
             recentDelete: "",
+            animationInProgress: false,
         }
 
         $.extend(settings, options);
@@ -456,21 +457,25 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
         */
         this.localLog = function(text)
         {
-            localMessage(text, "log");
+            localPost(text, "log");
         }
         this.localWarn = function(text)
         {
-            localMessage(text, "warn");
+            localPost(text, "warn");
         }
         this.localError = function(text)
         {
-            localMessage(text, "error");
+            localPost(text, "error");
+        }
+        this.localMessage = function(text)
+        {
+            localPost(text, "neutral");
         }
         /*
             The previous three are a wrapper for this.
             @param style Determines color to flash (green, yellow, or red) depending on severity of message.
         */
-        localMessage = function(text, style)
+        localPost = function(text, style)
         {
             var newClass = style + "Border";
             //this takes care of some random lines xmllint spits out that aren't useful
@@ -489,17 +494,28 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
                 + (curSeconds > 9 ? curSeconds : "0" + curSeconds);
             $("#consoleText").append("<br>" + timeStr + "> " + text);
 
-            //highlight the div quickly then switch back
-            $("#editorConsole").switchClass("regularBorder", newClass,
+            //highlight the div quickly then switch back, if no other changes are happening
+            if(!settings.animationInProgress)
             {
-                duration: 100,
-                complete: function(){
-                    $("#editorConsole").switchClass(newClass, "regularBorder", 100);
-                },
-            });
+                settings.animationInProgress = true;
+                $("#editorConsole").switchClass("regularBorder", newClass,
+                {
+                    duration: 100,
+                    complete: function(){
+                        $("#editorConsole").switchClass(newClass, "regularBorder",
+                        {
+                            duration: 100,
+                            complete: function(){
+                                settings.animationInProgress = false;
+                            }
+                        });
+                    },
+                });
+            }
 
             //inner div serves to float on bottom; when its height is bigger, snap it to the same height as the parent div
-            if($("#consoleText").height() > $("#editorConsole").height())
+            var editorPadding = ($("#editorConsole").outerHeight() - $("#editorConsole").height())
+            if($("#consoleText").outerHeight() + editorPadding > $("#editorConsole").height())
             {
                 $("#consoleText").height($("#editorConsole").height() - parseInt($("#consoleText").css('padding-top')) - parseInt($("#consoleText").css('padding-bottom'))); 
             }

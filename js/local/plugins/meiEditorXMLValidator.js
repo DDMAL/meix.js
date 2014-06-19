@@ -130,7 +130,6 @@ require(['meiEditor', window.meiEditorLocation + 'js/local/meilint'], function()
                                 var eArr = e.split("\n");
                                 for(curLine in eArr)
                                 {
-                                    console.log(eArr[curLine], e);
                                     validateCallback("web", eArr[curLine]);
                                 } 
                             },
@@ -144,7 +143,7 @@ require(['meiEditor', window.meiEditorLocation + 'js/local/meilint'], function()
                     {
                         console.log(err);
                     }
-                    meiEditor.localLog("Validating " + Module['xmlTitle'] + " with " + Module['schemaTitle'] + ".");
+                    meiEditor.localMessage("Validating " + Module['xmlTitle'] + " with " + Module['schemaTitle'] + ".");
                     $("#fileValidateModal-close").trigger('click');
                 }
 
