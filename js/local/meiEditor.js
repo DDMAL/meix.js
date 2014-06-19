@@ -342,8 +342,10 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
         this.renamePage = function(pageName)
         {
             //used to commit file renaming
-            var saveRename = function(parentListItem, originalName)
+            var saveRename = function(parentListItem)
             {
+                var containedLink = parentListItem.children("a");
+                var originalName = containedLink.text();
                 var newInput = parentListItem.children("input");
                 var newName = newInput.val();
 
@@ -420,28 +422,30 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
                 self.resetIconListeners();
             }
 
-            //variables we may or may not need
+            //get a pointer to the <li> and the rename object, get the original name to feed into the input item
             var parentListItem = $("#" + self.stripFilenameForJQuery(pageName) + "-listitem");
             var clicked = parentListItem.children("span.rename");
             var containedLink = parentListItem.children("a");
-            containedLink.css('display', 'none');
             var originalName = containedLink.text();
 
             //create the input field on top of where the name was before
-            parentListItem.append("<input class='input-ui-emulator' type='text' value='" + originalName + "''>");
+            parentListItem.prepend("<input class='input-ui-emulator' type='text' value='" + originalName + "''>");
+
+            //hide the contained link while the input is open
+            containedLink.css('display', 'none');
 
             //when the pencil is clicked again
             $(clicked).unbind('click');
             $(clicked).on('click', function(e)
             {
-                saveRename(parentListItem, originalName);
+                saveRename(parentListItem);
             });
 
             //or when the enter key is pressed in the field
             $(parentListItem.children("input")).on('keyup', function(e)
             {
                 if(e.keyCode == 13){
-                    saveRename(parentListItem, originalName);
+                    saveRename(parentListItem);
                 }
             });
         }

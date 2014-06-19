@@ -51,6 +51,7 @@ li:focus{
 input.input-ui-emulator{
     float:left;
     margin: .35em .8em;
+    display:inline-block;
 }
 #newTabButton{
     float:right;
@@ -84,12 +85,15 @@ input.input-ui-emulator{
 }
 .errorBorder{
     background-color:rgba(255, 0, 0, .3);
+    border: .1em #AA0000 solid;
 }
 .warnBorder{
     background-color:rgba(255, 255, 0, .3);
+    border: .1em #AAAA00 solid;
 }
 .logBorder{
     background-color:rgba(0, 255, 0, .3);
+    border: .1em #00AA00 solid;
 }
 .gutterError{
     background-color:#F00;
