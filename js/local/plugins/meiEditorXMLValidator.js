@@ -12,8 +12,14 @@ require(['meiEditor', window.meiEditorLocation + 'js/local/meilint'], function()
                 'Validate a file...': 'file-validate-dropdown',
                 'Upload validator...': 'validator-load-dropdown',
             },
-            requiredSettings: ['validatorLink', 'xmllintLoc'],
+            requiredSettings: ['xmllintLocation || xmllintServer'],
             init: function(meiEditor, meiEditorSettings){
+                /*
+                Required settings:
+                -xmllintLocation: if using the browser-based version of xmllint, where to find it in the server directory relative to the page containing the meiEditor.
+                    Optional: -validatorLink: if using the browser-based version of xmllint and supplying RelaxNG validators, where to find a directory holding only them.
+                -xmllintServer: if using the web-based version of xmllint, the URL for the instance.
+                */
                 var aceRange = ace.require('ace/range').Range;
                 $.extend(meiEditorSettings, {
                     validators: {},
@@ -120,24 +126,31 @@ require(['meiEditor', window.meiEditorLocation + 'js/local/meilint'], function()
 
                     try
                     {
-                        $.ajax({
-                            url: "http://132.206.14.122:8008",
-                            type: 'POST', 
-                            contentType: 'application/json',
-                            data: JSON.stringify(Module),
-                            processData: false,
-                            success: function(e){
-                                var eArr = e.split("\n");
-                                for(curLine in eArr)
-                                {
-                                    validateCallback("web", eArr[curLine]);
-                                } 
-                            },
-                            error: function(a, b, c){
-                                meiEditor.localError("Error in validating " + Module[xmlTitle] + ": " + b + ", " + c);
-                            }
-                        });
-                        //validateMEI(Module, {'pageName': pageName}, function(res){callbackFunction('browser', res);}, , meiEditorSettings.xmllintLoc);
+                        //if a server link is present, use that, else use the in-browser way
+                        if(meiEditorSettings['xmllintServer'])
+                        {
+                            $.ajax({
+                                url: meiEditorSettings['xmllintServer'],
+                                type: 'POST', 
+                                contentType: 'application/json',
+                                data: JSON.stringify(Module),
+                                processData: false,
+                                success: function(e){
+                                    var eArr = e.split("\n");
+                                    for(curLine in eArr)
+                                    {
+                                        validateCallback("web", eArr[curLine]);
+                                    } 
+                                },
+                                error: function(a, b, c){
+                                    meiEditor.localError("Error in validating " + Module[xmlTitle] + ": " + b + ", " + c);
+                                }
+                            });
+                        }
+                        else
+                        {
+                            validateMEI(Module, {'pageName': pageName}, function(res){validateCallback('browser', res);}, meiEditorSettings.xmllintLocation);
+                        }
                     }
                     catch(err)
                     {

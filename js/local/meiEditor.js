@@ -212,6 +212,7 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
             var numTabs = $("#pagesList li").length - 1;
             $("#openPages").tabs("refresh");
             $("#openPages").tabs({active: numTabs}); //load straight to the new one
+            settings.pageData[fileName].resize();
         
             //when the document is clicked
             $("#" + fileNameStripped).on('click', function(e) //parent of editorPane
@@ -682,9 +683,29 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
                     var requirementSkip = false;
                     while(requirementsLength--)
                     {
-                        //if we don't find the plugin, throw an error and break (throwing an exception would stop everything, this only stops this plugin)
-                        if(settings[curPlugin.requiredSettings[requirementsLength]] === undefined)
+                        //if this one's a logical OR
+                        if(curPlugin.requiredSettings[requirementsLength].match(/\|\|/))
                         {
+                            orArr = curPlugin.requiredSettings[requirementsLength].split(/ \|\| /);
+                            var curIndex = orArr.length;
+                            var requirementMet = false;
+                            while(curIndex--)
+                            {
+                                var curRequirement = orArr[curIndex];
+                                //if either is true, requirementMet should be true
+                                requirementMet = settings[curRequirement] || requirementMet;
+                            }
+                            //skip if requirementMet is false
+                            requirementSkip = !requirementMet;
+                            if(requirementSkip)
+                            {
+                                //if we don't find anything in the or statement, throw an error and break (throwing an exception would stop everything, this only stops this plugin)
+                                console.error("MEI Editor error: the " + curPlugin.title + " plugin could not find, but requires one of the following settings: (" + orArr.join(", ") + "). Disabling plugin.");
+                            }
+                        }
+                        else if(settings[curPlugin.requiredSettings[requirementsLength]] === undefined)
+                        {
+                            //if we don't find the plugin, throw an error and break (throwing an exception would stop everything, this only stops this plugin)
                             console.error("MEI Editor error: the " + curPlugin.title + " plugin could not find the '" + curPlugin.requiredSettings[requirementsLength] + "' setting. Disabling plugin.");
                             requirementSkip = true;
                         }

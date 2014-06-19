@@ -41,7 +41,8 @@ navbar.
 -requiredSettings is a list of all parameters that the plugin expects to be 
     passed in via the meiEditorSettings object. If one of these is not included,
     the editor will pass a console.error() message and the plugin will be 
-    disabled for that pageload. This is optional.
+    disabled for that pageload. An index of this array can be an or statement;
+    see below for an example. This parameter is optional.
 -skipHelp refers to the right-most dropdown menu; by default, the meiEditor.js 
     file will automatically add a dropdown with the id curPlugin.divName and the
     text curPlugin.title that should be used with a custom listener as a help
@@ -63,7 +64,7 @@ navbar.
                 'Second dropdown...': 'second-dropdown',
                 //'Dropdown title': 'id for dropdown'
             },
-            requiredSettings: ['setting1', 'setting2'],
+            requiredSettings: ['setting1', 'setting2 || setting3'],
             skipHelp: false,
             init: function(meiEditor, meiEditorSettings)
             {
