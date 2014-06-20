@@ -1,3 +1,26 @@
+/*
+
+Copyright (C) 2014 by Andrew Horwitz
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*/
+
 //Various imports - run npm install body-parser and express to get those two, other three should be included. Install xmllint (the C version, not the Emscripten version) to run this.
 var http = require('http');
 var express = require('express');
@@ -37,12 +60,12 @@ app.post('/', function(req, res){
         var ready = {
             'xml': false,
             'schema': false,
-        }
+        };
 
         this.loaded = function(which, status, error)
         {
             //if one file fails to write for some reason, send an error.
-            if(!status)
+            if (!status)
             {
                 res.writeHead(500, {'Content-Type': 'text/html'});
                 res.end("We messed up with the " + which + ":" + error);
@@ -55,7 +78,9 @@ app.post('/', function(req, res){
             }
 
             //once both have loaded...
-            if(ready['xml'] && ready['schema']){
+            if (ready.xml && ready.schema)
+            {
+                // NB (AH): JSHint complaining about function inside a block.
                 function puts(error, stdout, stderr) { 
                     //print and send the output
                     console.log((stdout || stderr));
@@ -72,16 +97,18 @@ app.post('/', function(req, res){
                 console.log(string);
                 exec(string, puts);
             }
-        }
-    }
+        };
+    };
 
     //create an asynch monitor class
     var preloader = new xmllintPreloader();
 
     //write the files to disk
+    // NB (AH): Check these lines -- JSHint is complaining about them.
     fs.writeFile(xmlTitle, xmlText, function (err) {
-        err ? preloader.loaded('xml', false, err) : preloader.loaded('xml', true);
+        (err) ? preloader.loaded('xml', false, err) : preloader.loaded('xml', true);
     });
+
     fs.writeFile(schemaTitle, schemaText, function (err) {
         err ? preloader.loaded('schema', false, err) : preloader.loaded('schema', true);
     });

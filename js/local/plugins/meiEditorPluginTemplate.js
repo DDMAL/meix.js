@@ -93,7 +93,7 @@ than the main file.
                             whatHappensWhenYouClickTheIcon();
                         }
                     },
-                    "class2name": //...
+                    "class2name": null //...
                 };
 
                 $.extend(meiEditorSettings.iconPane, localIcons);
@@ -210,12 +210,12 @@ by appending them as properties of the meiEditor object.
                 var thisFunctionIsOnlyLocal = function()
                 {
 
-                }
+                };
 
                 meiEditor.newFunction = function()
                 {
 
-                }
+                };
 
 /*
 
@@ -226,7 +226,7 @@ anything that was added is immediately removed.
 
                 return true;
             }
-        }
+        };
 
 /*
 
@@ -236,7 +236,9 @@ and is added into the DOM correctly.
 */
         return retval;
     })());
+
     window.pluginLoader.pluginLoaded();
+
 })(jQuery);
 
 });

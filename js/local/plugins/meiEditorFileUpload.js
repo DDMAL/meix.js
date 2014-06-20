@@ -7,23 +7,27 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/FileSaver'], function()
         {
             divName: "file-upload",
             title: 'Files',
+
             dropdownOptions: 
             {
                 'Open files...': 'file-load-dropdown',
                 'Save a file...': 'file-save-dropdown',
             },
+
             init: function(meiEditor, meiEditorSettings)
             {
                 $("#file-load-dropdown").on('click', function(){
                     $("#fileLoadModal").modal();
                 });
+
                 $("#file-save-dropdown").on('click', function(){
                     $("#fileSaveModal").modal();
                 });
+
                 $("#file-upload-help").on('click', function(){
                     $("#fileHelpModal").modal();
-                })
-                
+                });
+
                 /*
                     Prompts local download of a page.
                     @param pageName The page to download.
@@ -32,16 +36,19 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/FileSaver'], function()
                 {
                     formatToSave = function(lineIn, indexIn)
                     {          
-                        if(lineIn !== "") //if the line's not blank (nothing in MEI should be)
+                        if (lineIn !== "") //if the line's not blank (nothing in MEI should be)
                         {
                             formattedData[indexIn] = lineIn + "\n"; //add a newline - it doesn't use them otherwise. Last line will have a newline but this won't stack when pages are re-uploaded as this also removes blank lines.
                         }
-                    }
+                    };
                     
                     var formattedData = [];
                     var lastRow = meiEditorSettings.pageData[pageName].getSession().doc.getLength() - 1; //0-indexed
+
                     meiEditorSettings.pageData[pageName].getSession().doc.getLines(0, lastRow).forEach(formatToSave); //format each
+
                     var pageBlob = new Blob(formattedData, {type: "text/plain;charset=utf-8"}); //create a blob
+
                     saveAs(pageBlob, pageName); //download it! from FileSaver.js
                     $("#fileSaveModal-close").trigger('click');
                     meiEditor.localLog("Saved " + pageName + " to your computer.");
@@ -54,16 +61,18 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/FileSaver'], function()
                 {
                     var readerArr = [];
                     var readerLength = $(".fileInput").length;
-                    while(readerLength--)
+                    while (readerLength--)
                     {
                         var readerArrLength = readerArr.push(new FileReader()) - 1;
                         var reader = readerArr[readerArrLength];
-                        if($(".fileInput")[readerLength].files[0] !== undefined)
+                        if ($(".fileInput")[readerLength].files[0] !== undefined)
                         {
                             reader.file = $(".fileInput")[readerLength].files[0];
 
                             //when the file is loaded as text
-                            reader.onload = function(e) 
+
+                            // NB (AH): JSLint is complaining that you're defining a function in a loop.
+                            reader.onload = function(e)
                             { 
                                 fileName = this.file.name;
                                 if(fileName in meiEditorSettings.pageData)
@@ -72,9 +81,10 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/FileSaver'], function()
                                     return;
                                 }
 
-                                meiEditor.addFileToProject(this.result, fileName)
-                                meiEditor.localLog("Added " + fileName + " to project.")
+                                meiEditor.addFileToProject(this.result, fileName);
+                                meiEditor.localLog("Added " + fileName + " to project.");
                             };
+
                             reader.readAsText(reader.file);
                         }
                     }
@@ -92,7 +102,7 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/FileSaver'], function()
                     $(".fileInput").unbind('change');
                     $("#newFiles").append("<input type='file' class='fileInput' id='fileInput" + initialLength + "'>");
                     $("#fileInput" + initialLength).on('change', addNewFileInput);
-                }
+                };
 
                 createModal(meiEditorSettings.element, 'fileLoadModal', true, '<h4>Open files:</h4>'
                     + '<div id="newFiles">'
@@ -122,7 +132,7 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/FileSaver'], function()
 
                 return true;
             }
-        }
+        };
         return retval;
     })());
     window.pluginLoader.pluginLoaded();

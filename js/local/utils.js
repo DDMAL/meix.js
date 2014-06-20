@@ -1,23 +1,31 @@
-$.fn.toEm = function(settings){
+$.fn.toEm = function(settings)
+{
     settings = jQuery.extend({
         scope: 'body'
     }, settings);
-    var that = parseInt(this[0],10),
+
+    var that = parseInt(this[0], 10),
         scopeTest = jQuery('<div style="display: none; font-size: 1em; margin: 0; padding:0; height: auto; line-height: 1; border:0;">&nbsp;</div>').appendTo(settings.scope),
         scopeVal = scopeTest.height();
+
     scopeTest.remove();
+
     return that / scopeVal;
 };
 
 
-$.fn.toPx = function(settings){
+$.fn.toPx = function(settings)
+{
     settings = jQuery.extend({
         scope: 'body'
     }, settings);
+
     var that = parseFloat(this[0]),
         scopeTest = jQuery('<div style="display: none; font-size: 1em; margin: 0; padding:0; height: auto; line-height: 1; border:0;">&nbsp;</div>').appendTo(settings.scope),
         scopeVal = scopeTest.height();
+
     scopeTest.remove();
+
     return that * scopeVal;
 };
 
@@ -30,13 +38,15 @@ $.fn.toPx = function(settings){
 createSelect = function(idAppend, jsonObject, isArr)
 {
     var retString = "<select id='select" + idAppend + "'>";
-    for (curKeyIndex in jsonObject)
+
+    for (var curKeyIndex in jsonObject)
     {
         var curKey = (isArr ? jsonObject[curKeyIndex] : curKeyIndex);
         retString += "<option name='" + curKey + "'>" + curKey + "</option>";
     }
+
     return retString + "</select>";
-}
+};
 
 /*
     Shorthand function for creating an HTML list object from the keys of a JSON object/values of an array.
@@ -47,13 +57,16 @@ createSelect = function(idAppend, jsonObject, isArr)
 createList = function(idAppend, jsonObject, isArr)
 {
     var retString = "<ul id='list" + idAppend + "'>";
-    for (curKey in jsonObject)
+
+    for (var curKey in jsonObject)
     {
+        // NB (AH): curKey is being reassigned -- is this really what you want?
         var curKey = (isArr ? jsonObject[curKeyIndex] : curKeyIndex);
         retString += "<li id='" + curKey + "'>" + curKey + "</li>";
     }
+
     return retString + "</ul>";
-}
+};
 
 /* 
     Shorthand function for creating a bootstrap modal.
@@ -79,4 +92,4 @@ createModal = function(toAppendTo, modalID, small, modalBody, primaryTitle)
                 + '</div>'
             + '</div>'
         + '</div>');
-}
+};

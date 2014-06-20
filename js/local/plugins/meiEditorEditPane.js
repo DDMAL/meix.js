@@ -14,6 +14,7 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/UndoStack'], function()
                 'Find...': 'find-dropdown',
                 'Replace...': 'replace-dropdown',
             },
+
             init: function(meiEditor, meiEditorSettings)
             {
                 $.extend(meiEditorSettings, {
@@ -26,7 +27,8 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/UndoStack'], function()
                 $("#undo-dropdown").on('click', function()
                 {
                     var retVal = meiEditorSettings.undoManager.undo();
-                    if(!retVal)
+
+                    if (!retVal)
                     {
                         meiEditor.localWarn("Nothing to undo.");
                     }
@@ -35,7 +37,8 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/UndoStack'], function()
                 $("#redo-dropdown").on('click', function()
                 {
                     var retVal = meiEditorSettings.undoManager.redo();
-                    if(!retVal)
+
+                    if (!retVal)
                     {
                         meiEditor.localWarn("Nothing to redo.");
                     }
@@ -45,14 +48,22 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/UndoStack'], function()
                 {
                     var editor = meiEditorSettings.pageData[meiEditor.getActivePanel().text()];
                     var config = require("ace/config");
-                    config.loadModule("ace/ext/searchbox", function(e) {e.Search(editor)});
+
+                    config.loadModule("ace/ext/searchbox", function(e)
+                    {
+                        e.Search(editor);
+                    });
                 });
 
                 $("#replace-dropdown").on('click', function()
                 {
                     var editor = meiEditorSettings.pageData[meiEditor.getActivePanel().text()];
                     var config = require("ace/config");
-                    config.loadModule("ace/ext/searchbox", function(e) {e.Search(editor, true)});
+
+                    config.loadModule("ace/ext/searchbox", function(e)
+                    {
+                        e.Search(editor, true);
+                    });
 
                 });
 
@@ -60,11 +71,11 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/UndoStack'], function()
                     $("#editHelpModal").modal();
                 });
 
-                createModal(meiEditorSettings.element, 'fileHelpModal', false, '<h4>Help for "Edit" menu:</h4>'  
-                + '<li>The undo option (also accessible by pressing ctrl+z on Mac) will undo the last action performed.</li>'
-                + '<li>The redo option (also accessible by pressing ctrl+y on Mac) will redo the last action performed.</li>'
-                + '<li>The find option (also accessible by pressing ctrl+f on Windows or command+f on Mac) will open a find box based on the currently open page.</li>'
-                + '<li>The replace option (also accessible by pressing ctrl+h on Windows or command+option+f on Mac) will open a find/replace box based on the currently open page.</li>');
+                createModal(meiEditorSettings.element, 'fileHelpModal', false, '<h4>Help for "Edit" menu:</h4>'
+                    + '<li>The undo option (also accessible by pressing ctrl+z on Mac) will undo the last action performed.</li>'
+                    + '<li>The redo option (also accessible by pressing ctrl+y on Mac) will redo the last action performed.</li>'
+                    + '<li>The find option (also accessible by pressing ctrl+f on Windows or command+f on Mac) will open a find box based on the currently open page.</li>'
+                    + '<li>The replace option (also accessible by pressing ctrl+h on Windows or command+option+f on Mac) will open a find/replace box based on the currently open page.</li>');
 
                 meiEditor.reloadUndoListeners = function(fileName)
                 {                    
@@ -75,13 +86,14 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/UndoStack'], function()
                         window.clearTimeout(meiEditorSettings.editTimeout);
                         var newText = delta.data.text;
 
-                        if(!/\s/.test(newText))
+                        if (!/\s/.test(newText))
                         {
-                            if(!meiEditorSettings.initCursor)
+                            if (!meiEditorSettings.initCursor)
                             {
                                 meiEditorSettings.initCursor = editor.getCursorPosition();
                             }
-                            if(!meiEditorSettings.initDoc)
+
+                            if (!meiEditorSettings.initDoc)
                             {
                                 meiEditorSettings.initDoc = $("#openPages").tabs('option', 'active');
                             }    
@@ -98,7 +110,7 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/UndoStack'], function()
                             meiEditorSettings.undoManager.save('PageEdited', [texts, cursorPos, activeDoc]);
                         }, 500, [meiEditor.getAllTexts(), meiEditorSettings.initCursor, meiEditorSettings.initDoc]); //after no edits have been done for a second, save the page in the undo stack
                     });
-                }
+                };
 
                 $(document).on('keydown', function(e)
                 {
@@ -135,7 +147,7 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/UndoStack'], function()
                 meiEditorSettings.undoManager.newAction('PageEdited', function(texts, cursor, doc, currentState)
                 {
                     //replace the editsession for that title
-                    for(curTitle in texts)
+                    for (var curTitle in texts)
                     {
                         meiEditorSettings.pageData[curTitle].setSession(new ace.EditSession(texts[curTitle]));
                         meiEditorSettings.pageData[curTitle].resize();
@@ -150,13 +162,14 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/UndoStack'], function()
                     //move cursor to before first alpha-numberic character of most recent change
                     var title = meiEditor.getActivePanel().text();
                     var newCursor = currentState.parameters[1];
-                    meiEditorSettings.pageData[title].gotoLine(newCursor['row'] + 1, newCursor['column'], true); //because 1-indexing is always the right choice
+
+                    meiEditorSettings.pageData[title].gotoLine(newCursor.row + 1, newCursor.column, true); //because 1-indexing is always the right choice
                     meiEditorSettings.pageData[title].resize();
                 });
 
                 return true;
             }
-        }
+        };
         return retval;
     })());
     window.pluginLoader.pluginLoaded();
