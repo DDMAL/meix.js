@@ -284,7 +284,7 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
                 var activeIndex = $("#openPages").tabs("option", "active");
 
                 //if removed panel is active, set it to one less than the current or keep it at 0 if this is 0
-                if (pageName == self.getActivePanel().text())
+                if (pageName === self.getActivePanel().text())
                 {
                     var numTabs = $("#pagesList li").length - 1;
                     
@@ -725,50 +725,49 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
             $.each(window.meiEditorPlugins, function(index, curPlugin)
             {
                 //go through requiredSettings for each plugin
-                if (curPlugin.requiredSettings !== undefined)
+                /*/if (curPlugin.requiredSettings !== undefined)
                 {
-                    var requirementsLength = curPlugin.requiredSettings.length;
-                    var requirementSkip = false;
+                    */
+                var requirementsLength = curPlugin.requiredSettings === undefined ? 0 : curPlugin.requiredSettings.length;
+                var requirementSkip = false;
 
-                    while (requirementsLength--)
+                while (requirementsLength--)
+                {
+                    //if this one's a logical OR
+                    if (curPlugin.requiredSettings[requirementsLength].match(/\|\|/))
                     {
-                        //if this one's a logical OR
-                        if (curPlugin.requiredSettings[requirementsLength].match(/\|\|/))
+                        orArr = curPlugin.requiredSettings[requirementsLength].split(/ \|\| /);
+                        var curIndex = orArr.length;
+                        var orMet = false;
+
+                        while (curIndex--)
                         {
-                            orArr = curPlugin.requiredSettings[requirementsLength].split(/ \|\| /);
-                            var curIndex = orArr.length;
-                            var requirementMet = false;
-
-                            while (curIndex--)
-                            {
-                                var curRequirement = orArr[curIndex];
-                                //if either is true, requirementMet should be true
-                                requirementMet = settings[curRequirement] || requirementMet;
-                            }
-
-                            //skip if requirementMet is false
-                            requirementSkip = !requirementMet;
-
-                            if (requirementSkip)
-                            {
-                                //if we don't find anything in the or statement, throw an error and break (throwing an exception would stop everything, this only stops this plugin)
-                                console.error("MEI Editor error: the " + curPlugin.title + " plugin could not find, but requires one of the following settings: (" + orArr.join(", ") + "). Disabling plugin.");
-                            }
+                            var curRequirement = orArr[curIndex];
+                            //if either is true, orMet should be true
+                            orMet = settings[curRequirement] || orMet;
                         }
-                        else if (settings[curPlugin.requiredSettings[requirementsLength]] === undefined)
+
+                        if (!orMet)
                         {
-                            //if we don't find the plugin, throw an error and break (throwing an exception would stop everything, this only stops this plugin)
-                            console.error("MEI Editor error: the " + curPlugin.title + " plugin could not find the '" + curPlugin.requiredSettings[requirementsLength] + "' setting. Disabling plugin.");
-                            requirementSkip = true;
+                            //if we don't find anything in the or statement, throw an error and break (throwing an exception would stop everything, this only stops this plugin)
+                            console.error("MEI Editor error: the " + curPlugin.title + " plugin could not find, but requires one of the following settings: (" + orArr.join(", ") + "). Disabling plugin.");
+                            break;
                         }
                     }
-
-                    //this has to be thrown down here so that it breaks the $.each, not the while. $.each also needs "return", not "break"
-                    if (requirementSkip)
+                    else if (settings[curPlugin.requiredSettings[requirementsLength]] === undefined)
                     {
-                        return;
+                        //if we don't find the plugin, throw an error and break (throwing an exception would stop everything, this only stops this plugin)
+                        console.error("MEI Editor error: the " + curPlugin.title + " plugin could not find the '" + curPlugin.requiredSettings[requirementsLength] + "' setting. Disabling plugin.");
+                        requirementSkip = true;
                     }
                 }
+
+                //this has to be thrown down here so that it breaks the $.each, not the while. $.each also needs "return", not "break"
+                if (requirementSkip)
+                {
+                    return;
+                }
+                //}
 
                 if (curPlugin.skipHelp !== true)
                 {

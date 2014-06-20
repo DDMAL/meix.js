@@ -171,6 +171,19 @@ require(['meiEditor', window.meiEditorLocation + 'js/local/meilint'], function()
                 //load in the XML validator
                 var validatorNames = [];
 
+                function singleAjax(curValidator)
+                {
+                    $.ajax(
+                    {
+                        url: meiEditorSettings.validatorLink + curValidator,
+                        success: function(data)
+                        {
+                            meiEditorSettings.validators[curValidator] = data;
+                            meiEditor.events.publish("NewValidator", [curValidator]);
+                        }
+                    });
+                }
+
                 $.ajax(
                 {
                     url: meiEditorSettings.validatorLink,
@@ -195,19 +208,6 @@ require(['meiEditor', window.meiEditorLocation + 'js/local/meilint'], function()
                         curValidatorCount = validatorNames.length;
                         while (curValidatorCount--)
                         {
-                            // NB (AH): JSLint is complaining about function definition inside a block.
-                            function singleAjax(curValidator)
-                            {
-                                $.ajax(
-                                {
-                                    url: meiEditorSettings.validatorLink + curValidator,
-                                    success: function(data)
-                                    {
-                                        meiEditorSettings.validators[curValidator] = data;
-                                        meiEditor.events.publish("NewValidator", [curValidator]);
-                                    }
-                                });
-                            }
                             singleAjax(validatorNames[curValidatorCount]);
                         }
                     }
