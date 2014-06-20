@@ -14,8 +14,6 @@ require(['meiEditor', window.meiEditorLocation + 'js/local/meilint'], function()
                 'Upload validator...': 'validator-load-dropdown',
             },
 
-            requiredSettings: ['xmllintLocation || xmllintServer'],
-
             init: function(meiEditor, meiEditorSettings){
                 /*
                 Required settings:
@@ -24,6 +22,13 @@ require(['meiEditor', window.meiEditorLocation + 'js/local/meilint'], function()
                     Optional: -validatorLink: a directory holding only a set of validators to preload into the interface, used for both the browser-based and web-based versions of xmllint.
                 */
                 var aceRange = ace.require('ace/range').Range;
+
+                if (!("xmllintLocation" in meiEditorSettings) && !("xmllintServer" in meiEditorSettings))
+                {
+                    // A more informative error message should go here.
+                    return false;
+                }
+
                 $.extend(meiEditorSettings, {
                     validators: {},
                 });

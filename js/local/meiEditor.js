@@ -724,50 +724,11 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
             //for each plugin...
             $.each(window.meiEditorPlugins, function(index, curPlugin)
             {
-                //go through requiredSettings for each plugin
-                if (curPlugin.requiredSettings !== undefined)
+                // Call the init function and check return value
+                // If it returns false, consider the plugin disabled and exit.
+                if (!curPlugin.init(self, settings))
                 {
-                    var requirementsLength = curPlugin.requiredSettings.length;
-                    var requirementSkip = false;
-
-                    while (requirementsLength--)
-                    {
-                        //if this one's a logical OR
-                        if (curPlugin.requiredSettings[requirementsLength].match(/\|\|/))
-                        {
-                            orArr = curPlugin.requiredSettings[requirementsLength].split(/ \|\| /);
-                            var curIndex = orArr.length;
-                            var requirementMet = false;
-
-                            while (curIndex--)
-                            {
-                                var curRequirement = orArr[curIndex];
-                                //if either is true, requirementMet should be true
-                                requirementMet = settings[curRequirement] || requirementMet;
-                            }
-
-                            //skip if requirementMet is false
-                            requirementSkip = !requirementMet;
-
-                            if (requirementSkip)
-                            {
-                                //if we don't find anything in the or statement, throw an error and break (throwing an exception would stop everything, this only stops this plugin)
-                                console.error("MEI Editor error: the " + curPlugin.title + " plugin could not find, but requires one of the following settings: (" + orArr.join(", ") + "). Disabling plugin.");
-                            }
-                        }
-                        else if (settings[curPlugin.requiredSettings[requirementsLength]] === undefined)
-                        {
-                            //if we don't find the plugin, throw an error and break (throwing an exception would stop everything, this only stops this plugin)
-                            console.error("MEI Editor error: the " + curPlugin.title + " plugin could not find the '" + curPlugin.requiredSettings[requirementsLength] + "' setting. Disabling plugin.");
-                            requirementSkip = true;
-                        }
-                    }
-
-                    //this has to be thrown down here so that it breaks the $.each, not the while. $.each also needs "return", not "break"
-                    if (requirementSkip)
-                    {
-                        return;
-                    }
+                    return;
                 }
 
                 if (curPlugin.skipHelp !== true)
@@ -793,15 +754,6 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
                 else
                 {
                     $("#topbarContent").append('<li><a id="' + curPlugin.divName + '">' + curPlugin.title + '</a></li>');
-                }
-                // Call the init function and check return value
-                var pluginReturn = curPlugin.init(self, settings);
-                
-                // If it returns false, consider the plugin disabled
-                if (!pluginReturn)
-                {
-                    $("#" + curPlugin.divName).remove();
-                    return;
                 }
             });
 

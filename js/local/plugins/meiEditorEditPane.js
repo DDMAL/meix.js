@@ -6,7 +6,7 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/UndoStack'], function()
         var retval = 
         {
             divName: "edit-pane", 
-            title: "Edit", 
+            title: "Edit",
             dropdownOptions: 
             {
                 'Undo': 'undo-dropdown',

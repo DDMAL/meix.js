@@ -7,7 +7,6 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/FileSaver'], function()
         {
             divName: "file-upload",
             title: 'Files',
-
             dropdownOptions: 
             {
                 'Open files...': 'file-load-dropdown',
