@@ -10,6 +10,8 @@ this.addEventListener('message', function(event){
   };
   validateXML(Module);
 }, false);
+
+// NB (AH): JSHint complaining about unmatched { here.
 function validateXML(Module) {
   Module['preRun'] = function() {
     FS.createDataFile('/', Module['title'], Module['intArrayFromString'](Module['xml']), true, true);

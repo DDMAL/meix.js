@@ -37,12 +37,12 @@ app.post('/', function(req, res){
         var ready = {
             'xml': false,
             'schema': false,
-        }
+        };
 
         this.loaded = function(which, status, error)
         {
             //if one file fails to write for some reason, send an error.
-            if(!status)
+            if (!status)
             {
                 res.writeHead(500, {'Content-Type': 'text/html'});
                 res.end("We messed up with the " + which + ":" + error);
@@ -55,7 +55,9 @@ app.post('/', function(req, res){
             }
 
             //once both have loaded...
-            if(ready['xml'] && ready['schema']){
+            if (ready.xml && ready.schema)
+            {
+                // NB (AH): JSHint complaining about function inside a block.
                 function puts(error, stdout, stderr) { 
                     //print and send the output
                     console.log((stdout || stderr));
@@ -72,16 +74,18 @@ app.post('/', function(req, res){
                 console.log(string);
                 exec(string, puts);
             }
-        }
-    }
+        };
+    };
 
     //create an asynch monitor class
     var preloader = new xmllintPreloader();
 
     //write the files to disk
+    // NB (AH): Check these lines -- JSHint is complaining about them.
     fs.writeFile(xmlTitle, xmlText, function (err) {
-        err ? preloader.loaded('xml', false, err) : preloader.loaded('xml', true);
+        (err) ? preloader.loaded('xml', false, err) : preloader.loaded('xml', true);
     });
+
     fs.writeFile(schemaTitle, schemaText, function (err) {
         err ? preloader.loaded('schema', false, err) : preloader.loaded('schema', true);
     });

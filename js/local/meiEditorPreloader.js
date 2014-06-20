@@ -10,22 +10,23 @@
 var MeiEditor = function(element, settings, plugins){
     var localSettings = {
         'meiEditorLocation': 'meix.js/',
-    }
+    };
 
     //Checking for jQuery, jQueryUI, and Bootstrap 3+
-    if(window.jQuery === undefined)
+    if (window.jQuery === undefined)
     {
         console.error("The ACE MEI Editor requires jQuery to function. Please make sure it is included above meiEditorPreloader.js and require.js.");
         return;
     }
 
-    if($.ui === undefined)
+    if ($.ui === undefined)
     {
         console.error("The ACE MEI Editor requires jQueryUI to function. Please make sure it is included above meiEditorPreloader.js and require.js.");
         return;
     }
 
-    if(!(typeof $().emulateTransitionEnd === 'function'))
+    // NB (AH): JSHint complained of confusing use of !; switched to !==
+    if (typeof $().emulateTransitionEnd !== 'function')
     {
         console.error("The ACE MEI Editor requires Twitter's Bootstrap library (version 3+) to function. Please make sure its JavaScript file is included above meiEditorPreloader.js and require.js.");
         return;
@@ -57,17 +58,22 @@ var MeiEditor = function(element, settings, plugins){
                 //trigger a resize event to finalize layout of the screen
                 $(window).trigger('resize');
             }
-        }
-    }
+        };
+    };
 
     //various variables
     window.meiEditorLocation = settings.meiEditorLocation;
     window.meiEditorPlugins = [];
     
     //if desired
-    if(!settings['skipXMLValidator']) plugins.push(window.meiEditorLocation + "js/local/plugins/meiEditorXMLValidator.js");
-    if(!settings['skipFileUpload']) plugins.push(window.meiEditorLocation + "js/local/plugins/meiEditorFileUpload.js");
-    if(!settings['skipEditPane']) plugins.push(window.meiEditorLocation + "js/local/plugins/meiEditorEditPane.js");
+    if (!settings.skipXMLValidator)
+        plugins.push(window.meiEditorLocation + "js/local/plugins/meiEditorXMLValidator.js");
+
+    if (!settings.skipFileUpload)
+        plugins.push(window.meiEditorLocation + "js/local/plugins/meiEditorFileUpload.js");
+
+    if (!settings.skipEditPane)
+        plugins.push(window.meiEditorLocation + "js/local/plugins/meiEditorEditPane.js");
 
     window.pluginLoader = new meiEditorPluginLoader(plugins);
 
@@ -83,7 +89,8 @@ var MeiEditor = function(element, settings, plugins){
     { 
         //once meiEditor.js exists, initialize each plugin by navigating through the plugins array.
         var pluginLength = plugins.length;
-        while(pluginLength--)
+
+        while (pluginLength--)
         {
             require([plugins[pluginLength]]);
         }

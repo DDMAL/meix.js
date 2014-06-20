@@ -13,7 +13,9 @@
 function validateMEI(moduleIn, workerAttributes, onMessage, xmllintLoc)
 {
     var validationWorker = new Worker(xmllintLoc);
+
     $.extend(validationWorker, workerAttributes);
+
     validationWorker.onmessage = onMessage;
     validationWorker.postMessage(moduleIn);
 }
