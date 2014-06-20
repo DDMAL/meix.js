@@ -133,7 +133,7 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
         this.makeIconString = function()
         {
             var iconString = "";
-            for(var curIcon in settings.iconPane)
+            for (var curIcon in settings.iconPane)
             {
                 var thisIcon = settings.iconPane[curIcon];
                 iconString += "<span class='tabIcon " + curIcon + "' title='" + thisIcon.title + "' style='background-image:url(" + thisIcon.src + ")'></span>";
@@ -207,7 +207,7 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
             //check for a new version of "untitled__" that's not in use
             var newPageTitle = "untitled";
             var suffixNumber = 1;
-            while(newPageTitle in settings.pageData)
+            while (newPageTitle in settings.pageData)
             {
                 suffixNumber += 1;
                 newPageTitle = "untitled" + suffixNumber;
@@ -253,7 +253,7 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
                 var docRow = settings.pageData[pageName].getCursorPosition().row; //0-index to 1-index
 
                 //if the document row that was clicked on has a gutter decoration, remove it
-                if(docRow in settings.pageData[pageName].getSession().$decorations)
+                if (docRow in settings.pageData[pageName].getSession().$decorations)
                 {
                     settings.pageData[pageName].getSession().removeGutterDecoration(parseInt(docRow), settings.pageData[pageName].getSession().$decorations[docRow].substring(1));
                 } 
