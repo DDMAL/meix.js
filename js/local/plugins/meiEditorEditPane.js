@@ -12,7 +12,7 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/UndoStack'], function()
                 'Undo': 'undo-dropdown',
                 'Redo': 'redo-dropdown',
                 'Find...': 'find-dropdown',
-                'Replace...': 'replace-dropdown',
+                'Replace...': 'replace-dropdown'
             },
 
             init: function(meiEditor, meiEditorSettings)
@@ -21,7 +21,7 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/UndoStack'], function()
                     undoManager: new UndoStack(),
                     initCursor: "",
                     initDoc: "",
-                    editTimeout: "",
+                    editTimeout: ""
                 });
 
                 $("#undo-dropdown").on('click', function()
@@ -71,11 +71,11 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/UndoStack'], function()
                     $("#editHelpModal").modal();
                 });
 
-                createModal(meiEditorSettings.element, 'fileHelpModal', false, '<h4>Help for "Edit" menu:</h4>'
-                    + '<li>The undo option (also accessible by pressing ctrl+z on Mac) will undo the last action performed.</li>'
-                    + '<li>The redo option (also accessible by pressing ctrl+y on Mac) will redo the last action performed.</li>'
-                    + '<li>The find option (also accessible by pressing ctrl+f on Windows or command+f on Mac) will open a find box based on the currently open page.</li>'
-                    + '<li>The replace option (also accessible by pressing ctrl+h on Windows or command+option+f on Mac) will open a find/replace box based on the currently open page.</li>');
+                createModal(meiEditorSettings.element, 'editHelpModal', false, '<h4>Help for "Edit" menu:</h4>' +
+                    '<li>The undo option (also accessible by pressing ctrl+z on Mac) will undo the last action performed.</li>' +
+                    '<li>The redo option (also accessible by pressing ctrl+y on Mac) will redo the last action performed.</li>' +
+                    '<li>The find option (also accessible by pressing ctrl+f on Windows or command+f on Mac) will open a find box based on the currently open page.</li>' +
+                    '<li>The replace option (also accessible by pressing ctrl+h on Windows or command+option+f on Mac) will open a find/replace box based on the currently open page.</li>');
 
                 meiEditor.reloadUndoListeners = function(fileName)
                 {                    
@@ -86,7 +86,7 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/UndoStack'], function()
                         window.clearTimeout(meiEditorSettings.editTimeout);
                         var newText = delta.data.text;
 
-                        if (!/\s/.test(newText))
+                        if (!(/\s/.test(newText)))
                         {
                             if (!meiEditorSettings.initCursor)
                             {

@@ -11,7 +11,7 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/FileSaver'], function()
             dropdownOptions: 
             {
                 'Open files...': 'file-load-dropdown',
-                'Save a file...': 'file-save-dropdown',
+                'Save a file...': 'file-save-dropdown'
             },
 
             init: function(meiEditor, meiEditorSettings)
@@ -104,15 +104,15 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/FileSaver'], function()
                     $("#fileInput" + initialLength).on('change', addNewFileInput);
                 };
 
-                createModal(meiEditorSettings.element, 'fileLoadModal', true, '<h4>Open files:</h4>'
-                    + '<div id="newFiles">'
-                    + '</div>', "Open file");
+                createModal(meiEditorSettings.element, 'fileLoadModal', true, '<h4>Open files:</h4>' +
+                    '<div id="newFiles">' +
+                    '</div>', "Open file");
                 addNewFileInput();
-                createModal(meiEditorSettings.element, 'fileSaveModal', true, '<h4>Save a file:</h4>'
-                    + createSelect("Save", meiEditorSettings.pageData), "Save file");
-                createModal(meiEditorSettings.element, 'fileHelpModal', false, '<h4>Help for "Files" menu:</h4>'
-                    + '<li>The "Open files..." option will let you load files into the project as new tabs in the editor. You can only select one file per input, but more spaces for uploading files will appear as you use existing ones.</li>'
-                    + '<li>The "Save file..." option will let you save a file that you have edited locally. It will save to the folder your browser automatically points to (likely your local Downloads folder).</li>');
+                createModal(meiEditorSettings.element, 'fileSaveModal', true, '<h4>Save a file:</h4>' +
+                    createSelect("Save", meiEditorSettings.pageData), "Save file");
+                createModal(meiEditorSettings.element, 'fileHelpModal', false, '<h4>Help for "Files" menu:</h4>' +
+                    '<li>The "Open files..." option will let you load files into the project as new tabs in the editor. You can only select one file per input, but more spaces for uploading files will appear as you use existing ones.</li>' +
+                    '<li>The "Save file..." option will let you save a file that you have edited locally. It will save to the folder your browser automatically points to (likely your local Downloads folder).</li>');
                 $("#fileLoadModal-primary").on('click', addPages);
                 $("#fileSaveModal-primary").on('click', function()
                     {

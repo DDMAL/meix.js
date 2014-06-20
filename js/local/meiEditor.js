@@ -33,7 +33,7 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
             iconPane: {},
             oldPageY: "",
             recentDelete: "",
-            animationInProgress: false,
+            animationInProgress: false
         };
 
         $.extend(settings, options);
@@ -226,9 +226,9 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
 
             //add a new tab to the editor
             $("#pagesList").append("<li id='" + fileNameStripped + "-listitem'><a href='#" + fileNameStripped + "-wrapper' class='linkWrapper'>" + fileName + "</a>" + self.makeIconString() + "</li>");
-            $("#openPages").append("<div id='" + fileNameStripped + "-wrapper'>" //necessary for CSS to work
-                + "<div id='" + fileNameStripped + "' originalName='" + fileName + "' class='aceEditorPane'>"
-                + "</div></div>");
+            $("#openPages").append("<div id='" + fileNameStripped + "-wrapper'>" + //necessary for CSS to work
+                "<div id='" + fileNameStripped + "' originalName='" + fileName + "' class='aceEditorPane'>" +
+                "</div></div>");
             
             self.resetIconListeners();
 
@@ -255,7 +255,7 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
                 //if the document row that was clicked on has a gutter decoration, remove it
                 if (docRow in settings.pageData[pageName].getSession().$decorations)
                 {
-                    settings.pageData[pageName].getSession().removeGutterDecoration(parseInt(docRow), settings.pageData[pageName].getSession().$decorations[docRow].substring(1));
+                    settings.pageData[pageName].getSession().removeGutterDecoration(parseInt(docRow, 10), settings.pageData[pageName].getSession().$decorations[docRow].substring(1));
                 } 
             });
 
@@ -286,8 +286,6 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
                 //if removed panel is active, set it to one less than the current or keep it at 0 if this is 0
                 if (pageName == self.getActivePanel().text())
                 {
-                    // NB (AH) activeIndex is already defined
-                    var activeIndex = $("#openPages").tabs("option", "active");
                     var numTabs = $("#pagesList li").length - 1;
                     
                     //if there's 2 or less tabs open, it's only one and the "new-tab" tab, which we don't want open
@@ -536,9 +534,9 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
             var curSeconds = curDate.getSeconds();
 
             //make sure it prints out with two digit minutes/seconds; JavaScript defaults to 11:4:4 instead of 11:04:04
-            var timeStr = curHours + ":" 
-                + (curMinutes > 9 ? curMinutes : "0" + curMinutes) + ":" 
-                + (curSeconds > 9 ? curSeconds : "0" + curSeconds);
+            var timeStr = curHours + ":" +
+                (curMinutes > 9 ? curMinutes : "0" + curMinutes) + ":" +
+                (curSeconds > 9 ? curSeconds : "0" + curSeconds);
             $("#consoleText").append("<br>" + timeStr + "> " + text);
 
             //highlight the div quickly then switch back, if no other changes are happening
@@ -556,7 +554,7 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
                                 settings.animationInProgress = false;
                             }
                         });
-                    },
+                    }
                 });
             }
 
@@ -565,7 +563,7 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
 
             if ($("#consoleText").outerHeight() + editorPadding > $("#editorConsole").height())
             {
-                $("#consoleText").height($("#editorConsole").height() - parseInt($("#consoleText").css('padding-top')) - parseInt($("#consoleText").css('padding-bottom'))); 
+                $("#consoleText").height($("#editorConsole").height() - parseInt($("#consoleText").css('padding-top'), 10) - parseInt($("#consoleText").css('padding-bottom'), 10)); 
             }
             else
             {
@@ -602,33 +600,32 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
             $.extend(settings.iconPane, localIcons);
 
             settings.element.append(
-                '<div class="navbar navbar-inverse navbar-sm" id="topbar">'
-                    + '<div class="container-fluid">'
-                        + '<div class="collapse navbar-collapse">'
-                            + '<ul class="nav navbar-nav" id="topbarContent">'
-                                + '<li class="navbar-brand"> ACE MEI Editor </li>'
-                                + '<li class="dropdown navbar-right">'
-                                    + '<a href="#" class="dropdown-toggle navbar" data-toggle="dropdown"> Help <b class="caret"></b></a>'
-                                    + '<ul class="dropdown-menu" id="help-dropdown">'
-                                    + '</ul>'
-                                + '</li>'
-                            + '</ul>'
-                        + '</div>'
-                    + '</div>'
-                + '</div>'
-                + '<div id="openPages">'
-                    + '<ul id="pagesList">'
-                        + '<li id="newTabButton">'
-                            + '<a href="#new-tab" onclick="$(\'#mei-editor\').data(\'AceMeiEditor\').addDefaultPage()">+</a>'
-                        + '</li>'
-                    + '</ul>'
-                    + '<div id="new-tab"></div>' //this will never be seen, but is needed to prevent a bug or two
-                + '</div>'
-                + '<div id="editorConsole" class="regularBorder">'
-                    + '<div id="consoleResizeDiv"></div>'
-                    + '<div id="consoleText">Console loaded!</div>'
-                + '</div>'
-                );
+                '<div class="navbar navbar-inverse navbar-sm" id="topbar">' +
+                    '<div class="container-fluid">' +
+                        '<div class="collapse navbar-collapse">' +
+                            '<ul class="nav navbar-nav" id="topbarContent">' +
+                                '<li class="navbar-brand"> ACE MEI Editor </li>' +
+                                '<li class="dropdown navbar-right">' +
+                                    '<a href="#" class="dropdown-toggle navbar" data-toggle="dropdown"> Help <b class="caret"></b></a>' +
+                                    '<ul class="dropdown-menu" id="help-dropdown">' +
+                                    '</ul>' +
+                                '</li>' +
+                            '</ul>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>' +
+                '<div id="openPages">' +
+                    '<ul id="pagesList">' +
+                        '<li id="newTabButton">' +
+                            '<a href="#new-tab" onclick="$(\'#mei-editor\').data(\'AceMeiEditor\').addDefaultPage()">+</a>' +
+                        '</li>' +
+                    '</ul>' +
+                    '<div id="new-tab"></div>' + //this will never be seen, but is needed to prevent a bug or two
+                '</div>' +
+                '<div id="editorConsole" class="regularBorder">' +
+                    '<div id="consoleResizeDiv"></div>' +
+                    '<div id="consoleText">Console loaded!</div>' +
+                '</div>');
 
             $("#consoleText").css('bottom', $(($("#editorConsole").outerHeight() - $("#editorConsole").height())/2).toEm().toString() + 'em');
 
@@ -667,13 +664,11 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
                     var consoleDiff = $("#editorConsole").outerHeight() - $("#editorConsole").height();
                     $("#editorConsole").offset({'top': $("#openPages").outerHeight() + $("#topbar").outerHeight()});
 
-                    // NB (AH) newHeight is already defined.
-                    var newHeight = parseInt(window.innerHeight - $("#openPages").outerHeight() - topbarHeight - consoleDiff + 1);
+                    newHeight = parseInt(window.innerHeight - $("#openPages").outerHeight() - topbarHeight - consoleDiff + 1, 10);
                     $("#editorConsole").height(newHeight);
 
-                    // NB (AH) consoleDiff is already defined.
                     //make sure that the child of the console that holds the text is at the right size
-                    var consoleDiff = $("#editorConsole").outerHeight() - $("#editorConsole").height();
+                    consoleDiff = $("#editorConsole").outerHeight() - $("#editorConsole").height();
                     $("#consoleText").css('bottom', $(consoleDiff/2).toEm().toString() + 'em');
 
                     //var currentHeight = document.getElementById("consoleText").scrollHeight;
@@ -783,10 +778,10 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
                 //append a dropdown menu to the navbar
                 if (curPlugin.dropdownOptions !== undefined)
                 {
-                    $("#topbarContent").append('<li class="dropdown">'
-                        + '<a href="#" class="dropdown-toggle" data-toggle="dropdown">' + curPlugin.title + ' <b class="caret"></b></a>'
-                        + '<ul class="dropdown-menu" id="dropdown-' + curPlugin.divName + '">'
-                        + '</ul></li>');
+                    $("#topbarContent").append('<li class="dropdown">' +
+                        '<a href="#" class="dropdown-toggle" data-toggle="dropdown">' + curPlugin.title + ' <b class="caret"></b></a>' +
+                        '<ul class="dropdown-menu" id="dropdown-' + curPlugin.divName + '">' +
+                        '</ul></li>');
 
                     for (var optionName in curPlugin.dropdownOptions)
                     {

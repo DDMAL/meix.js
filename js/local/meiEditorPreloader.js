@@ -9,7 +9,7 @@
 */
 var MeiEditor = function(element, settings, plugins){
     var localSettings = {
-        'meiEditorLocation': 'meix.js/',
+        'meiEditorLocation': 'meix.js/'
     };
 
     //Checking for jQuery, jQueryUI, and Bootstrap 3+
@@ -80,7 +80,7 @@ var MeiEditor = function(element, settings, plugins){
     //standardize the meiEditor path for require.js
     require.config({
         paths: {
-            'meiEditor': window.meiEditorLocation + 'js/local/meiEditor',
+            'meiEditor': window.meiEditorLocation + 'js/local/meiEditor'
         }
     });
 
