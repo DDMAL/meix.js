@@ -17,8 +17,8 @@ require(['meiEditor', window.meiEditorLocation + 'js/local/meilint'], function()
                 /*
                 Required settings:
                 -xmllintLocation: if using the browser-based version of xmllint, where to find it in the server directory relative to the page containing the meiEditor.
-                    Optional: -validatorLink: if using the browser-based version of xmllint and supplying RelaxNG validators, where to find a directory holding only them.
                 -xmllintServer: if using the web-based version of xmllint, the URL for the instance.
+                    Optional: -validatorLink: a directory holding only a set of validators to preload into the interface, used for both the browser-based and web-based versions of xmllint.
                 */
                 var aceRange = ace.require('ace/range').Range;
                 $.extend(meiEditorSettings, {
