@@ -15,15 +15,18 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/FileSaver'], function()
 
             init: function(meiEditor, meiEditorSettings)
             {
-                $("#file-load-dropdown").on('click', function(){
+                $("#file-load-dropdown").on('click', function()
+                {
                     $("#fileLoadModal").modal();
                 });
 
-                $("#file-save-dropdown").on('click', function(){
+                $("#file-save-dropdown").on('click', function()
+                {
                     $("#fileSaveModal").modal();
                 });
 
-                $("#file-upload-help").on('click', function(){
+                $("#file-upload-help").on('click', function()
+                {
                     $("#fileHelpModal").modal();
                 });
 
@@ -60,21 +63,23 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/FileSaver'], function()
                 {
                     var readerArr = [];
                     var readerLength = $(".fileInput").length;
+
                     while (readerLength--)
                     {
                         var readerArrLength = readerArr.push(new FileReader()) - 1;
                         var reader = readerArr[readerArrLength];
+
                         if ($(".fileInput")[readerLength].files[0] !== undefined)
                         {
                             reader.file = $(".fileInput")[readerLength].files[0];
-
                             //when the file is loaded as text
 
                             // NB (AH): JSLint is complaining that you're defining a function in a loop.
                             reader.onload = function(e)
                             { 
                                 fileName = this.file.name;
-                                if(fileName in meiEditorSettings.pageData)
+
+                                if (fileName in meiEditorSettings.pageData)
                                 {
                                     meiEditor.localError("Error in adding " + fileName + ": a file with the same name is already in the project. Please change a file's name and try readding the file.");
                                     return;
@@ -106,17 +111,22 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/FileSaver'], function()
                 createModal(meiEditorSettings.element, 'fileLoadModal', true, '<h4>Open files:</h4>' +
                     '<div id="newFiles">' +
                     '</div>', "Open file");
+
                 addNewFileInput();
+
                 createModal(meiEditorSettings.element, 'fileSaveModal', true, '<h4>Save a file:</h4>' +
                     createSelect("Save", meiEditorSettings.pageData), "Save file");
+
                 createModal(meiEditorSettings.element, 'fileHelpModal', false, '<h4>Help for "Files" menu:</h4>' +
                     '<li>The "Open files..." option will let you load files into the project as new tabs in the editor. You can only select one file per input, but more spaces for uploading files will appear as you use existing ones.</li>' +
                     '<li>The "Save file..." option will let you save a file that you have edited locally. It will save to the folder your browser automatically points to (likely your local Downloads folder).</li>');
+
                 $("#fileLoadModal-primary").on('click', addPages);
+
                 $("#fileSaveModal-primary").on('click', function()
-                    {
+                {
                         savePageToClient($("#selectSave").find(":selected").text());
-                    });
+                });
 
                 meiEditor.events.subscribe("NewFile", function(a, fileName)
                 {
