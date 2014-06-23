@@ -5,15 +5,6 @@ require(['meiEditor', window.meiEditorLocation + 'js/local/meilint'], function()
     {
         var retval = 
         {
-            divName: "xml-validator",
-            title: "Validator",
-
-            dropdownOptions: 
-            {
-                'Validate a file...': 'file-validate-dropdown',
-                'Upload validator...': 'validator-load-dropdown',
-            },
-
             init: function(meiEditor, meiEditorSettings){
                 /*
                 Required settings:
@@ -25,13 +16,19 @@ require(['meiEditor', window.meiEditorLocation + 'js/local/meilint'], function()
 
                 if (!("xmllintLocation" in meiEditorSettings) && !("xmllintServer" in meiEditorSettings))
                 {
-                    // A more informative error message should go here.
+                    console.error("MEI Editor error: The 'XML Validator' plugin requires either the 'xmllintLocation' or 'xmllintServer' settings present on intialization.");
                     return false;
                 }
 
                 $.extend(meiEditorSettings, {
-                    validators: {},
+                    validators: {}
                 });
+
+
+                meiEditor.addToNavbar("Validator", "xml-validator");
+                $("#dropdown-xml-validator").append("<li><a id='file-validate-dropdown'>Validate a file...</a></li>");
+                $("#dropdown-xml-validator").append("<li><a id='validator-load-dropdown'>Upload validator...</a></li>");
+                $("#help-dropdown").append("<li><a id='xml-validator-help'>Validator</a></li>");
 
                 $("#file-validate-dropdown").on('click', function(){
                     $("#fileValidateModal").modal();
@@ -45,9 +42,9 @@ require(['meiEditor', window.meiEditorLocation + 'js/local/meilint'], function()
                     $("#validatorHelpModal").modal();
                 });
 
-                createModal(meiEditorSettings.element, 'validatorHelpModal', false, '<h4>Help for "Validator" menu:</h4>'  
-                + '<li>The "Validate a file" option will bring you to a list of files in the editor and a list of validators loaded automatically. Choosing "validate a file" will run in the background and update you on its progress in both the console pane and highlight errors or warnings in the file.</li>'
-                + '<li>The "Upload validator" option allows you to upload a custom validator other than the five that are included normally.</li>');
+                createModal(meiEditorSettings.element, 'validatorHelpModal', false, '<h4>Help for "Validator" menu:</h4>' + 
+                '<li>The "Validate a file" option will bring you to a list of files in the editor and a list of validators loaded automatically. Choosing "validate a file" will run in the background and update you on its progress in both the console pane and highlight errors or warnings in the file.</li>' +
+                '<li>The "Upload validator" option allows you to upload a custom validator other than the five that are included normally.</li>');
 
                 /* 
                     Function called to reapply button listeners
@@ -88,7 +85,7 @@ require(['meiEditor', window.meiEditorLocation + 'js/local/meilint'], function()
                         var pageName = resultsArray[0];
                         
                         //if the second block of text is an integer (if it's a line number)
-                        if (parseInt(rowNumber) === rowNumber)
+                        if (parseInt(rowNumber, 10) === rowNumber)
                         {
                             var zeroedRowNumber = rowNumber - 1; //0-indexing!
                             var gutterClass = resultsString.match(/error/) ? "gutterError" : "gutterWarning";
@@ -131,7 +128,7 @@ require(['meiEditor', window.meiEditorLocation + 'js/local/meilint'], function()
                         xml: meiEditorSettings.pageData[pageName].getSession().doc.getAllLines().join("\n"),
                         schema: meiEditorSettings.validators[validatorName],
                         xmlTitle: pageName,
-                        schemaTitle: validatorName,
+                        schemaTitle: validatorName
                     };
 
                     try

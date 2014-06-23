@@ -27,47 +27,79 @@ extend the AceMeiEditor class.
     {
         var retval = 
         {
-/*
-
-Each plugin is displayed as a Bootstrap dropdown menu/button along the top 
-navbar. 
--divName is the id given to the navbar object. 
--title is the text visible on the top navbar
--dropdownOptions is a json object with the syntax 'Dropdown object title': 'id 
-    of the dropdown object'. The id is for your use; chain a jQuery on-click 
-    event on it to be able to provide functionality. This parameter is optional,
-    and if you choose not to use it, the navbar object will be only a button and
-    will not dropdown on click.
--requiredSettings is a list of all parameters that the plugin expects to be 
-    passed in via the meiEditorSettings object. If one of these is not included,
-    the editor will pass a console.error() message and the plugin will be 
-    disabled for that pageload. An index of this array can be an or statement;
-    see below for an example. This parameter is optional.
--skipHelp refers to the right-most dropdown menu; by default, the meiEditor.js 
-    file will automatically add a dropdown with the id curPlugin.divName and the
-    text curPlugin.title that should be used with a custom listener as a help
-    popup. Setting skipHelp to true will skip adding this; if skipHelp == false
-    or skipHelp == undefined, the dropdown option will be added.
--init is where the functionality of your plugin is imported into the 
-    AceMeiEditor class. It will be called with two parameters: meiEditor, a 
-    pointer to all functions that are a part of the AceMeiEditor class, and 
-    meiEditorSettings, a pointer to all the settings that are a part of the 
-    AceMeiEditor class. They can be extended as you wish. More documentation 
-    follows.
-
-*/
-            divName: "my-plugin", 
-            title: "My Plugin!", //text for the dropdown div, required
-            dropdownOptions: //the <li> objects present when the dropdown is clicked
-            {
-                'First dropdown...': 'first-dropdown',
-                'Second dropdown...': 'second-dropdown',
-                //'Dropdown title': 'id for dropdown'
-            },
-            requiredSettings: ['setting1', 'setting2 || setting3'],
-            skipHelp: false,
             init: function(meiEditor, meiEditorSettings)
             {
+/*
+
+If there are settings required for your plugin, the logic is your responsibility
+to implement. These can be checked for in the meiEditorSettings object.
+
+*/
+                if (!("requiredSettingOne" in meiEditorSettings) && !("requiredSettingTwo" in meiEditorSettings))
+                {
+                    console.error("MEI Editor error: The 'My Plugin' plugin requires either the 'requiredSettingOne' or 'requiredSettingTwo' settings present on intialization.");
+                    return false;
+                }
+
+/*
+
+Any interactions that need to be done with plugins should be included as a 
+Bootstrap navbar menu. A built-in function, meiEditor.addToNavbar, takes two
+parameters. The first is the title to show on the nav-bar, the second is a 
+string that gets appended to the word "dropdown" to make the dropdown box ID. To
+add options to the dropdown, include an anchor tag within a list item tag; 
+Bootstrap will automatically format this correctly. You may add on-click 
+listeners/hrefs as you wish; the default plugins come with on-click listeners.
+
+To add a help option, append the same structure to the "#help-dropdown"
+selector.
+
+*/
+
+                meiEditor.addToNavbar("My Plugin", "my-plugin");
+                $("#dropdown-my-plugin").append("<li><a id='first-dropdown'>" + nameForThisOption + "</a></li>");
+                $("#help-dropdown").append("<li><a id='" + idForThisHelpOption + "-help'>" + nameForThisPlugin + "</a></li>");
+                  
+/*
+
+An example of how to chain events off the dropdown/navbar objects.
+
+*/
+
+                $("#first-dropdown").on('click', function()
+                {
+                    //...
+                });
+
+/*
+
+An example of a streamlined way to spawn a modal off a dropdown/navbar object.
+The utils.js file contains a function, createModal, to build a Bootstrap modal
+automatically and avoid adding ~15 lines of HTML manually. The parameters are:
+
+-A jQuery selector for the element(s) to attach it to (the parent element is fine)
+-The id for the modal so it can be displayed (see below)
+-A boolean value where true spawns a small modal and false spawns a larger modal
+-The body of the modal, in plain text or html.
+-The primary button (rightmost and usually coloured) of the modal.
+
+*/
+
+                createModal(meiEditorSettings.element, 'idForTheModal', smallModal, 'Body of the modal', 'Primary Button On Modal');
+
+/*
+
+To spawn the modal, use the builtin Bootstrap function and call .modal() on its
+selector (the first parameter of the function above). 
+
+*/
+                $("#first-dropdown").on('click', function()
+                {
+                    $("#idForTheModal").modal();
+                });
+
+/*
+
 /*
 
 The icon pane on each open file can be extended using 
@@ -106,47 +138,6 @@ To add settings to the meiEditorSettings object, use jQuery.extend as well.
 
                 $.extend(meiEditorSettings, {
                     newSettings: 'newVal',
-                });
-
-/*
-
-An example of how to chain events off the dropdown/navbar objects. The same 
-syntax applies if dropdownOptions is left empty; just use #divName as the
-selector instead of the dropdown option's ID.
-
-*/
-
-                $("#first-dropdown").on('click', function()
-                {
-                    //...
-                });
-
-/*
-
-An example of a streamlined way to spawn a modal off a dropdown/navbar object.
-The utils.js file contains a function, createModal, to build a Bootstrap modal
-automatically and avoid adding ~15 lines of HTML manually. The parameters are:
-
--A jQuery selector for the element(s) to attach it to (the parent element is fine)
--The id for the modal so it can be displayed (see below)
--A boolean value where true spawns a small modal and false spawns a larger modal
--The body of the modal, in plain text or html.
--The primary button (rightmost and usually coloured) of the modal.
-
-*/
-
-                createModal(meiEditorSettings.element, 'idForTheModal', smallModal, 'Body of the modal', 'Primary Button On Modal');
-
-/*
-
-To spawn the modal, use the builtin Bootstrap function and call .modal() on its
-selector (the first parameter of the function above). In this example, it is 
-called off clicking the second dropdown option.
-
-*/
-                $("#second-dropdown").on('click', function()
-                {
-                    $("#idForTheModal").modal();
                 });
 
 /*

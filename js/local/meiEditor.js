@@ -515,7 +515,7 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
         };
 
         /*
-            The previous three are a wrapper for this.
+            The previous four are a wrapper for this.
             @param style Determines color to flash (green, yellow, or red) depending on severity of message.
         */
         localPost = function(text, style)
@@ -572,6 +572,20 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
 
             //automatically scroll to bottom when new text is added
             document.getElementById("consoleText").scrollTop = document.getElementById("consoleText").scrollHeight;
+        };
+
+        /*
+            Adds a navbar menu for a plugin.
+            @param title The title of the plugin.
+            @param divName Will be appended to "dropdown-" to add options to the dropdown.
+        */
+
+        this.addToNavbar = function(title, divName)
+        {
+            $("#topbarContent").append('<li class="dropdown">' +
+                '<a href="#" class="dropdown-toggle" data-toggle="dropdown">' + title + ' <b class="caret"></b></a>' +
+                '<ul class="dropdown-menu" id="dropdown-' + divName + '">' +
+                '</ul></li>');
         };
 
         /*
@@ -729,31 +743,6 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
                 if (!curPlugin.init(self, settings))
                 {
                     return;
-                }
-
-                if (curPlugin.skipHelp !== true)
-                {
-                    $("#help-dropdown").append("<li><a id='" + curPlugin.divName + "-help'>" + curPlugin.title + "</a></li>");
-                }
-
-                //append a dropdown menu to the navbar
-                if (curPlugin.dropdownOptions !== undefined)
-                {
-                    $("#topbarContent").append('<li class="dropdown">' +
-                        '<a href="#" class="dropdown-toggle" data-toggle="dropdown">' + curPlugin.title + ' <b class="caret"></b></a>' +
-                        '<ul class="dropdown-menu" id="dropdown-' + curPlugin.divName + '">' +
-                        '</ul></li>');
-
-                    for (var optionName in curPlugin.dropdownOptions)
-                    {
-                        optionClick = curPlugin.dropdownOptions[optionName];
-                        $("#dropdown-" + curPlugin.divName).append("<li><a id='" + optionClick + "'>" + optionName + "</a></li>");
-                    }
-                }
-                //and if dropdownOptions doesn't exist, just append a button
-                else
-                {
-                    $("#topbarContent").append('<li><a id="' + curPlugin.divName + '">' + curPlugin.title + '</a></li>');
                 }
             });
 

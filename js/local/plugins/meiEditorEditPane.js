@@ -5,16 +5,6 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/UndoStack'], function()
     {
         var retval = 
         {
-            divName: "edit-pane", 
-            title: "Edit",
-            dropdownOptions: 
-            {
-                'Undo': 'undo-dropdown',
-                'Redo': 'redo-dropdown',
-                'Find...': 'find-dropdown',
-                'Replace...': 'replace-dropdown'
-            },
-
             init: function(meiEditor, meiEditorSettings)
             {
                 $.extend(meiEditorSettings, {
@@ -23,6 +13,13 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/UndoStack'], function()
                     initDoc: "",
                     editTimeout: ""
                 });
+
+                meiEditor.addToNavbar("Edit", "edit-pane");
+                $("#dropdown-edit-pane").append("<li><a id='undo-dropdown'>Undo</a></li>");
+                $("#dropdown-edit-pane").append("<li><a id='redo-dropdown'>Redo</a></li>");
+                $("#dropdown-edit-pane").append("<li><a id='find-dropdown'>Find...</a></li>");
+                $("#dropdown-edit-pane").append("<li><a id='replace-dropdown'>Replace...</a></li>");
+                $("#help-dropdown").append("<li><a id='edit-pane-help'>Edit</a></li>");
 
                 $("#undo-dropdown").on('click', function()
                 {

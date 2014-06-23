@@ -5,16 +5,13 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/FileSaver'], function()
     {
         var retval = 
         {
-            divName: "file-upload",
-            title: 'Files',
-            dropdownOptions: 
-            {
-                'Open files...': 'file-load-dropdown',
-                'Save a file...': 'file-save-dropdown'
-            },
-
             init: function(meiEditor, meiEditorSettings)
             {
+                meiEditor.addToNavbar("Files", "file-upload");
+                $("#dropdown-file-upload").append("<li><a id='file-load-dropdown'>Open files...</a></li>");
+                $("#dropdown-file-upload").append("<li><a id='file-save-dropdown'>Save a file...</a></li>");
+                $("#help-dropdown").append("<li><a id='file-upload-help'>Files</a></li>");
+                  
                 $("#file-load-dropdown").on('click', function()
                 {
                     $("#fileLoadModal").modal();
