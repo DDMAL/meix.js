@@ -80,16 +80,16 @@ createModal = function(toAppendTo, modalID, small, modalBody, primaryTitle)
 {
     var modalSize = small ? "modal-sm" : "modal-md";
     var primaryTitleString = primaryTitle ? '<button type="button" class="btn btn-primary" id="' + modalID + '-primary">' + primaryTitle + '</button>' : "";
-    $(toAppendTo).append("<div id='" + modalID + "' class='modal fade'>"
-        + '<div class="modal-dialog ' + modalSize + '">'
-            + '<div class="modal-content">'
-                + '<div class="modal-body">'
-                    + modalBody
-                + '</div>'
-                + '<div class="modal-footer">'
-                    + '<button type="button" class="btn btn-default" id="' + modalID + '-close" data-dismiss="modal">Close</button>'    
-                    +  primaryTitleString
-                + '</div>'
-            + '</div>'
-        + '</div>');
+    $(toAppendTo).append("<div id='" + modalID + "' class='modal fade'>" +
+        '<div class="modal-dialog ' + modalSize + '">' +
+            '<div class="modal-content">' +
+                '<div class="modal-body">' +
+                    modalBody +
+                '</div>' +
+                '<div class="modal-footer">' +
+                    '<button type="button" class="btn btn-default" id="' + modalID + '-close" data-dismiss="modal">Close</button>' +
+                     primaryTitleString +
+                '</div>' +
+            '</div>' +
+        '</div>');
 };

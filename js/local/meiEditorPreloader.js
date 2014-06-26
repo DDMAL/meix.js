@@ -56,7 +56,7 @@ var MeiEditor = function(element, settings, plugins){
                 meiEditor = $(element).AceMeiEditor(settings);
 
                 //trigger a resize event to finalize layout of the screen
-                $(window).trigger('resize');
+                $(window).trigger('allReady');
             }
         };
     };
