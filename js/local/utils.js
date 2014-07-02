@@ -39,7 +39,7 @@ createSelect = function(idAppend, jsonObject, isArr)
 {
     var retString = "<select id='select" + idAppend + "'>";
 
-    for (var curKeyIndex in jsonObject)
+    for (curKeyIndex in jsonObject)
     {
         var curKey = (isArr ? jsonObject[curKeyIndex] : curKeyIndex);
         retString += "<option name='" + curKey + "'>" + curKey + "</option>";
@@ -58,9 +58,8 @@ createList = function(idAppend, jsonObject, isArr)
 {
     var retString = "<ul id='list" + idAppend + "'>";
 
-    for (var curKey in jsonObject)
+    for (curKeyIndex in jsonObject)
     {
-        // NB (AH): curKey is being reassigned -- is this really what you want?
         var curKey = (isArr ? jsonObject[curKeyIndex] : curKeyIndex);
         retString += "<li id='" + curKey + "'>" + curKey + "</li>";
     }
@@ -80,7 +79,7 @@ createModal = function(toAppendTo, modalID, small, modalBody, primaryTitle)
 {
     var modalSize = small ? "modal-sm" : "modal-md";
     var primaryTitleString = primaryTitle ? '<button type="button" class="btn btn-primary" id="' + modalID + '-primary">' + primaryTitle + '</button>' : "";
-    $(toAppendTo).append("<div id='" + modalID + "' class='modal fade'>" +
+    $(toAppendTo).append("<div id='" + modalID + "' class='modal fade' tabindex='-1'>" +
         '<div class="modal-dialog ' + modalSize + '">' +
             '<div class="modal-content">' +
                 '<div class="modal-body">' +
