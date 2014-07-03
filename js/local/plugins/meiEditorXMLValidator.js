@@ -151,7 +151,14 @@ require(['meiEditor', window.meiEditorLocation + 'js/local/meilint'], function()
                                     } 
                                 },
                                 error: function(a, b, c){
-                                    meiEditor.localError("Error in validating " + Module[xmlTitle] + ": " + b + ", " + c);
+                                    if(c !== "")
+                                    {
+                                        meiEditor.localError("Error in validating '" + Module['xmlTitle'] + "': " + b + ", " + c + ".");
+                                    }
+                                    else 
+                                    {
+                                        meiEditor.localError("Error in validating '" + Module['xmlTitle'] + "': unspecified problem.");
+                                    }
                                 }
                             });
                         }
@@ -204,7 +211,11 @@ require(['meiEditor', window.meiEditorLocation + 'js/local/meilint'], function()
 
                             if (foundLink)
                             {
-                                validatorNames.push(foundLink[0].slice(9, -2));
+                                linkText = foundLink[0].slice(9, -2);
+                                if(linkText.match(/rng/))
+                                {
+                                    validatorNames.push(foundLink[0].slice(9, -2));
+                                }
                             }
                         }
                         curValidatorCount = validatorNames.length;

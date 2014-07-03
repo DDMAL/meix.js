@@ -103,6 +103,10 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/FileSaver'], function()
                     $(".fileInput").unbind('change');
                     $("#newFiles").append("<input type='file' class='fileInput' id='fileInput" + initialLength + "'>");
                     $("#fileInput" + initialLength).on('change', addNewFileInput);
+                    if(initialLength == 1)
+                    {
+                        $("#fileLoadModal-primary").text('Open files');
+                    }
                 };
 
                 createModal(meiEditorSettings.element, 'fileLoadModal', true, '<h4>Open files:</h4>' +
