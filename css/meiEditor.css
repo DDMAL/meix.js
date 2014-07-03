@@ -57,12 +57,10 @@ input.input-ui-emulator{
     float:right;
 }
 #editorConsole{
-    font-family: Verdana, Arial, sans-serif;
     height: 15em;
     position: relative;
     padding: .35em;
     background-size:auto;
-    /*border-radius: 4px; /*matches jQueryUI/Bootstrap */
 }
 #consoleText{
     position: absolute;

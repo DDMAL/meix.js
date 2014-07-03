@@ -33,7 +33,8 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
             iconPane: {},
             oldPageY: "",
             recentDelete: "",
-            animationInProgress: false
+            animationInProgress: false,
+            navbarClass: "navbar navbar-inverse"
         };
 
         $.extend(settings, options);
@@ -614,7 +615,7 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
             $.extend(settings.iconPane, localIcons);
 
             settings.element.append(
-                '<div class="navbar navbar-inverse navbar-sm" id="topbar">' +
+                '<div class="' + settings.navbarClass + '" id="topbar">' +
                     '<div class="container-fluid">' +
                         '<div class="collapse navbar-collapse">' +
                             '<ul class="nav navbar-nav" id="topbarContent">' +
@@ -750,6 +751,7 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
             createModal(settings.element, 'fileRemoveModal', true, 'Are you sure you want to remove "<span id="deletionName"></span>" from this project?', 'Remove file');
 
             //graphics stuff
+            $(".ui-corner-all").toggleClass("ui-corner-all"); //get rid of border radii
             self.resizeComponents();
             $(window).on('resize', self.resizeComponents);
         };
