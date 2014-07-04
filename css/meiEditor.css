@@ -50,8 +50,13 @@ li:focus{
 }
 input.input-ui-emulator{
     float:left;
-    margin: .35em .8em;
+    margin: 0.05em .8em 0em 0.1em;
+    padding: 0em 0em -0.1em 0em;
+    height: 2.2em;
     display:inline-block;
+    font-family:inherit;
+    font-size:inherit;
+    line-height:inherit;
 }
 #newTabButton{
     float:right;
