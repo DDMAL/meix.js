@@ -243,11 +243,10 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
             editor.highlightedLines = {};
 
             //Hankinson wants his keyboard shortcuts, so we'll give them to him...
-            console.log(editor.commands);
             editor.commands.removeCommand('gotoline');
             editor.commands.addCommand({
                 name: "gotoline",
-                bindKey: {win: "Control-G", mac: "Control-G"},
+                bindKey: {win: "Ctrl-G", mac: "Ctrl-G"},
                 exec: function(editor) {
                     var line = parseInt(prompt("Enter line number:"), 10);
                     if (!isNaN(line)) {
