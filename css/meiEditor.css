@@ -119,6 +119,9 @@ input.input-ui-emulator{
 .navbar-right{
     float:right;
 }
+#newFiles{
+    position:relative;
+}
 .fileInput{
     opacity: 0;
     z-index:100;
