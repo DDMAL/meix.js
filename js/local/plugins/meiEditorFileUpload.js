@@ -116,7 +116,6 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/FileSaver'], function()
                     $("#fileInput" + initialLength).on('change', addNewFileInput);
                     $(".fileInput").on('mousedown', function(e){
                         var idNumber = e.target.id.split("fileInput")[1];
-                        console.log(idNumber);
                         $("#fakeWrapper" + idNumber).addClass('fileInputFakeActive');
                         $(document).on('mouseup', deactivateFakeInput);
                     });
