@@ -119,3 +119,28 @@ input.input-ui-emulator{
 .navbar-right{
     float:right;
 }
+.fileInput{
+    opacity: 0;
+    z-index:100;
+    position:relative;
+}
+.fileInputFake{
+    position:absolute;
+}
+.fileInputFake > button{
+    border-radius:4px;
+    padding:4px;
+    margin-right:8px;
+    background-color: #BBB;
+    border-bottom:1px #222 solid;
+    border-right:1px #222 solid;
+    border-top:1px #777 solid;
+    border-left:1px #777 solid;
+}
+.fileInputFakeActive > button{
+    background-color: #AAA;
+    border-top:1px #222 solid;
+    border-left:1px #222 solid;
+    border-bottom:1px #777 solid;
+    border-right:1px #777 solid;
+}

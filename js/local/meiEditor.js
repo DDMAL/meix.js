@@ -235,11 +235,27 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
 
             //add the data to the pageData object and initialize the editor
             settings.pageData[fileName] = ace.edit(fileNameStripped); //add the file's data into a "pageData" array that will eventually feed into the ACE editor
-            settings.pageData[fileName].resize();
-            settings.pageData[fileName].setTheme(settings.aceTheme);
-            settings.pageData[fileName].setSession(new ace.EditSession(fileData));
-            settings.pageData[fileName].getSession().setMode("ace/mode/xml");
-            settings.pageData[fileName].highlightedLines = {};
+            editor = settings.pageData[fileName];
+            editor.resize();
+            editor.setTheme(settings.aceTheme);
+            editor.setSession(new ace.EditSession(fileData));
+            editor.getSession().setMode("ace/mode/xml");
+            editor.highlightedLines = {};
+
+            //Hankinson wants his keyboard shortcuts, so we'll give them to him...
+            console.log(editor.commands);
+            editor.commands.removeCommand('gotoline');
+            editor.commands.addCommand({
+                name: "gotoline",
+                bindKey: {win: "Control-G", mac: "Control-G"},
+                exec: function(editor) {
+                    var line = parseInt(prompt("Enter line number:"), 10);
+                    if (!isNaN(line)) {
+                        editor.gotoLine(line);
+                    }
+                },
+                readOnly: true
+            });
 
             //refresh the tab list with the new one in mind
             var numTabs = $("#pagesList li").length - 1;

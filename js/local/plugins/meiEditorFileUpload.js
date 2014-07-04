@@ -96,20 +96,44 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/FileSaver'], function()
                 /*
                     Adds a new fileInput object, removes the change event from all previously existing ones, and adds a new event listener to the newly created one.
                 */
-
                 var addNewFileInput = function()
                 {
+                    deactivateFakeInput();
                     var initialLength = $(".fileInput").length;
-                    $(".fileInput").unbind('change');
-                    $("#newFiles").append("<input type='file' class='fileInput' id='fileInput" + initialLength + "'>");
+                    if($(".fileInput").length > 0)
+                    {
+                        var oldVal = document.getElementById("fileInput" + (initialLength - 1)).value;
+                        var fileName = oldVal.substring(oldVal.lastIndexOf("\\") + 1);
+                        $("#fileName" + (initialLength - 1)).text(fileName);
+                        $(".fileInput").unbind('change');
+                    }
+                    $("#newFiles").append("<div class='fileInputFake' id='fakeWrapper" + initialLength + "'>" +
+                            "<button>Select a file...</button>" +
+                            "<span id='fileName" + initialLength + "'>No file chosen.</span>" +
+                        "</div>" +
+                        "<input type='file' class='fileInput' id='fileInput" + initialLength + "'>");
+                    $("#fakeWrapper" + initialLength).offset({'top': $("#fileInput" + initialLength).offset().top});
                     $("#fileInput" + initialLength).on('change', addNewFileInput);
+                    $(".fileInput").on('mousedown', function(e){
+                        var idNumber = e.target.id.split("fileInput")[1];
+                        console.log(idNumber);
+                        $("#fakeWrapper" + idNumber).addClass('fileInputFakeActive');
+                        $(document).on('mouseup', deactivateFakeInput);
+                    });
+
                     if(initialLength == 1)
                     {
                         $("#fileLoadModal-primary").text('Open files');
                     }
                 };
 
-                createModal(meiEditorSettings.element, 'fileLoadModal', true, '<h4>Open files:</h4>' +
+                var deactivateFakeInput = function()
+                {
+                    $(".fileInputFake").removeClass('fileInputFakeActive');
+                    $(document).unbind('mouseup', deactivateFakeInput);
+                };
+
+                createModal(meiEditorSettings.element, 'fileLoadModal', false, '<h4>Open files:</h4>' +
                     '<div id="newFiles">' +
                     '</div>', "Open file");
 
@@ -137,6 +161,7 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/FileSaver'], function()
                 $("#fileLoadModal-close").on('click', function()
                 {
                     $(".fileInput").remove();
+                    $(".fileInputFake").remove();
                     addNewFileInput();
                 });
 
