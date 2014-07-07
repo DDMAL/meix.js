@@ -69,9 +69,8 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/FileSaver'], function()
                         if ($(".fileInput")[readerLength].files[0] !== undefined)
                         {
                             reader.file = $(".fileInput")[readerLength].files[0];
-                            //when the file is loaded as text
 
-                            // NB (AH): JSLint is complaining that you're defining a function in a loop.
+                            //when the file is loaded as text
                             reader.onload = function(e)
                             { 
                                 fileName = this.file.name;
@@ -100,32 +99,47 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/FileSaver'], function()
                 {
                     deactivateFakeInput();
                     var initialLength = $(".fileInput").length;
-                    if($(".fileInput").length > 0)
+
+                    //if one already exists (any time other than page load, keep in mind this is being called AFTER the previous one changes)
+                    if(initialLength > 0)
                     {
+                        //grab the old file name
                         var oldVal = document.getElementById("fileInput" + (initialLength - 1)).value;
                         var fileName = oldVal.substring(oldVal.lastIndexOf("\\") + 1);
+
+                        //put it on a span that is part of the fake wrapper
                         $("#fileName" + (initialLength - 1)).text(fileName);
+
+                        //make only the bottom, newest one spawn a new one
                         $(".fileInput").unbind('change');
                     }
+
+                    //append a fake object on top of a real one with opacity=0
                     $("#newFiles").append("<div class='fileInputFake' id='fakeWrapper" + initialLength + "'>" +
                             "<button>Select a file...</button>" +
                             "<span id='fileName" + initialLength + "'>No file chosen.</span>" +
                         "</div>" +
                         "<input type='file' class='fileInput' id='fileInput" + initialLength + "'>");
                     $("#fakeWrapper" + initialLength).offset({'top': $("#fileInput" + initialLength).offset().top});
+
+                    //make this happen again when the new one changes
                     $("#fileInput" + initialLength).on('change', addNewFileInput);
+
+                    //on mousedown, make the fake one seem like it's being clicked
                     $(".fileInput").on('mousedown', function(e){
                         var idNumber = e.target.id.split("fileInput")[1];
                         $("#fakeWrapper" + idNumber).addClass('fileInputFakeActive');
                         $(document).on('mouseup', deactivateFakeInput);
                     });
 
+                    //change this to plural
                     if(initialLength == 1)
                     {
                         $("#fileLoadModal-primary").text('Open files');
                     }
                 };
 
+                //turns off the fake input press class
                 var deactivateFakeInput = function()
                 {
                     $(".fileInputFake").removeClass('fileInputFakeActive');

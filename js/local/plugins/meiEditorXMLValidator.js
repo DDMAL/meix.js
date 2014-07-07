@@ -21,7 +21,7 @@ require(['meiEditor', window.meiEditorLocation + 'js/local/meilint'], function()
                 }
 
                 $.extend(meiEditorSettings, {
-                    validators: {}
+                    validators: {} //list of validator objects
                 });
 
 
@@ -198,19 +198,23 @@ require(['meiEditor', window.meiEditorLocation + 'js/local/meilint'], function()
                     url: meiEditorSettings.validatorLink,
                     success: function(data)
                     {
+                        //for each line of text in the page
                         var dataArr = data.split("\n");
                         var dataLength = dataArr.length;
                         while (dataLength--)
                         {
+                            //that is not empty
                             if (!dataArr[dataLength])
                             {
                                 continue;
                             }
 
+                            //find a link
                             var foundLink = dataArr[dataLength].match(/<a href=".*">/g);
 
                             if (foundLink)
                             {
+                                //strip the outside, make sure it has ".rng"
                                 linkText = foundLink[0].slice(9, -2);
                                 if(linkText.match(/rng/))
                                 {
@@ -221,6 +225,7 @@ require(['meiEditor', window.meiEditorLocation + 'js/local/meilint'], function()
                         curValidatorCount = validatorNames.length;
                         while (curValidatorCount--)
                         {
+                            //grab the contents of each validator
                             singleAjax(validatorNames[curValidatorCount]);
                         }
                     }

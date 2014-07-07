@@ -27,17 +27,22 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
     var AceMeiEditor = function(element, options){
         var self = this;
         var settings = {
-            pageData: {},
-            element: $(element),
-            aceTheme: "",
-            iconPane: {},
-            oldPageY: "",
-            recentDelete: "",
-            animationInProgress: false,
-            navbarClass: "navbar navbar-inverse"
+            aceTheme: "",           //which ace theme to use, passed in as a string. Check setTheme() on http://ace.c9.io/#nav=api&api=editor
+            navbarClass: "navbar navbar-inverse" //allows the user to set the class string for the navigation bar and change its theme
         };
 
         $.extend(settings, options);
+
+        var globals = {
+            pageData: {},           //stores the editors and all associated data for all pages.
+            element: $(element),    //jQuery reference to the object that contains the MEI editor
+            iconPane: {},           //stores a template for all icon objects to display on open tabs
+            oldPageY: "",           //saves position of editor console/editor divider to facilitate resizing.
+            recentDelete: "",       //saves name of almost-deleted file to allow for a confirmation screen.
+            animationInProgress: false, //prevents duplicate error console animations from happening at the same time.
+        };
+
+        $.extend(settings, globals);
 
         //for topbar plugins
         var previousSizes = {};
@@ -278,6 +283,9 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
             self.events.publish("NewFile", [fileData, fileName]);
         };
 
+        /*
+            Returns an array of the raw texts for all editor objects.
+        */
         this.getAllTexts = function()
         {
             var textArr = {};
@@ -534,7 +542,7 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
             The previous four are a wrapper for this.
             @param style Determines color to flash (green, yellow, or red) depending on severity of message.
         */
-        localPost = function(text, style)
+        var localPost = function(text, style)
         {
             var newClass = style + "Border";
 

@@ -7,12 +7,14 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/UndoStack'], function()
         {
             init: function(meiEditor, meiEditorSettings)
             {
-                $.extend(meiEditorSettings, {
-                    undoManager: new UndoStack(),
-                    initCursor: "",
-                    initDoc: "",
-                    editTimeout: ""
-                });
+                var globals = {
+                    undoManager: new UndoStack(), //ref to the UndoStack object
+                    initCursor: "",         //initial point for the cursor when restoring undos
+                    initDoc: "",            //initial document when restoring undos
+                    editTimeout: ""         //timeout object to stop edit compilation
+                };
+
+                $.extend(meiEditorSettings, globals);
 
                 meiEditor.addToNavbar("Edit", "edit-pane");
                 $("#dropdown-edit-pane").append("<li><a id='undo-dropdown'>Undo</a></li>");
