@@ -81,7 +81,10 @@ var MeiEditor = function(element, settingsIn, pluginsIn){
         plugins.push(window.meiEditorLocation + "js/local/plugins/meiEditorXMLValidator.js");
 
     //merges default with incoming
-    plugins = plugins.concat(pluginsIn);
+    if(pluginsIn)
+    {
+        plugins = plugins.concat(pluginsIn);
+    }
 
     window.pluginLoader = new meiEditorPluginLoader(plugins);
 
