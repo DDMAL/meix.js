@@ -27,6 +27,7 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
     var AceMeiEditor = function(element, options){
         var self = this;
         var settings = {
+            pageTitle: "Ace MEI Editor", //title for the navbar-brand object
             aceTheme: "",           //which ace theme to use, passed in as a string. Check setTheme() on http://ace.c9.io/#nav=api&api=editor
             navbarClass: "navbar navbar-inverse" //allows the user to set the class string for the navigation bar and change its theme
         };
@@ -638,20 +639,29 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
             $.extend(settings.iconPane, localIcons);
 
             settings.element.append(
-                '<div class="' + settings.navbarClass + '" id="topbar">' +
-                    '<div class="container-fluid">' +
-                        '<div class="collapse navbar-collapse">' +
-                            '<ul class="nav navbar-nav" id="topbarContent">' +
-                                '<li class="navbar-brand"> ACE MEI Editor </li>' +
-                                '<li class="dropdown navbar-right">' +
+                '<nav class="' + settings.navbarClass + '" id="topbar">' +
+                    //'<div class="collapse navbar-collapse">' +
+                            '<div class="navbar-header pull-left">' +
+                                '<button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-responsive-collapse">' +
+                                    '<span class="icon-bar"></span>' +
+                                    '<span class="icon-bar"></span>' +
+                                    '<span class="icon-bar"></span>' +
+                                '</button>' +
+                                '<a id="site-logo" class="navbar-brand" href="#">' + settings.pageTitle + '</a>' +
+                            '</div>' +
+                            '<div class="collapse navbar-collapse pull-left">' +
+
+                                '<ul class="nav navbar-nav pull-left" id="topbarContent">' + 
+                                '</ul>' +
+                            '</div>' +
+                            '<div class="nav navbar-nav pull-right" id="topbarRightContent">' + 
+                                '<li class="dropdown">' +
                                     '<a href="#" class="dropdown-toggle navbar" data-toggle="dropdown"> Help <b class="caret"></b></a>' +
                                     '<ul class="dropdown-menu" id="help-dropdown">' +
                                     '</ul>' +
                                 '</li>' +
-                            '</ul>' +
-                        '</div>' +
-                    '</div>' +
-                '</div>' +
+                            '</div>' +
+                '</nav>' +
                 '<div id="openPages">' +
                     '<ul id="pagesList">' +
                         '<li id="newTabButton">' +

@@ -116,9 +116,6 @@ input.input-ui-emulator{
     height:.3em;
     cursor:ns-resize;
 }
-.navbar-right{
-    float:right;
-}
 #newFiles{
     position:relative;
 }
