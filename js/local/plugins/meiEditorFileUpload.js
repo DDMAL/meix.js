@@ -112,6 +112,15 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/FileSaver'], function()
 
                         //make only the bottom, newest one spawn a new one
                         $(".fileInput").unbind('change');
+
+                        //but make it keep changing the name as necessary in case the user changes the file
+                        $("#fileInput" + (initialLength - 1)).on('change', function(e)
+                            {
+                                var fileInputIndex = $(e.target).attr('id').split("fileInput")[1];
+                                var oldVal = document.getElementById("fileInput" + (fileInputIndex)).value;
+                                var fileName = oldVal.substring(oldVal.lastIndexOf("\\") + 1);
+                                $("#fileName" + (fileInputIndex)).text(fileName);
+                            });
                     }
 
                     //append a fake object on top of a real one with opacity=0
