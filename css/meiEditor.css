@@ -119,6 +119,9 @@ input.input-ui-emulator{
 #newFiles{
     position:relative;
 }
+#newFiles > input{
+    padding:7px;
+}
 .fileInput{
     opacity: 0;
     z-index:100;
@@ -129,7 +132,6 @@ input.input-ui-emulator{
 }
 .fileInputFake > button{
     border-radius:4px;
-    padding:4px;
     margin-right:8px;
     background-color: #BBB;
     border-bottom:1px #222 solid;

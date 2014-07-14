@@ -27,6 +27,10 @@
         var plugins = [];
 
         var meiEditor = new MeiEditor(element, settings, plugins);
+        $(window).on('meiEditorLoaded', function(){
+            meiEditor = $("#mei-editor").data('AceMeiEditor');
+            console.log(meiEditor);
+        });
         </script>
 
     </head>

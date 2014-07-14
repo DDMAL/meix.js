@@ -57,10 +57,10 @@ var MeiEditor = function(element, settingsIn, pluginsIn){
             //once completed is the same length as plugins
             if(completed.length == plugins.length){
                 //initialize the editor
-                meiEditor = $(element).AceMeiEditor(settings);
+                $(element).AceMeiEditor(settings);
 
                 //trigger a resize event to finalize layout of the screen
-                $(window).trigger('allReady');
+                $(window).trigger('meiEditorLoaded');
             }
         };
     };
