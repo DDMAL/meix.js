@@ -107,6 +107,7 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/UndoStack'], function()
                             var cursorPos = arr[1];
                             var activeDoc = arr[2];
                             meiEditorSettings.undoManager.save('PageEdited', [texts, cursorPos, activeDoc]);
+                            meiEditor.events.publish("PageEdited");
                         }, 500, [meiEditor.getAllTexts(), meiEditorSettings.initCursor, meiEditorSettings.initDoc]); //after no edits have been done for a second, save the page in the undo stack
                     });
                 };
