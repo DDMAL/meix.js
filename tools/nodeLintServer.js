@@ -27,10 +27,23 @@ var express = require('express');
 var bodyParser = require('body-parser');
 var fs = require('fs');
 var exec = require('child_process').exec;
-app = express();
+var app = express();
+
+function addZero(number)
+{
+    return String(number).length == 1 ? "0" + number : number;
+}
+
+function timeLog(text)
+{
+    var now = new Date();
+    var formattedDate = now.getFullYear() + "/" + addZero(now.getMonth()) + "/" + addZero(now.getDate()) + " - " + addZero(now.getHours()) + ":" + addZero(now.getMinutes()) + ":" + addZero(now.getSeconds()) + "." + now.getMilliseconds() + ": ";
+    console.log(formattedDate + text);
+}
 
 //Allow cross-origin requests as necessary.
-app.use(function (req, res, next) {
+app.use(function (req, res, next) 
+{
     // Website you wish to allow to connect
     res.setHeader('Access-Control-Allow-Origin', 'http://127.0.0.1:8000');
     // Request methods you wish to allow
@@ -47,15 +60,24 @@ app.use(function (req, res, next) {
 //Limit is needed to transfer both large files.
 app.use(bodyParser({limit: '50mb'}));
 
+app.use(function(req, res, next)
+{
+    timeLog(req.connection.remoteAddress + ":" + req.method + " - " + req.url);
+    next();
+});
+
 //On receiving a post...
-app.post('/', function(req, res){
+app.post('/', function(req, res)
+{
     //Get the expected parameters...
     var xmlTitle = req.body.xmlTitle;
     var schemaTitle = req.body.schemaTitle;
     var xmlText = req.body.xml;
-    var schemaText =req.body.schema;
+    var schemaText = req.body.schema;
 
-    var xmllintPreloader = function()
+    timeLog("Request received - xml: " + xmlTitle + " and schema: " + schemaTitle);
+
+    var xmllintPreloader = function(xmlTitle, schemaTitle)
     {
         var ready = {
             'xml': false,
@@ -68,50 +90,52 @@ app.post('/', function(req, res){
             if (!status)
             {
                 res.writeHead(500, {'Content-Type': 'text/html'});
-                res.end("We messed up with the " + which + ":" + error);
+                res.end("Error detected in the " + which + " file:" + error);
             }
             else
             {
                 //otherwise if it worked, keep going
                 ready[which] = true;
-                console.log("Loaded ", which, ".");
+                timeLog("Loaded ", which, ".");
             }
 
             //once both have loaded...
             if (ready.xml && ready.schema)
             {
-                function puts(error, stdout, stderr) { 
+                function puts(error, stdout, stderr) 
+                { 
+                    stdout = stdout.replace('in.rng', schemaTitle);
+                    stderr = stderr.replace('in.xml', xmlTitle);
                     //print and send the output
-                    console.log((stdout || stderr));
+                    timeLog((stdout || stderr));
                     res.writeHead(200, {'Content-Type': 'text/html'});
                     res.end((stdout || stderr));
 
                     //delete the files
-                    fs.unlink(schemaTitle);
-                    fs.unlink(xmlTitle);
+                    fs.unlink('in.rng');
+                    fs.unlink('in.xml');
                 }
 
                 //execute the command on the server
-                string = "xmllint --noout --relaxng " + schemaTitle + " " + xmlTitle;
-                console.log(string);
+                string = "xmllint --noout --relaxng in.rng in.xml";
+                timeLog(string);
                 exec(string, puts);
             }
         };
     };
 
     //create an asynch monitor class
-    var preloader = new xmllintPreloader();
+    var preloader = new xmllintPreloader(xmlTitle, schemaTitle);
 
     //write the files to disk
-    // NB (AH): Check these lines -- JSHint is complaining about them.
-    fs.writeFile(xmlTitle, xmlText, function (err) {
-        (err) ? preloader.loaded('xml', false, err) : preloader.loaded('xml', true);
+    fs.writeFile('in.xml', xmlText, function (err) {
+        err ? preloader.loaded('xml', false, err) : preloader.loaded('xml', true);
     });
 
-    fs.writeFile(schemaTitle, schemaText, function (err) {
+    fs.writeFile('in.rng', schemaText, function (err) {
         err ? preloader.loaded('schema', false, err) : preloader.loaded('schema', true);
     });
 });
  
 app.listen(8008);
-console.log('Server running at http://localhost:8008/');
+timeLog('Server running at http://localhost:8008/');
