@@ -59,7 +59,7 @@ app.post('/', function(req, res){
     {
         var ready = {
             'xml': false,
-            'schema': false,
+            'schema': false
         };
 
         this.loaded = function(which, status, error)
@@ -80,7 +80,6 @@ app.post('/', function(req, res){
             //once both have loaded...
             if (ready.xml && ready.schema)
             {
-                // NB (AH): JSHint complaining about function inside a block.
                 function puts(error, stdout, stderr) { 
                     //print and send the output
                     console.log((stdout || stderr));

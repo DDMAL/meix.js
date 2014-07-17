@@ -495,6 +495,11 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
             //create the input field on top of where the name was before
             parentListItem.prepend("<input class='input-ui-emulator' type='text' value='" + originalName + "''>");
 
+            //avoid a glitch where jQueryUI used the arrow keys to move between tabs
+            $('.input-ui-emulator').on('keydown', function(e){
+                e.stopPropagation();
+            });
+
             //hide the contained link while the input is open
             containedLink.css('display', 'none');
 
