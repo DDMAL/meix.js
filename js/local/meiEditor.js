@@ -209,8 +209,9 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
         /*
             Called to add the next available "untitled" page to the GUI.
         */
-        this.addDefaultPage = function()
+        this.addDefaultPage = function(pageText)
         {
+            pageText = pageText === undefined ? "" : pageText;
             //check for a new version of "untitled__" that's not in use
             var newPageTitle = "untitled";
             var suffixNumber = 1;
@@ -219,7 +220,7 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
                 suffixNumber += 1;
                 newPageTitle = "untitled" + suffixNumber;
             }
-            self.addFileToProject("", newPageTitle);
+            self.addFileToProject(pageText, newPageTitle);
         };
 
         /*
