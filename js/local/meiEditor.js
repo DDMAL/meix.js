@@ -767,6 +767,7 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
                     //usually, the URL bar will change to the last tab visited because jQueryUI tabs use <a> href attributes; this prevents that by repalcing every URL change with "index.html" and no ID information
                     var urlArr = document.URL.split("/");
                     window.history.replaceState("","", urlArr[urlArr.length - 1]);
+                    self.events.publish('ActivePageChanged', [activePage]);
                 }
             });
 
