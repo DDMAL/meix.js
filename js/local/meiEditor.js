@@ -684,7 +684,7 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
                             '<div class="nav navbar-nav pull-right" id="topbarRightContent">' + 
                                 '<li class="dropdown">' +
                                     '<a href="#" class="dropdown-toggle navbar" data-toggle="dropdown"> Help <b class="caret"></b></a>' +
-                                    '<ul class="dropdown-menu" id="help-dropdown">' +
+                                    '<ul class="dropdown-menu dropdown-menu-right" id="help-dropdown">' +
                                     '</ul>' +
                                 '</li>' +
                             '</div>' +
