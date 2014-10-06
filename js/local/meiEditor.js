@@ -667,27 +667,25 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
 
             settings.element.append(
                 '<nav class="' + settings.navbarClass + '" id="topbar">' +
-                    //'<div class="collapse navbar-collapse">' +
-                            '<div class="navbar-header pull-left">' +
-                                '<button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-responsive-collapse">' +
-                                    '<span class="icon-bar"></span>' +
-                                    '<span class="icon-bar"></span>' +
-                                    '<span class="icon-bar"></span>' +
-                                '</button>' +
-                                '<a id="site-logo" class="navbar-brand" href="#">' + settings.pageTitle + '</a>' +
-                            '</div>' +
-                            '<div class="collapse navbar-collapse pull-left">' +
-
-                                '<ul class="nav navbar-nav pull-left" id="topbarContent">' + 
-                                '</ul>' +
-                            '</div>' +
-                            '<div class="nav navbar-nav pull-right" id="topbarRightContent">' + 
-                                '<li class="dropdown">' +
-                                    '<a href="#" class="dropdown-toggle navbar" data-toggle="dropdown"> Help <b class="caret"></b></a>' +
-                                    '<ul class="dropdown-menu dropdown-menu-right" id="help-dropdown">' +
-                                    '</ul>' +
-                                '</li>' +
-                            '</div>' +
+                    '<div class="navbar-header pull-left">' +
+                        '<button type="button" class="btn btn-navbar navbar-toggle" data-toggle="collapse" data-target=".navbar-responsive-collapse">' +
+                            '<span class="icon-bar"></span>' +
+                            '<span class="icon-bar"></span>' +
+                            '<span class="icon-bar"></span>' +
+                        '</button>' +
+                        '<a id="site-logo" class="navbar-brand" href="#">' + settings.pageTitle + '</a>' +
+                    '</div>' +
+                    '<div class="collapse navbar-collapse pull-left">' +
+                        '<ul class="nav navbar-nav pull-left" id="topbarContent">' + 
+                        '</ul>' +
+                    '</div>' +
+                    '<div class="nav navbar-nav pull-right" id="topbarRightContent">' + 
+                        '<li class="dropdown">' +
+                            '<a href="#" class="dropdown-toggle navbar" data-toggle="dropdown"> Help <b class="caret"></b></a>' +
+                            '<ul class="dropdown-menu dropdown-menu-right" id="help-dropdown">' +
+                            '</ul>' +
+                        '</li>' +
+                    '</div>' +
                 '</nav>' +
                 '<div id="openPages">' +
                     '<ul id="pagesList">' +
