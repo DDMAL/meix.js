@@ -571,7 +571,7 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
             var timeStr = curHours + ":" +
                 (curMinutes > 9 ? curMinutes : "0" + curMinutes) + ":" +
                 (curSeconds > 9 ? curSeconds : "0" + curSeconds);
-            $("#consoleText").append("<br>" + timeStr + "> " + text);
+            $("#consoleText").append("<br><span id='console" + curDate.getTime() + "' style='font-weight:bold'>" + timeStr + "> " + text + "</div>");
 
             //highlight the div quickly then switch back, if no other changes are happening
             if (!settings.animationInProgress)
@@ -579,13 +579,14 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
                 settings.animationInProgress = true;
                 $("#editorConsole").switchClass("regularBorder", newClass,
                 {
-                    duration: 100,
+                    duration: 300,
                     complete: function(){
                         $("#editorConsole").switchClass(newClass, "regularBorder",
                         {
-                            duration: 100,
+                            duration: 300,
                             complete: function(){
                                 settings.animationInProgress = false;
+                                $("#console" + curDate.getTime()).css('font-weight', 'normal');
                             }
                         });
                     }
