@@ -282,6 +282,9 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
                 } 
             });
 
+            if(fileName != "untitled")
+                self.localLog("Added " + fileName + " to project.");
+
             self.events.publish("NewFile", [fileData, fileName]);
         };
 

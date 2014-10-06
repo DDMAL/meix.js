@@ -74,7 +74,8 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/UndoStack'], function()
                     '<li>The undo option (also accessible by pressing ctrl+z on Mac) will undo the last action performed.</li>' +
                     '<li>The redo option (also accessible by pressing ctrl+y on Mac) will redo the last action performed.</li>' +
                     '<li>The find option (also accessible by pressing ctrl+f on Windows or command+f on Mac) will open a find box based on the currently open page.</li>' +
-                    '<li>The replace option (also accessible by pressing ctrl+h on Windows or command+option+f on Mac) will open a find/replace box based on the currently open page.</li>');
+                    '<li>The replace option (also accessible by pressing ctrl+h on Windows or command+option+f on Mac) will open a find/replace box based on the currently open page.</li>' +
+                    '<li>Pressing Ctrl+G will open a prompt to navigate to a specific line number.</li>');
 
                 meiEditor.reloadUndoListeners = function(fileName)
                 {                    
