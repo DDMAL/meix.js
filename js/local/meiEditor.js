@@ -229,9 +229,10 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
             @param fileName Original file name.
         */
         this.addFileToProject = function(fileData, fileName)
-        {            
-            var fileNameStripped = self.stripFilenameForJQuery(fileName);
+        {
+            var pageDataKeys = Object.keys(settings.pageData);
 
+            var fileNameStripped = self.stripFilenameForJQuery(fileName);
             //add a new tab to the editor
             $("#pagesList").append("<li id='" + fileNameStripped + "-listitem'><a href='#" + fileNameStripped + "-wrapper' class='linkWrapper'>" + fileName + "</a>" + self.makeIconString() + "</li>");
             $("#openPages").append("<div id='" + fileNameStripped + "-wrapper'>" + //necessary for CSS to work
@@ -282,8 +283,16 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
                 } 
             });
 
-            if(fileName != "untitled")
-                self.localLog("Added " + fileName + " to project.");
+            //pageDataKeys was called before page was added - if only an untitled page existed before, delete it
+            if(pageDataKeys.length = 1 && pageDataKeys[0] == "untitled")
+            {
+                if(settings.pageData["untitled"].getSession().doc.getLength() == 1 && settings.pageData["untitled"].getSession().doc.getLine(0) === "")
+                { 
+                    self.removePageFromProject("untitled", true);
+                }
+            }
+
+            self.localLog("Added " + fileName + " to project.");
 
             self.events.publish("NewFile", [fileData, fileName]);
         };
@@ -304,8 +313,9 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
         /*
             Removes from page without project without saving.
             @param pageName The page to remove.
+            @param override Skips a confirmation modal if true.
         */
-        this.removePageFromProject = function(pageName)
+        this.removePageFromProject = function(pageName, override)
         {
             saveDelete = function(pageName)
             {
@@ -377,25 +387,32 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
 
             };
 
-            //turn on the confirmation modal
-            $("#fileRemoveModal").modal();
-            $("#deletionName").text(pageName);
-            settings.recentDelete = pageName;
-
-            $("#fileRemoveModal-close").on('click', function()
+            if(override)
             {
-                $("#deletionName").text();
-                settings.recentDelete = "";
-                //so that these events don't stack
-                $("#fileRemoveModal-primary").unbind('click');
-            });
-
-            $("#fileRemoveModal-primary").on('click', function()
+                saveDelete(pageName);
+            }
+            else
             {
-                //actually delete it, then close the modal.
-                saveDelete(settings.recentDelete);
-                $("#fileRemoveModal-close").trigger('click');
-            });
+                //turn on the confirmation modal
+                $("#fileRemoveModal").modal();
+                $("#deletionName").text(pageName);
+                settings.recentDelete = pageName;
+
+                $("#fileRemoveModal-close").on('click', function()
+                {
+                    $("#deletionName").text();
+                    settings.recentDelete = "";
+                    //so that these events don't stack
+                    $("#fileRemoveModal-primary").unbind('click');
+                });
+
+                $("#fileRemoveModal-primary").on('click', function()
+                {
+                    //actually delete it, then close the modal.
+                    saveDelete(settings.recentDelete);
+                    $("#fileRemoveModal-close").trigger('click');
+                });
+            }
         };
 
         /*

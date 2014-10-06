@@ -92,15 +92,15 @@ input.input-ui-emulator{
 }
 .errorBorder{
     background-color:rgba(255, 0, 0, .3);
-    border: .1em #AA0000 solid;
+    border: .1em #000000 solid;
 }
 .warnBorder{
     background-color:rgba(255, 255, 0, .3);
-    border: .1em #AAAA00 solid;
+    border: .1em #000000 solid;
 }
 .logBorder{
     background-color:rgba(0, 255, 0, .3);
-    border: .1em #00AA00 solid;
+    border: .1em #000000 solid;
 }
 .gutterError{
     background-color:#F00;
