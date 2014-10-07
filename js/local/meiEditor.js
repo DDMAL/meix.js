@@ -352,27 +352,6 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
                 //delete the pageData item
                 delete settings.pageData[pageName];
 
-                //look through the selects...
-                var curSelectIndex = $("select").length;
-
-                while (curSelectIndex--)
-                {
-                    //...and their children...
-                    var childArray = $($("select")[curSelectIndex]).children();
-                    var curChildIndex = childArray.length;
-
-                    while (curChildIndex--)
-                    {
-                        var curChild = $(childArray[curChildIndex]);
-
-                        //...for this page.
-                        if (curChild.text() == pageName)
-                        {
-                            $(curChild).remove();
-                        }
-                    }
-                }
-
                 self.events.publish("PageWasDeleted", [pageName]); //let whoever is interested know 
                 self.localLog("Removed " + pageName + " from the project.")
 

@@ -252,6 +252,11 @@ require(['meiEditor', window.meiEditorLocation + 'js/local/meilint'], function()
                     $("#selectValidate").append("<option name='" + fileName + "'>" + fileName + "</option>");
                 });
 
+                meiEditor.events.subscribe("PageWasDeleted", function(fileName)
+                {
+                    $("#selectValidate").find(':contains("' + fileName + '")').remove();
+                });
+
                 meiEditor.events.subscribe("NewValidator", function(validatorName)
                 {
                     $("#selectValidators").append("<option name='" + validatorName + "'>" + validatorName + "</option>");

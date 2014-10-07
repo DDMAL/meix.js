@@ -179,6 +179,11 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/FileSaver'], function()
                     $("#selectSave").append("<option name='" + fileName + "'>" + fileName + "</option>");
                 });
 
+                meiEditor.events.subscribe("PageWasDeleted", function(pageName)
+                {
+                    $("#selectSave").find(':contains("' + pageName + '")').remove();
+                });
+
                 $("#fileLoadModal-close").on('click', function()
                 {
                     $(".fileInput").remove();
