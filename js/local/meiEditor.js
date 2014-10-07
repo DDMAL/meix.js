@@ -590,26 +590,22 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
                 (curSeconds > 9 ? curSeconds : "0" + curSeconds);
             $("#consoleText").append("<br><span id='console" + curDate.getTime() + "' style='font-weight:bold'>" + timeStr + "> " + text + "</div>");
 
-            //highlight the div quickly then switch back, if no other changes are happening
-            if (!settings.animationInProgress)
+            //highlight the div quickly then switch back
+            $("#editorConsole").switchClass("regularBorder", newClass,
             {
-                settings.animationInProgress = true;
-                $("#editorConsole").switchClass("regularBorder", newClass,
-                {
-                    duration: 300,
-                    complete: function(){
-                        $("#editorConsole").switchClass(newClass, "regularBorder",
-                        {
-                            duration: 300,
-                            complete: function(){
-                                settings.animationInProgress = false;
-                                $("#console" + curDate.getTime()).css('font-weight', 'normal');
-                            }
-                        });
-                    }
-                });
-            }
-
+                duration: 300,
+                complete: function(){
+                    $("#editorConsole").switchClass(newClass, "regularBorder",
+                    {
+                        duration: 300,
+                        complete: function(){
+                            settings.animationInProgress = false;
+                            $("#console" + curDate.getTime()).css('font-weight', 'normal');
+                        }
+                    });
+                }
+            });
+        
             //inner div serves to float on bottom; when its height is bigger, snap it to the same height as the parent div
             var editorPadding = ($("#editorConsole").outerHeight() - $("#editorConsole").height());
 
