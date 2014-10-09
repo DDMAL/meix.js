@@ -481,6 +481,7 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
                     }
 
                     self.localLog("Renamed " + originalName + " to " + newName + ".");
+                    self.events.publish('PageWasRenamed', [originalName, newName]);
                 }
                 //lastly, remove the old bindings for the icons and put the original ones back on
                 self.resetIconListeners();
