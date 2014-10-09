@@ -755,7 +755,7 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
                     
                     //resize components to make sure the newly activated tab is the right size
                     settings.pageData[activePage].resize();
-                    settings.pageData[activePage].focus();
+                    //settings.pageData[activePage].focus();
                     self.resizeComponents(); 
 
                     //usually, the URL bar will change to the last tab visited because jQueryUI tabs use <a> href attributes; this prevents that by repalcing every URL change with "index.html" and no ID information
