@@ -459,32 +459,16 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
                     $("#openPages").tabs("refresh");
                     $("#openPages").tabs("option", "active", activeHold);
                     
-                    //change it in the pageData variable and in the select
+                    //change it in the pageData variable
                     settings.pageData[newName] = settings.pageData[originalName];
                     delete settings.pageData[originalName];
-
-                    var curSelectIndex = $("select").length;
-
-                    while (curSelectIndex--)
-                    {
-                        var childArray = $($("select")[curSelectIndex]).children();
-                        var curChildIndex = childArray.length;
-                        while (curChildIndex--)
-                        {
-                            var curChild = $(childArray[curChildIndex]);
-                            if (curChild.text() == originalName)
-                            {
-                                $(curChild).text(newName);
-                                $(curChild).attr('name', newName);
-                            }
-                        }
-                    }
 
                     self.localLog("Renamed " + originalName + " to " + newName + ".");
                     self.events.publish('PageWasRenamed', [originalName, newName]);
                 }
                 //lastly, remove the old bindings for the icons and put the original ones back on
                 self.resetIconListeners();
+                self.reloadUndoListeners();
             };
 
             //get a pointer to the <li> and the rename object, get the original name to feed into the input item

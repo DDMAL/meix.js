@@ -176,12 +176,17 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/FileSaver'], function()
 
                 meiEditor.events.subscribe("NewFile", function(a, fileName)
                 {
-                    $("#selectSave").append("<option name='" + fileName + "'>" + fileName + "</option>");
+                    $("#selectSave").append("<option id='save-" + fileName + "' name='" + fileName + "'>" + fileName + "</option>");
                 });
 
                 meiEditor.events.subscribe("PageWasDeleted", function(pageName)
                 {
                     $("#selectSave").find(':contains("' + pageName + '")').remove();
+                });
+
+                meiEditor.events.subscribe("PageWasRenamed", function(oldName, newName)
+                {
+                    $("#save-" + meiEditor.stripFilenameForJQuery(oldName)).attr('id', "save-" + meiEditor.stripFilenameForJQuery(newName)).attr('name', meiEditor.stripFilenameForJQuery(newName));
                 });
 
                 $("#fileLoadModal-close").on('click', function()

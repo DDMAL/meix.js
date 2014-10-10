@@ -78,7 +78,13 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/UndoStack'], function()
                     '<li>Pressing Ctrl+G will open a prompt to navigate to a specific line number.</li>');
 
                 meiEditor.reloadUndoListeners = function(fileName)
-                {                    
+                {        
+                    //get rid of this sometime. happens when pages are renamed            
+                    if(fileName === undefined)
+                    {
+                        return;
+                    }
+
                     //when each document changes
                     meiEditorSettings.pageData[fileName].on('change', function(delta, editor)
                     {
@@ -107,6 +113,7 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/UndoStack'], function()
                             var texts = arr[0];
                             var cursorPos = arr[1];
                             var activeDoc = arr[2];
+                            meiEditor.events.publish("PageEdited");
                             meiEditorSettings.undoManager.save('PageEdited', [texts, cursorPos, activeDoc]);
                         }, 500, [meiEditor.getAllTexts(), meiEditorSettings.initCursor, meiEditorSettings.initDoc]); //after no edits have been done for a second, save the page in the undo stack
                     });
@@ -138,8 +145,15 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/UndoStack'], function()
                     meiEditor.reloadUndoListeners(fileName);
                 });
 
-                meiEditor.events.subscribe("NewFile", function(fileData, fileName){
+                meiEditor.events.subscribe("NewFile", function(fileData, fileName)
+                {
                     meiEditor.reloadUndoListeners(fileName);
+                    meiEditorSettings.undoManager.save('PageEdited', [meiEditor.getAllTexts(), [{'row':0, 'column':0}], $("#pagesList li").length - 1]);
+                });
+
+                meiEditor.events.subscribe("PageWasRenamed", function(oldName, newName)
+                {
+                    meiEditor.reloadUndoListeners(newName);
                     meiEditorSettings.undoManager.save('PageEdited', [meiEditor.getAllTexts(), [{'row':0, 'column':0}], $("#pagesList li").length - 1]);
                 });
 
