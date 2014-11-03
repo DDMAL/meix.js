@@ -175,7 +175,7 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
             {
                 self.toggleTopbar(false);
             }
-            else if(($("#mei-editor").width() >= settings.thresholdTopbarWidth) && !settings.expandedTopbar)
+            else if(($("#mei-editor").width() > settings.thresholdTopbarWidth) && !settings.expandedTopbar)
             {
                 self.toggleTopbar(true);
             }
