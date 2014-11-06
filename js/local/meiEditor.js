@@ -825,7 +825,7 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
                     
                     //resize components to make sure the newly activated tab is the right size
                     settings.pageData[activePage].resize();
-                    //self.resizeComponents(); //note: not sure why this was here but I'm commenting out cause it means resizeComponents is called twice
+                    self.resizeComponents(); 
 
                     //usually, the URL bar will change to the last tab visited because jQueryUI tabs use <a> href attributes; this prevents that by repalcing every URL change with "index.html" and no ID information
                     var urlArr = document.URL.split("/");
