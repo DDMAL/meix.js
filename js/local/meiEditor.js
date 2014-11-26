@@ -41,6 +41,8 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
             oldPageY: "",           //saves position of editor console/editor divider to facilitate resizing.
             recentDelete: "",       //saves name of almost-deleted file to allow for a confirmation screen.
             animationInProgress: false, //prevents duplicate error console animations from happening at the same time.
+            expandedTopbar: true,
+            thresholdTopbarWidth: 0,
         };
 
         $.extend(settings, globals);
@@ -155,7 +157,7 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
         {
             var tabIndex = $("#openPages").tabs("option", "active");
             if (tabIndex === 0)
-            {
+            { 
                 $("#openPages").tabs("option", "active", 1);
                 tabIndex = 1;
             }
@@ -168,11 +170,21 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
         */
         this.resizeComponents = function()
         {
+            //toggles between the two different topbar views
+            if(($("#mei-editor").width() <= settings.thresholdTopbarWidth) && settings.expandedTopbar)
+            {
+                self.toggleTopbar(false);
+            }
+            else if(($("#mei-editor").width() > settings.thresholdTopbarWidth) && !settings.expandedTopbar)
+            {
+                self.toggleTopbar(true);
+            }
+
             $("#mei-editor").offset({'top': '0'});
             $("#mei-editor").height($(window).height());
 
             var editorConsoleHeight = $("#editorConsole").outerHeight();
-            var topbarHeight = $("#topbar").outerHeight();
+            var topbarHeight = (settings.expandedTopbar ? $("#expandedTopbar").outerHeight() : $("#compactTopbar").outerHeight());
             var workableHeight = $("#mei-editor").height() - editorConsoleHeight - topbarHeight;
             var heightDiff = $("#openPages").outerHeight() - $("#openPages").height();
 
@@ -187,7 +199,60 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
             $("#openPages").width(innerComponentWidth);
             $(".aceEditorPane").width(innerComponentWidth);
             $(".aceEditorPane").parent().width(innerComponentWidth);
+
         };
+
+        /*
+            Called to switch from expanded topbar to compact or vice versa.
+            @param toExpanded Boolean; if true, converts to expanded nav, if false converts to compact.
+        */
+        this.toggleTopbar = function(toExpanded)
+        {
+            var dropdownArr, curDropdown;
+            if(toExpanded)
+            {
+                //caret icons
+                $("li > a > b").show();
+
+                //all the main dropdowns
+                dropdownArr = $("#compact-dropdown > li");
+                for(curDropdown = 0; curDropdown < dropdownArr.length; curDropdown++)
+                {
+                    //add submenu class and add them to the topbar
+                    $(dropdownArr[curDropdown]).addClass('dropdown').removeClass('dropdown-submenu');
+                    $("#topbarContent").append(dropdownArr[curDropdown]);
+                }
+
+                //move help separately cause it's right-float
+                $("#topbarRightContent").append($("#help-dropdown-wrapper"));
+                $("#help-dropdown-wrapper").addClass('dropdown').removeClass('dropdown-submenu');
+
+                //finalize changes
+                $("#compact-dropdown").html("");
+                $("#expandedTopbar").show();
+                $("#compactTopbar").hide();
+            }
+            else
+            {
+                //opposite of the above
+                dropdownArr = $("#topbarContent > li");
+                for(curDropdown = 0; curDropdown < dropdownArr.length; curDropdown++)
+                {
+                    $(dropdownArr[curDropdown]).addClass('dropdown-submenu').removeClass('dropdown');
+                    $("#compact-dropdown").append(dropdownArr[curDropdown]);
+                }
+                $("#compact-dropdown").append($("#help-dropdown-wrapper"));
+                $("#help-dropdown-wrapper").addClass('dropdown-submenu').removeClass('dropdown');
+                $("#topbarRightContent").html("");
+                $("#topbarContent").html("");
+                $("#compact-dropdown > li > a > b").hide();
+                $("#expandedTopbar").hide();
+                $("#compactTopbar").show();
+
+            }
+            settings.expandedTopbar = toExpanded;
+        };
+
 
         /*
             Called to reset the listeners for icons on the tabs.
@@ -209,8 +274,9 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
         /*
             Called to add the next available "untitled" page to the GUI.
         */
-        this.addDefaultPage = function()
+        this.addDefaultPage = function(pageText)
         {
+            pageText = pageText === undefined ? "" : pageText;
             //check for a new version of "untitled__" that's not in use
             var newPageTitle = "untitled";
             var suffixNumber = 1;
@@ -219,7 +285,7 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
                 suffixNumber += 1;
                 newPageTitle = "untitled" + suffixNumber;
             }
-            self.addFileToProject("", newPageTitle);
+            self.addFileToProject(pageText, newPageTitle);
         };
 
         /*
@@ -228,9 +294,10 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
             @param fileName Original file name.
         */
         this.addFileToProject = function(fileData, fileName)
-        {            
-            var fileNameStripped = self.stripFilenameForJQuery(fileName);
+        {
+            var pageDataKeys = Object.keys(settings.pageData);
 
+            var fileNameStripped = self.stripFilenameForJQuery(fileName);
             //add a new tab to the editor
             $("#pagesList").append("<li id='" + fileNameStripped + "-listitem'><a href='#" + fileNameStripped + "-wrapper' class='linkWrapper'>" + fileName + "</a>" + self.makeIconString() + "</li>");
             $("#openPages").append("<div id='" + fileNameStripped + "-wrapper'>" + //necessary for CSS to work
@@ -281,6 +348,17 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
                 } 
             });
 
+            //pageDataKeys was called before page was added - if only an untitled page existed before, delete it
+            if(pageDataKeys.length = 1 && pageDataKeys[0] == "untitled")
+            {
+                if(settings.pageData["untitled"].getSession().doc.getLength() == 1 && settings.pageData["untitled"].getSession().doc.getLine(0) === "")
+                { 
+                    self.removePageFromProject("untitled", true);
+                }
+            }
+
+            self.localLog("Added " + fileName + " to project.");
+
             self.events.publish("NewFile", [fileData, fileName]);
         };
 
@@ -300,8 +378,9 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
         /*
             Removes from page without project without saving.
             @param pageName The page to remove.
+            @param override Skips a confirmation modal if true.
         */
-        this.removePageFromProject = function(pageName)
+        this.removePageFromProject = function(pageName, override)
         {
             saveDelete = function(pageName)
             {
@@ -338,27 +417,6 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
                 //delete the pageData item
                 delete settings.pageData[pageName];
 
-                //look through the selects...
-                var curSelectIndex = $("select").length;
-
-                while (curSelectIndex--)
-                {
-                    //...and their children...
-                    var childArray = $($("select")[curSelectIndex]).children();
-                    var curChildIndex = childArray.length;
-
-                    while (curChildIndex--)
-                    {
-                        var curChild = $(childArray[curChildIndex]);
-
-                        //...for this page.
-                        if (curChild.text() == pageName)
-                        {
-                            $(curChild).remove();
-                        }
-                    }
-                }
-
                 self.events.publish("PageWasDeleted", [pageName]); //let whoever is interested know 
                 self.localLog("Removed " + pageName + " from the project.")
 
@@ -373,25 +431,32 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
 
             };
 
-            //turn on the confirmation modal
-            $("#fileRemoveModal").modal();
-            $("#deletionName").text(pageName);
-            settings.recentDelete = pageName;
-
-            $("#fileRemoveModal-close").on('click', function()
+            if(override)
             {
-                $("#deletionName").text();
-                settings.recentDelete = "";
-                //so that these events don't stack
-                $("#fileRemoveModal-primary").unbind('click');
-            });
-
-            $("#fileRemoveModal-primary").on('click', function()
+                saveDelete(pageName);
+            }
+            else
             {
-                //actually delete it, then close the modal.
-                saveDelete(settings.recentDelete);
-                $("#fileRemoveModal-close").trigger('click');
-            });
+                //turn on the confirmation modal
+                $("#fileRemoveModal").modal();
+                $("#deletionName").text(pageName);
+                settings.recentDelete = pageName;
+
+                $("#fileRemoveModal-close").on('click', function()
+                {
+                    $("#deletionName").text();
+                    settings.recentDelete = "";
+                    //so that these events don't stack
+                    $("#fileRemoveModal-primary").unbind('click');
+                });
+
+                $("#fileRemoveModal-primary").on('click', function()
+                {
+                    //actually delete it, then close the modal.
+                    saveDelete(settings.recentDelete);
+                    $("#fileRemoveModal-close").trigger('click');
+                });
+            }
         };
 
         /*
@@ -459,31 +524,16 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
                     $("#openPages").tabs("refresh");
                     $("#openPages").tabs("option", "active", activeHold);
                     
-                    //change it in the pageData variable and in the select
+                    //change it in the pageData variable
                     settings.pageData[newName] = settings.pageData[originalName];
                     delete settings.pageData[originalName];
 
-                    var curSelectIndex = $("select").length;
-
-                    while (curSelectIndex--)
-                    {
-                        var childArray = $($("select")[curSelectIndex]).children();
-                        var curChildIndex = childArray.length;
-                        while (curChildIndex--)
-                        {
-                            var curChild = $(childArray[curChildIndex]);
-                            if (curChild.text() == originalName)
-                            {
-                                $(curChild).text(newName);
-                                $(curChild).attr('name', newName);
-                            }
-                        }
-                    }
-
                     self.localLog("Renamed " + originalName + " to " + newName + ".");
+                    self.events.publish('PageWasRenamed', [originalName, newName]);
                 }
                 //lastly, remove the old bindings for the icons and put the original ones back on
                 self.resetIconListeners();
+                self.reloadUndoListeners();
             };
 
             //get a pointer to the <li> and the rename object, get the original name to feed into the input item
@@ -494,6 +544,11 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
 
             //create the input field on top of where the name was before
             parentListItem.prepend("<input class='input-ui-emulator' type='text' value='" + originalName + "''>");
+
+            //avoid a glitch where jQueryUI used the arrow keys to move between tabs
+            $('.input-ui-emulator').on('keydown', function(e){
+                e.stopPropagation();
+            });
 
             //hide the contained link while the input is open
             containedLink.css('display', 'none');
@@ -562,27 +617,24 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
             var timeStr = curHours + ":" +
                 (curMinutes > 9 ? curMinutes : "0" + curMinutes) + ":" +
                 (curSeconds > 9 ? curSeconds : "0" + curSeconds);
-            $("#consoleText").append("<br>" + timeStr + "> " + text);
+            $("#consoleText").append("<br><span id='console" + curDate.getTime() + "' style='font-weight:bold'>" + timeStr + "> " + text + "</div>");
 
-            //highlight the div quickly then switch back, if no other changes are happening
-            if (!settings.animationInProgress)
+            //highlight the div quickly then switch back
+            $("#editorConsole").switchClass("regularBorder", newClass,
             {
-                settings.animationInProgress = true;
-                $("#editorConsole").switchClass("regularBorder", newClass,
-                {
-                    duration: 100,
-                    complete: function(){
-                        $("#editorConsole").switchClass(newClass, "regularBorder",
-                        {
-                            duration: 100,
-                            complete: function(){
-                                settings.animationInProgress = false;
-                            }
-                        });
-                    }
-                });
-            }
-
+                duration: 300,
+                complete: function(){
+                    $("#editorConsole").switchClass(newClass, "regularBorder",
+                    {
+                        duration: 300,
+                        complete: function(){
+                            settings.animationInProgress = false;
+                            $("#console" + curDate.getTime()).css('font-weight', 'normal');
+                        }
+                    });
+                }
+            });
+        
             //inner div serves to float on bottom; when its height is bigger, snap it to the same height as the parent div
             var editorPadding = ($("#editorConsole").outerHeight() - $("#editorConsole").height());
 
@@ -639,28 +691,34 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
             $.extend(settings.iconPane, localIcons);
 
             settings.element.append(
-                '<nav class="' + settings.navbarClass + '" id="topbar">' +
-                    //'<div class="collapse navbar-collapse">' +
-                            '<div class="navbar-header pull-left">' +
-                                '<button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-responsive-collapse">' +
-                                    '<span class="icon-bar"></span>' +
-                                    '<span class="icon-bar"></span>' +
-                                    '<span class="icon-bar"></span>' +
-                                '</button>' +
-                                '<a id="site-logo" class="navbar-brand" href="#">' + settings.pageTitle + '</a>' +
-                            '</div>' +
-                            '<div class="collapse navbar-collapse pull-left">' +
-
-                                '<ul class="nav navbar-nav pull-left" id="topbarContent">' + 
+                '<nav class="' + settings.navbarClass + '" id="expandedTopbar">' +
+                    '<div class="container-fluid" id="topbarContainer">' +
+                        '<div class="navbar-header pull-left">' +
+                            '<div id="site-logo" class="navbar-brand">' + settings.pageTitle + '</div>' +
+                        '</div>' +
+                        '<div class="collapse navbar-collapse pull-left" id="topbarContentWrapper">' +
+                            '<ul class="nav navbar-nav pull-left" id="topbarContent">' + 
+                            '</ul>' +
+                        '</div>' +
+                        '<div class="nav navbar-nav pull-right" id="topbarRightContent">' + 
+                            '<li class="dropdown" id="help-dropdown-wrapper">' +
+                                '<a href="#" class="dropdown-toggle" data-toggle="dropdown"> Help <b class="caret"></b></a>' +
+                                '<ul class="dropdown-menu dropdown-menu-right pull-right" id="help-dropdown" style="z-index:1000">' +
                                 '</ul>' +
-                            '</div>' +
-                            '<div class="nav navbar-nav pull-right" id="topbarRightContent">' + 
-                                '<li class="dropdown">' +
-                                    '<a href="#" class="dropdown-toggle navbar" data-toggle="dropdown"> Help <b class="caret"></b></a>' +
-                                    '<ul class="dropdown-menu" id="help-dropdown">' +
-                                    '</ul>' +
-                                '</li>' +
-                            '</div>' +
+                            '</li>' +
+                        '</div>' +
+                    '</div>' +
+                '</nav>' +
+                '<nav class="' + settings.navbarClass + '" id="compactTopbar">' +
+                    '<div class="container-fluid" id="topbarContainer">' +
+                        '<ul class="nav navbar-header pull-left">' +
+                            '<li class="dropdown" id="brandLI">' +
+                                '<div id="site-logo" class="dropdown-toggle navbar-brand" data-toggle="dropdown" style="cursor:pointer">' + settings.pageTitle + '&nbsp;&nbsp;<b class="caret"></b></div>' +
+                                '<ul class="dropdown-menu" id="compact-dropdown" style="top:50px">' +
+                                '</ul>' +
+                            '</li>' +
+                        '</ul>' +
+                    '</div>' +
                 '</nav>' +
                 '<div id="openPages">' +
                     '<ul id="pagesList">' +
@@ -674,6 +732,20 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
                     '<div id="consoleResizeDiv"></div>' +
                     '<div id="consoleText">Console loaded!</div>' +
                 '</div>');
+
+            //To enable second-tier dropdown menus in Bootstrap, stolen mercilessly from https://www.gaslampmedia.com/multilevel-dropdown-menus-bootstrap-3-x/
+            //Has to be called after divs exist
+            $('ul.dropdown-menu [data-toggle=dropdown]').on('click', function(event) {
+                // Avoid following the href location when clicking
+                event.preventDefault(); 
+                // Avoid having the menu to close when clicking
+                event.stopPropagation(); 
+                // Re-add .open to parent sub-menu item
+                $(this).parent().addClass('open');
+                $(this).parent().find("ul").parent().find("li.dropdown").addClass('open');
+            });
+
+            $("#compactTopbar").hide();
 
             $("#consoleText").css('bottom', $(($("#editorConsole").outerHeight() - $("#editorConsole").height())/2).toEm().toString() + 'em');
 
@@ -691,7 +763,7 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
                     }
                     //set up the tab container to the right e.pageY height first
                     var editorConsoleHeight = $("#editorConsole").outerHeight();
-                    var topbarHeight = $("#topbar").outerHeight();
+                    var topbarHeight = (settings.expandedTopbar ? $("#expandedTopbar").outerHeight() : $("#compactTopbar").outerHeight());
                     var heightDiff = $("#openPages").outerHeight() - $("#openPages").height(); 
                     var newHeight = e.pageY - topbarHeight - heightDiff;
 
@@ -710,7 +782,7 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
 
                     //resize console to take up rest of the screen
                     var consoleDiff = $("#editorConsole").outerHeight() - $("#editorConsole").height();
-                    $("#editorConsole").offset({'top': $("#openPages").outerHeight() + $("#topbar").outerHeight()});
+                    $("#editorConsole").offset({'top': $("#openPages").outerHeight() + (settings.expandedTopbar ? $("#expandedTopbar").outerHeight() : $("#compactTopbar").outerHeight())});
 
                     newHeight = parseInt(window.innerHeight - $("#openPages").outerHeight() - topbarHeight - consoleDiff + 1, 10);
                     $("#editorConsole").height(newHeight);
@@ -719,8 +791,6 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
                     consoleDiff = $("#editorConsole").outerHeight() - $("#editorConsole").height();
                     $("#consoleText").css('bottom', $(consoleDiff/2).toEm().toString() + 'em');
 
-                    //var currentHeight = document.getElementById("consoleText").scrollHeight;
-                    //var maxHeight = window.innerHeight - $("#topbar").outerHeight() - $("#openPages").outerHeight() - consoleDiff;
                     $("#consoleText").height(Math.min(document.getElementById("consoleText").scrollHeight, $("#editorConsole").height()));                    
 
                     //this prevents horizontal movement from triggering this event with the if statement at the top
@@ -755,12 +825,12 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
                     
                     //resize components to make sure the newly activated tab is the right size
                     settings.pageData[activePage].resize();
-                    settings.pageData[activePage].focus();
                     self.resizeComponents(); 
 
                     //usually, the URL bar will change to the last tab visited because jQueryUI tabs use <a> href attributes; this prevents that by repalcing every URL change with "index.html" and no ID information
                     var urlArr = document.URL.split("/");
                     window.history.replaceState("","", urlArr[urlArr.length - 1]);
+                    self.events.publish('ActivePageChanged', [activePage]);
                 }
             });
 
@@ -785,6 +855,7 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
 
             //graphics stuff
             $(".ui-corner-all").toggleClass("ui-corner-all"); //get rid of border radii
+            settings.thresholdTopbarWidth = $("#site-logo").outerWidth() + $("#topbarContentWrapper").outerWidth() + $("#topbarRightContent").outerWidth() + parseInt($("#topbarContainer").css('padding-left'), 10);
             self.resizeComponents();
             $(window).on('resize', self.resizeComponents);
         };

@@ -7,7 +7,7 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/FileSaver'], function()
         {
             init: function(meiEditor, meiEditorSettings)
             {
-                meiEditor.addToNavbar("Files", "file-upload");
+                meiEditor.addToNavbar("File", "file-upload");
                 $("#dropdown-file-upload").append("<li><a id='file-load-dropdown'>Open files...</a></li>");
                 $("#dropdown-file-upload").append("<li><a id='file-save-dropdown'>Save a file...</a></li>");
                 $("#help-dropdown").append("<li><a id='file-upload-help'>Files</a></li>");
@@ -82,7 +82,6 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/FileSaver'], function()
                                 }
 
                                 meiEditor.addFileToProject(this.result, fileName);
-                                meiEditor.localLog("Added " + fileName + " to project.");
                             };
 
                             reader.readAsText(reader.file);
@@ -177,7 +176,17 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/FileSaver'], function()
 
                 meiEditor.events.subscribe("NewFile", function(a, fileName)
                 {
-                    $("#selectSave").append("<option name='" + fileName + "'>" + fileName + "</option>");
+                    $("#selectSave").append("<option id='save-" + fileName + "' name='" + fileName + "'>" + fileName + "</option>");
+                });
+
+                meiEditor.events.subscribe("PageWasDeleted", function(pageName)
+                {
+                    $("#selectSave").find(':contains("' + pageName + '")').remove();
+                });
+
+                meiEditor.events.subscribe("PageWasRenamed", function(oldName, newName)
+                {
+                    $("#save-" + meiEditor.stripFilenameForJQuery(oldName)).attr('id', "save-" + meiEditor.stripFilenameForJQuery(newName)).attr('name', meiEditor.stripFilenameForJQuery(newName));
                 });
 
                 $("#fileLoadModal-close").on('click', function()

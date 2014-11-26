@@ -74,10 +74,17 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/UndoStack'], function()
                     '<li>The undo option (also accessible by pressing ctrl+z on Mac) will undo the last action performed.</li>' +
                     '<li>The redo option (also accessible by pressing ctrl+y on Mac) will redo the last action performed.</li>' +
                     '<li>The find option (also accessible by pressing ctrl+f on Windows or command+f on Mac) will open a find box based on the currently open page.</li>' +
-                    '<li>The replace option (also accessible by pressing ctrl+h on Windows or command+option+f on Mac) will open a find/replace box based on the currently open page.</li>');
+                    '<li>The replace option (also accessible by pressing ctrl+h on Windows or command+option+f on Mac) will open a find/replace box based on the currently open page.</li>' +
+                    '<li>Pressing Ctrl+G will open a prompt to navigate to a specific line number.</li>');
 
                 meiEditor.reloadUndoListeners = function(fileName)
-                {                    
+                {        
+                    //get rid of this sometime. happens when pages are renamed            
+                    if(fileName === undefined)
+                    {
+                        return;
+                    }
+
                     //when each document changes
                     meiEditorSettings.pageData[fileName].on('change', function(delta, editor)
                     {
@@ -106,6 +113,7 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/UndoStack'], function()
                             var texts = arr[0];
                             var cursorPos = arr[1];
                             var activeDoc = arr[2];
+                            meiEditor.events.publish("PageEdited");
                             meiEditorSettings.undoManager.save('PageEdited', [texts, cursorPos, activeDoc]);
                             meiEditor.events.publish("PageEdited");
                         }, 500, [meiEditor.getAllTexts(), meiEditorSettings.initCursor, meiEditorSettings.initDoc]); //after no edits have been done for a second, save the page in the undo stack
@@ -138,8 +146,15 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/UndoStack'], function()
                     meiEditor.reloadUndoListeners(fileName);
                 });
 
-                meiEditor.events.subscribe("NewFile", function(fileData, fileName){
+                meiEditor.events.subscribe("NewFile", function(fileData, fileName)
+                {
                     meiEditor.reloadUndoListeners(fileName);
+                    meiEditorSettings.undoManager.save('PageEdited', [meiEditor.getAllTexts(), [{'row':0, 'column':0}], $("#pagesList li").length - 1]);
+                });
+
+                meiEditor.events.subscribe("PageWasRenamed", function(oldName, newName)
+                {
+                    meiEditor.reloadUndoListeners(newName);
                     meiEditorSettings.undoManager.save('PageEdited', [meiEditor.getAllTexts(), [{'row':0, 'column':0}], $("#pagesList li").length - 1]);
                 });
 

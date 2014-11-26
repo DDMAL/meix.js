@@ -42,7 +42,7 @@ createSelect = function(idAppend, jsonObject, isArr)
     for (curKeyIndex in jsonObject)
     {
         var curKey = (isArr ? jsonObject[curKeyIndex] : curKeyIndex);
-        retString += "<option name='" + curKey + "'>" + curKey + "</option>";
+        retString += "<option id='" + idAppend + "-" + curKey + "' name='" + curKey + "'>" + curKey + "</option>";
     }
 
     return retString + "</select>";
