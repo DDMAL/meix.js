@@ -21,7 +21,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js/local/utils'], function(){
+define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 'js/local/utils.js'], function(){
 (function ($)
 {
     var AceMeiEditor = function(element, options){
@@ -171,21 +171,21 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
         this.resizeComponents = function()
         {
             //toggles between the two different topbar views
-            if(($("#mei-editor").width() <= settings.thresholdTopbarWidth) && settings.expandedTopbar)
+            if(($(element).width() <= settings.thresholdTopbarWidth) && settings.expandedTopbar)
             {
                 self.toggleTopbar(false);
             }
-            else if(($("#mei-editor").width() > settings.thresholdTopbarWidth) && !settings.expandedTopbar)
+            else if(($(element).width() > settings.thresholdTopbarWidth) && !settings.expandedTopbar)
             {
                 self.toggleTopbar(true);
             }
 
-            $("#mei-editor").offset({'top': '0'});
-            $("#mei-editor").height($(window).height());
+            $(element).offset({'top': '0'});
+            $(element).height($(window).height());
 
             var editorConsoleHeight = $("#editorConsole").outerHeight();
             var topbarHeight = (settings.expandedTopbar ? $("#expandedTopbar").outerHeight() : $("#compactTopbar").outerHeight());
-            var workableHeight = $("#mei-editor").height() - editorConsoleHeight - topbarHeight;
+            var workableHeight = $(element).height() - editorConsoleHeight - topbarHeight;
             var heightDiff = $("#openPages").outerHeight() - $("#openPages").height();
 
             $("#openPages").height(workableHeight - heightDiff);
@@ -195,7 +195,7 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
             $(activeTab).height($("#openPages").height() - $("#pagesList").height() - heightDiff);
             $(activeTab + " > .aceEditorPane").height($(activeTab).height());
 
-            var innerComponentWidth = $("#mei-editor").width() - $("#openPages").css('padding-left') - $("#openPages").css('padding-right');
+            var innerComponentWidth = $(element).width() - $("#openPages").css('padding-left') - $("#openPages").css('padding-right');
             $("#openPages").width(innerComponentWidth);
             $(".aceEditorPane").width(innerComponentWidth);
             $(".aceEditorPane").parent().width(innerComponentWidth);
@@ -723,7 +723,7 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
                 '<div id="openPages">' +
                     '<ul id="pagesList">' +
                         '<li id="newTabButton">' +
-                            '<a href="#new-tab" onclick="$(\'#mei-editor\').data(\'AceMeiEditor\').addDefaultPage()">+</a>' +
+                            '<a href="#new-tab">+</a>' +
                         '</li>' +
                     '</ul>' +
                     '<div id="new-tab"></div>' + //this will never be seen, but is needed to prevent a bug or two
@@ -732,6 +732,11 @@ define([window.meiEditorLocation + 'ace/src/ace', window.meiEditorLocation + 'js
                     '<div id="consoleResizeDiv"></div>' +
                     '<div id="consoleText">Console loaded!</div>' +
                 '</div>');
+
+            $("#newTabButton > a").on('click', function()
+            {
+                $(element).data('AceMeiEditor').addDefaultPage();
+            });
 
             //To enable second-tier dropdown menus in Bootstrap, stolen mercilessly from https://www.gaslampmedia.com/multilevel-dropdown-menus-bootstrap-3-x/
             //Has to be called after divs exist

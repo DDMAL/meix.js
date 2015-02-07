@@ -1,4 +1,4 @@
-require(['meiEditor', window.meiEditorLocation + 'js/lib/UndoStack'], function(){
+require(['meiEditor', window.meiEditorLocation + 'js/lib/UndoStack.js'], function(){
 (function ($)
 {
     window.meiEditorPlugins.push((function()

@@ -1,4 +1,4 @@
-require(['meiEditor', window.meiEditorLocation + 'js/local/meilint'], function(){
+require(['meiEditor', window.meiEditorLocation + 'js/local/meilint.js'], function(){
 (function ($)
 {
     window.meiEditorPlugins.push((function()
