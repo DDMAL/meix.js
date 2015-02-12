@@ -317,6 +317,7 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
             //add the data to the pageData object and initialize the editor
             settings.pageData[fileName] = ace.edit(fileNameStripped); //add the file's data into a "pageData" array that will eventually feed into the ACE editor
             editor = settings.pageData[fileName];
+            editor.$blockScrolling = Infinity;
             editor.resize();
             editor.setTheme(settings.aceTheme);
             editor.setSession(new ace.EditSession(fileData));
