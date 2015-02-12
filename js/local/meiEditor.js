@@ -166,6 +166,14 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
         };
 
         /*
+            Gets/sets pageData for a specific page title (accessible by this.getActivePanel.text())
+        */
+        this.getPageData = function(pageTitle)
+        {
+            return settings.pageData[pageTitle];
+        }
+
+        /*
             Function called when window is resized/editor pane is changed.
         */
         this.resizeComponents = function()
