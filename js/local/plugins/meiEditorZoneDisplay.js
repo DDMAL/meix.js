@@ -42,8 +42,6 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     createModeActive: false,    //determines if the meta key is being held down
                     boxSingleTimeout: "",       //stores the timeout object for determining if a box was double-clicked or single-clicked
                     boxClickHandler: "",        //stores the current function to be called when a box is single-clicked; this changes depending on whether or not shift is down
-                    highlightedCache: [],       //cache of highlighted items used to reload display once createHighlights is called
-                    resizableCache: [],         //cache of resizable items used to reload display once createHighlights is called
                     lastClicked: "",            //determines which delete listener to use by storing which side was last clicked on
                     highlightHandle: "",        //handler for the highlight event, needs to be committed to memory
                     activeNeumeChoices: [],      //list of neumes present on the active page to choose from when creating new zones
@@ -55,9 +53,16 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                 {
                     zoneDict: {},              //dict of zones to highlight represented as {'UUID'(surface): [['ulx': ulx, 'uly': uly, 'lrx': lrx, 'lry': lry, 'divID': uuid(zone)}, {'ulx'...}]}
                     zoneIDs: [],               //an array of IDs for faster lookup
+                    selectedCache: [],       //cache of highlighted items used to reload display once createHighlights is called
+                    resizableCache: [],         //cache of resizable items used to reload display once createHighlights is called
+                    selectedClass: "editorSelected", //class to identify selected highlights. NOT a selector.
+                    resizableClass: "editorResizable" //class to identify resizable highlights. NOT a selector.
                 };
 
                 $.extend(meiEditorSettings, globals);
+
+                selectedSelector = "." + meiEditorSettings.selectedClass;
+                resizableSelector = "." + meiEditorSettings.resizableClass;
 
                 meiEditor.addToNavbar("Zone Display", "zone-display");
                 $("#dropdown-zone-display").append("<li><a id='file-link-dropdown'>Link files to Diva images...</a></li>" +
@@ -87,7 +92,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                 $("#clear-selection-dropdown").on('click', function()
                 {
                     meiEditor.deselectAllHighlights();
-                    meiEditor.deselectResizable(".resizableSelected");
+                    meiEditor.deselectResizable(resizableSelector);
                 });
 
                 $("#estimateBox").on('click', function(e){
@@ -154,7 +159,70 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     "<li style='margin-left:0.25in'>Pressing an arrow key will move a box slightly in the direction of the arrow.</li>" +
                     "<li style='margin-left:0.25in'>Press the 'Escape' key to leave resize/move mode.</li>" +
                     "<br><li>Press the 'delete' key on your keyboard to delete all selected highlights and the MEI lines associated with them.</li>");
-    
+                
+                /*
+                    Reloads highlights/resizable IDs after highlights have been reloaded.
+                */
+                meiEditor.reloadFromCaches = function()
+                {
+                    var curselectedCached = meiEditorSettings.selectedCache.length;
+                    while(curselectedCached--)
+                    {
+                        meiEditor.selectHighlight($('#' + meiEditorSettings.selectedCache[curselectedCached]));
+                    }
+                    var curResizableCached = meiEditorSettings.resizableCache.length;
+                    while(curResizableCached--)
+                    {
+                        meiEditor.selectResizable('#' + meiEditorSettings.resizableCache[curResizableCached]);
+                    }
+                };
+
+                meiEditor.cursorUpdate = function(a, selection)
+                {
+                    var curRow = selection.getCursor().row;
+                    var UUIDs = selection.doc.getLine(curRow).match(/m-[\dabcdef]{8}-([\dabcdef]{4})-([\dabcdef]{4})-([\dabcdef]{4})-([\dabcdef]{12})/gi);
+                    if(!UUIDs) return;
+
+                    var curFacs = UUIDs.length;
+                    meiEditor.deselectAllHighlights();
+                    while(curFacs--)
+                    {
+                        meiEditor.selectHighlight($("#" + UUIDs[curFacs]));
+                    }
+                };
+
+                meiEditor.reapplyEditorClickListener = function()
+                {
+                    //commented out as per issue #36
+                    $(".aceEditorPane").on('click', function()
+                    {
+                        var activeTab = meiEditor.getActivePanel().text();
+                        if (true) //(meiEditor.meiIsLinked(activeTab))
+                        {
+                            //if only one is selected, don't multiselect
+                            if($(".selectedHover").length == 1)
+                            {
+                                meiEditor.deselectAllHighlights();
+                            }
+                            var row = meiEditorSettings.pageData[activeTab].getSelectionRange().start.row;
+                            var rowText = meiEditorSettings.pageData[activeTab].session.doc.getLine(row);
+                            var matchArr = rowText.match(/m-[(0-9|a-f)]{8}(-[(0-9|a-f)]{4}){3}-[(0-9|a-f)]{12}/g);
+                            if (!matchArr) return false;
+                            var curMatch = matchArr.length;
+                            while (curMatch--)
+                            {
+                                if ($("#"+matchArr[curMatch]).length)
+                                {
+                                    meiEditor.selectHighlight($("#"+matchArr[curMatch]), true);
+                                }
+                            }
+                        }
+                    });
+                };
+
+                /*
+                    Highlight reloading code:
+                */
                 var reloadOneToOneZones = function()
                 {
                     if(!meiEditorSettings.oneToOneMEI) 
@@ -168,7 +236,6 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
 
                 var reloadMultiPageZones = function()
                 {
-                    console.log('called');
                     if(meiEditorSettings.oneToOneMEI) 
                     {
                         meiEditor.localError("Multiple surfaces not found. Can not reload zones.");
@@ -178,6 +245,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     var activePage = meiEditor.getActivePageTitle();
                     var linesArr = meiEditorSettings.pageData[activePage].session.doc.getAllLines();
                     zoneDict = {}; //reset this
+                    zoneIDs = []; //and this
                     var curPage;
 
                     // iterate through each line
@@ -201,6 +269,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                             //assemble that dict in Diva highlight format
                             var highlightInfo = {'width': lineDict['zone']['lrx'] - lineDict['zone']['ulx'], 'height': lineDict['zone']['lry'] - lineDict['zone']['uly'], 'ulx':lineDict['zone']['ulx'], 'uly': lineDict['zone']['uly'], 'divID': lineDict['zone']['xml:id']};
                             zoneDict[curPage].push(highlightInfo);
+                            zoneIDs.push(lineDict['zone']['xml:id']);
                         }
                     }
                     
@@ -220,7 +289,196 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                 //public function to re-parse XML
                 meiEditor.reloadZones = (meiEditorSettings.oneToOneMEI ? reloadOneToOneZones : reloadMultiPageZones);
                 //so zone reloading can be triggered
-                meiEditor.events.subscribe('UpdateZones', meiEditor.reloadZones);              
+                meiEditor.events.subscribe("ZonesWereUpdated", meiEditor.reloadFromCaches);             
+                meiEditor.events.subscribe('UpdateZones', meiEditor.reloadZones); 
+                
+                /*
+                    Highlight selection code:
+                */
+                /*
+                    Selects a highlight.
+                    @param divToSelect The highlight to select.
+                    @param findOverride Overrides jumping to the div in the editor pane.
+                */
+                meiEditor.selectHighlight = function(divToSelect, findOverride)
+                {
+                    if(!findOverride)
+                    {
+                        var searchNeedle = new RegExp("<neume.*" + divToSelect.id, "g");
+
+                        var pageTitle = meiEditor.getActivePanel().text();
+                        var testSearch = meiEditorSettings.pageData[pageTitle].find(searchNeedle, 
+                        {
+                            wrap: true,
+                            range: null
+                        });
+                    }
+                    
+                    $(divToSelect).addClass(meiEditorSettings.selectedClass);
+                    $(divToSelect).css('background-color', 'rgba(0, 255, 0, 0.1)');
+                    meiEditor.updateCaches();
+                };
+
+                //shortcut to deselect all highlights
+                meiEditor.deselectAllHighlights = function()
+                {
+                    meiEditor.deselectHighlight(selectedSelector);
+                };
+
+                //deselects highlights.
+                meiEditor.deselectHighlight = function(divToDeselect)
+                {
+                    $(divToDeselect).css('background-color', 'rgba(255, 0, 0, 0.2)');
+                    $(divToDeselect).toggleClass(meiEditorSettings.selectedClass);
+                    meiEditor.updateCaches();
+                };
+
+                /*
+                    Saves highlights/resizable IDs while highlights are being reloaded.
+                */
+                meiEditor.updateCaches = function()
+                {
+                    meiEditorSettings.selectedCache = [];
+                    meiEditorSettings.resizableCache = [];
+                    var curHighlight = $(selectedSelector).length;
+                    while(curHighlight--)
+                    {
+                        meiEditorSettings.selectedCache.push($($(selectedSelector)[curHighlight]).attr('id'));
+                    }
+                    var curResizable = $(resizableSelector).length;
+                    while(curResizable--)
+                    {
+                        meiEditorSettings.resizableCache.push($($(resizableSelector)[curResizable]).attr('id'));
+                    }
+                };
+
+
+                meiEditor.events.subscribe("NewFile", function(a, fileName)
+                {
+                    //add new files to link-file select
+                    /*var result = meiEditor.autoLinkFile(fileName);
+                    if(!result)
+                    {
+                        meiEditor.localWarn("Could not automatically link " + fileName + ".");
+                        fileNameStripped = meiEditor.stripFilenameForJQuery(fileName);
+                        $("#selectfile-link").append("<option id='file-link-" + fileNameStripped + "' name='" + fileName + "'>" + fileName + "</option>");
+                    }
+                    else
+                    {
+                        meiEditor.localLog("Automatically linked " + fileName + ".");
+                    }*/
+                    meiEditorSettings.pageData[fileName].selection.on('changeCursor', meiEditor.cursorUpdate);
+                });
+
+                meiEditor.events.subscribe("ActivePageChanged", function(pageName)
+                {
+                    /*var lineArr = meiEditorSettings.pageData[pageName].getSession().doc.getAllLines();
+                    for(curLine in lineArr)
+                    {
+                        if(lineArr[curLine].match(/<neume/g))
+                        {
+                            var neumeNameString = lineArr[curLine].match(/name=".*"[ >]/g);
+                            var neumeNameSliced = neumeNameString[0].slice(6, -2);
+                            if (meiEditorSettings.activeNeumeChoices.indexOf(neumeNameSliced) == -1)
+                            {
+                                meiEditorSettings.activeNeumeChoices.push(neumeNameSliced);
+                            }
+                        }
+                    }
+                    
+                    //also have diva automatically scroll
+                    for(curDiva in meiEditorSettings.divaImagesToMeiFiles)
+                    {
+                        if(meiEditorSettings.divaImagesToMeiFiles[curDiva] == pageName)
+                        {
+                            meiEditorSettings.divaInstance.gotoPageByName(curDiva);
+                            break;
+                        }
+                    }*/
+                });
+
+                meiEditor.events.subscribe("PageWasDeleted", function(pageName)
+                {
+                    /*
+                    //if the page was deleted, see if it was linked
+                    var retVal = meiEditor.meiIsLinked(pageName);
+                    var meiFileStripped = meiEditor.stripFilenameForJQuery(pageName);
+                    if (retVal)
+                    {
+                        //if it was, remove it from a lot and refresh highlights
+                        var imageName = retVal;
+                        var fileNameStripped = meiEditor.stripFilenameForJQuery(imageName);
+                        delete meiEditorSettings.divaImagesToMeiFiles[imageName];
+                        var dualOptionID = meiEditor.stripFilenameForJQuery(pageName) + "_" + meiEditor.stripFilenameForJQuery(imageName);
+                        $("#" + dualOptionID).remove();
+                        $("#diva-link-" + fileNameStripped).toggleOption(true);
+                        meiEditor.createHighlights();
+                        $("#resizableOverlay").remove();
+                    }
+                    $("#file-link-" + meiFileStripped).remove();
+
+                    //it's automatically removed from all other selects in the main meiEditor.js file
+                    */
+                });
+
+                meiEditor.events.subscribe("PageEdited", meiEditor.reloadZones);
+
+                meiEditor.events.subscribe("PageWasRenamed", function(originalName, newName)
+                {
+                    /*var strippedOriginal = meiEditor.stripFilenameForJQuery(originalName);
+                    var strippedNew = meiEditor.stripFilenameForJQuery(newName);
+                    for (curImage in meiEditorSettings.divaImagesToMeiFiles)
+                    {
+                        //if it's linked
+                        if(meiEditorSettings.divaImagesToMeiFiles[curImage] == originalName)
+                        {
+                            meiEditorSettings.divaImagesToMeiFiles[curImage] = newName;
+                            var foundChild = $("#selectUnlink").children("[id*='" + strippedOriginal + "']");
+                            var strippedImage = meiEditor.stripFilenameForJQuery(curImage);
+                            $(foundChild).attr('id', strippedNew + "_" + strippedImage).text(newName + " and " + curImage);
+
+                            return;
+                        }
+                    }
+
+                    //or if we make it through the loop, basically treat it as a new file and see if we can auto-link it
+                    var result = meiEditor.autoLinkFile(newName);
+                    if(!result)
+                    {
+                        meiEditor.localWarn("Could not automatically link " + newName + ".");
+                        var newNameStripped = meiEditor.stripFilenameForJQuery(newName);
+                        $("#selectfile-link").append("<option id='file-link-" + newNameStripped + "' name='" + newName + "'>" + newName + "</option>");
+                    }
+                    else
+                    {
+                        meiEditor.localLog("Automatically linked " + newName + ".");
+                    }*/
+                });
+
+                //to get default pages
+                meiEditor.reapplyEditorClickListener();
+                for(fileName in meiEditorSettings.pageData)
+                {
+                    meiEditorSettings.pageData[fileName].selection.on('changeCursor', meiEditor.cursorUpdate);
+                }
+
+                $(meiEditorSettings.divaInstance.getSettings().parentObject).on('click', function(e)
+                {
+                    if ($(e.target).hasClass(meiEditorSettings.divaInstance.getSettings().ID + "highlight"))
+                    {
+                        console.log("clicked on a highlight");
+                        meiEditor.selectHighlight(e.target);
+                    }
+                    else
+                    {
+                        console.log("clicked elsewhere on diva");
+                        meiEditor.deselectAllHighlights();
+                    }
+                });
+
+
+
+
 
 
                 return true;

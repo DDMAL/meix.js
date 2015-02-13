@@ -64,16 +64,15 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
              *      @param args     {Array}
              *      @param scope {Object} Optional
              */
-            publish = function (topic, args, scope) {
+            publish = function (topic, args, scope)
+            {
                 if (cache[topic])
                 {
                     var thisTopic = cache[topic],
                         i = thisTopic.length;
 
                     while (i--)
-                    {
                         thisTopic[i].apply( scope || this, args || []);
-                    }
                 }
             },
             /**
@@ -86,7 +85,8 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
              *      @param callback {Function}
              *      @return Event handler {Array}
              */
-            subscribe = function (topic, callback) {
+            subscribe = function (topic, callback)
+            {
                 if (!cache[topic])
                     cache[topic] = [];
 
@@ -872,7 +872,7 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
                     $("input.input-ui-emulator").remove();
                     $(".linkWrapper").css('display', 'inline-block');
 
-                    var activePage = self.getActivePageTitle();
+                    var activePage = self.getActivePanel().text();
                     settings.activePageTitle = activePage;
                     
                     //resize components to make sure the newly activated tab is the right size

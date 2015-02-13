@@ -189,3 +189,11 @@ input.input-ui-emulator{
     margin-top:-5px;
     min-width:179px;
 }
+
+.editorSelected {
+    cursor: pointer;
+}
+.editorResizable {
+    z-index: 150;
+    background-color:rgba(255, 255, 0, 0.5);
+}
