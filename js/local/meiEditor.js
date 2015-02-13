@@ -43,6 +43,7 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
             animationInProgress: false, //prevents duplicate error console animations from happening at the same time.
             expandedTopbar: true,
             thresholdTopbarWidth: 0,
+            activePageTitle: ""
         };
 
         $.extend(settings, globals);
@@ -102,22 +103,25 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
              *      @param handle {Array}
              *      @param completely {Boolean}
              */
-            unsubscribe = function (handle, completely) {
-                var t = handle[0],
-                    i = cache[t].length;
+            unsubscribe = function (handle, completely)
+            {
+                var t = handle[0];
 
                 if (cache[t])
                 {
+                    var i = cache[t].length;
                     while (i--)
                     {
                         if (cache[t][i] === handle[1])
                         {
-                            cache[t].splice(cache[t][i], 1);
+                            cache[t].splice(i, 1);
                             if (completely)
                                 delete cache[t];
+                            return true;
                         }
                     }
                 }
+                return false;
             };
 
             return {
@@ -163,6 +167,11 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
             }
             var activeTab = $($("#pagesList > li > a")[tabIndex]);
             return activeTab;
+        };
+
+        this.getActivePageTitle = function()
+        {
+            return settings.activePageTitle;
         };
 
         /*
@@ -397,7 +406,7 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
                 var activeIndex = $("#openPages").tabs("option", "active");
 
                 //if removed panel is active, set it to one less than the current or keep it at 0 if this is 0
-                if (pageName == self.getActivePanel().text())
+                if (pageName == self.getActivePageTitle())
                 {
                     var numTabs = $("#pagesList li").length - 1;
                     
@@ -673,6 +682,34 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
                 '<ul class="dropdown-menu" id="dropdown-' + divName + '">' +
                 '</ul></li>');
         };
+        /*
+            Finds the first line in the MEI that matches <tag>, <tag att>, or <tag att="val">
+            @param tag The element name to look for.
+            @param att (optional) The attribute to look for.
+            @param val (optional) The value to look for if att is found.
+        */
+        this.findLineInEditor = function(tag, att, val)
+        {
+            var linesArr = settings.pageData[self.getActivePageTitle()].session.doc.getAllLines();
+
+            for(line in linesArr)
+            {
+                var retLine = parseInt(line, 10) + 1;
+                var lineDict = parseXMLLine(linesArr[line]);
+                if(!lineDict) continue;
+                else if (lineDict.hasOwnProperty(tag))
+                {
+                    if (!att) return [retLine, lineDict];
+                    else if (lineDict[tag].hasOwnProperty(att))
+                    {
+                        if (!val) return [retLine, lineDict];
+                        else if (lineDict[tag][att] == val)
+                            return [retLine, lineDict];
+                    }
+                }
+            }
+            return false;
+        };
 
         /*
             Function ran on initialization.
@@ -835,7 +872,8 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
                     $("input.input-ui-emulator").remove();
                     $(".linkWrapper").css('display', 'inline-block');
 
-                    var activePage = self.getActivePanel().text();
+                    var activePage = self.getActivePageTitle();
+                    settings.activePageTitle = activePage;
                     
                     //resize components to make sure the newly activated tab is the right size
                     settings.pageData[activePage].resize();

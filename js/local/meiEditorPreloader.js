@@ -31,7 +31,6 @@ var MeiEditor = function(element, settingsIn, pluginsIn){
         return;
     }
 
-    // NB (AH): JSHint complained of confusing use of !; switched to !==
     if (typeof $().emulateTransitionEnd !== 'function')
     {
         console.error("The ACE MEI Editor requires Twitter's Bootstrap library (version 3+) to function. Please make sure its JavaScript file is included above meiEditorPreloader.js and require.js.");
