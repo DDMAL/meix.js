@@ -200,7 +200,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                         if (true) //(meiEditor.meiIsLinked(activeTab))
                         {
                             //if only one is selected, don't multiselect
-                            if($(".selectedHover").length == 1)
+                            if($(selectedSelector).length == 1)
                             {
                                 meiEditor.deselectAllHighlights();
                             }
@@ -466,12 +466,11 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                 {
                     if ($(e.target).hasClass(meiEditorSettings.divaInstance.getSettings().ID + "highlight"))
                     {
-                        console.log("clicked on a highlight");
+                        meiEditor.deselectAllHighlights();
                         meiEditor.selectHighlight(e.target);
                     }
                     else
                     {
-                        console.log("clicked elsewhere on diva");
                         meiEditor.deselectAllHighlights();
                     }
                 });
