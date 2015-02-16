@@ -29,7 +29,8 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
         var settings = {
             pageTitle: "Ace MEI Editor", //title for the navbar-brand object
             aceTheme: "",           //which ace theme to use, passed in as a string. Check setTheme() on http://ace.c9.io/#nav=api&api=editor
-            navbarClass: "navbar navbar-inverse" //allows the user to set the class string for the navigation bar and change its theme
+            navbarClass: "navbar navbar-inverse", //allows the user to set the class string for the navigation bar and change its theme
+            initializeWithFile: null //If this is not null, it will attempt to automatically open this parameter as a file
         };
 
         $.extend(settings, options);
@@ -916,9 +917,6 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
 
             $("#newTabButton").attr('tabindex', -1); //make sure the new tab button isn't shown as default active
 
-            //create the initial ACE editor
-            self.addDefaultPage();
-
             //for each plugin...
             $.each(window.meiEditorPlugins, function(index, curPlugin)
             {
@@ -933,11 +931,42 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
             //deletion conformation modal
             createModal(settings.element, 'fileRemoveModal', true, 'Are you sure you want to remove "<span id="deletionName"></span>" from this project?', 'Remove file');
 
+
+            //create the initial ACE editor
+            if (settings.initializeWithFile)
+            {
+                $.ajax(settings.initializeWithFile, {
+                    dataType: 'text',
+                    success: function(data, status, jsxhr) {
+                        var fileSplit = settings.initializeWithFile.split("/");
+                        var fileName = fileSplit[fileSplit.length - 1];
+                        self.addFileToProject(data, fileName);
+
+                        //if we make this ajax call, we need to let all listeners know it's fully loaded.
+                        $(window).trigger('meiEditorLoaded');
+                    },
+                    error: function(a, b, desc) {
+                        self.localError("Could not load default file at URL " + settings.initializeWithFile + " with the error '" + desc + ".' Loading default untitled page instead.");
+                        self.addDefaultPage();
+                    }
+                });
+            }
+            else
+            {
+                self.addDefaultPage();
+            }
+
             //graphics stuff
             $(".ui-corner-all").toggleClass("ui-corner-all"); //get rid of border radii
             settings.thresholdTopbarWidth = $("#site-logo").outerWidth() + $("#topbarContentWrapper").outerWidth() + $("#topbarRightContent").outerWidth() + parseInt($("#topbarContainer").css('padding-left'), 10);
             self.resizeComponents();
             $(window).on('resize', self.resizeComponents);
+
+            //if we didn't trigger the AJAX call, let everyone know this is loaded; otherwise it's done a bit above.
+            if (!settings.initializeWithFile)
+            {
+                $(window).trigger('meiEditorLoaded');
+            }
         };
 
         _init();

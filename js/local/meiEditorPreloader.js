@@ -72,9 +72,6 @@ var MeiEditor = function(element, settingsIn, pluginsIn){
             if(completed.length == plugins.length){
                 //initialize the editor
                 $(element).AceMeiEditor(settings);
-
-                //trigger a resize event to finalize layout of the screen
-                $(window).trigger('meiEditorLoaded');
             }
         };
     };
