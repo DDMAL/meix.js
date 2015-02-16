@@ -1,3 +1,12 @@
+//Taken from http://requirejs.org/docs/faq-advanced.html#css with the minimal amount of gratitude required to satisfy
+function loadCss(url) {
+    var link = document.createElement("link");
+    link.type = "text/css";
+    link.rel = "stylesheet";
+    link.href = url;
+    document.getElementsByTagName("head")[0].appendChild(link);
+}
+
 /*
     Wrapper class to include require.js functionality around the AceMeiEditor class.
 
@@ -18,23 +27,29 @@ var MeiEditor = function(element, settingsIn, pluginsIn){
 
     $.extend(settings, settingsIn)
 
+    window.meiEditorLocation = settings.meiEditorLocation;
+
     //Checking for jQuery, jQueryUI, and Bootstrap 3+
     if (window.jQuery === undefined)
     {
-        console.error("The ACE MEI Editor requires jQuery to function. Please make sure it is included above meiEditorPreloader.js and require.js.");
-        return;
+        require([window.meiEditorLocation + "js/lib/jquery.min.js"]);
+        console.warn("The ACE MEI Editor did not find jQuery included. Loading from assets.");
     }
 
     if ($.ui === undefined)
     {
-        console.error("The ACE MEI Editor requires jQueryUI to function. Please make sure it is included above meiEditorPreloader.js and require.js.");
-        return;
+        console.warn("The ACE MEI Editor did not find jQueryUI included. Loading from assets.");
+        require([window.meiEditorLocation + "js/lib/jquery-ui.min.js"]);
+        loadCss(window.meiEditorLocation + "css/jquery-ui.min.css");
+        loadCss(window.meiEditorLocation + "css/jquery-ui.structure.min.css");
+        loadCss(window.meiEditorLocation + "css/jquery-ui.theme.min.css");
     }
 
     if (typeof $().emulateTransitionEnd !== 'function')
     {
-        console.error("The ACE MEI Editor requires Twitter's Bootstrap library (version 3+) to function. Please make sure its JavaScript file is included above meiEditorPreloader.js and require.js.");
-        return;
+        console.warn("The ACE MEI Editor did not find Bootstrap included. Loading from assets.");
+        require([window.meiEditorLocation + "js/lib/bootstrap.min.js"]);
+        loadCss(window.meiEditorLocation + "css/bootstrap.min.css");
     }
 
     /*
@@ -65,7 +80,6 @@ var MeiEditor = function(element, settingsIn, pluginsIn){
     };
 
     //various variables
-    window.meiEditorLocation = settings.meiEditorLocation;
     window.meiEditorPlugins = [];
     var plugins = [];
 
