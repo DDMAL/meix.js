@@ -179,7 +179,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
 
                 meiEditor.cursorUpdate = function(a, selection)
                 {
-                    var curRow = selection.getCursor().row;
+                    /*var curRow = selection.getCursor().row;
                     var UUIDs = selection.doc.getLine(curRow).match(/m-[\dabcdef]{8}-([\dabcdef]{4})-([\dabcdef]{4})-([\dabcdef]{4})-([\dabcdef]{12})/gi);
                     if(!UUIDs) return;
 
@@ -188,7 +188,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     while(curFacs--)
                     {
                         meiEditor.selectHighlight($("#" + UUIDs[curFacs]));
-                    }
+                    }*/
                 };
 
                 meiEditor.reapplyEditorClickListener = function()
@@ -304,19 +304,39 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                 {
                     if(!findOverride)
                     {
-                        var searchNeedle = new RegExp("<neume.*" + divToSelect.id, "g");
+                        var searchNeedle = new RegExp(divToSelect.id, "g");
 
+                        //searches for the facs ID that is also the ID of the highlighted panel
                         var pageTitle = meiEditor.getActivePanel().text();
-                        var testSearch = meiEditorSettings.pageData[pageTitle].find(searchNeedle, 
+                        var pageRef = meiEditor.getPageData(pageTitle);
+                        var facsSearch = pageRef.find(searchNeedle, 
                         {
                             wrap: true,
                             range: null
                         });
+
+                        var initRow = facsSearch.start.row;
+                        var lineText, newRow = initRow;
+
+                        do {
+                            //gets the full text from the search result row
+                            lineText = pageRef.session.doc.getLine(newRow);
+
+                            //if it doesn't include "zone" it's what we want
+                            if (!lineText.match(/zone/g))
+                            {
+                                break;
+                            }
+
+                            //if we didn't break, find the next one
+                            pageRef.findNext();
+                            newRow = pageRef.getSelectionRange().start.row;
+                        } while (newRow != initRow); //safety to make sure we wrap only once and not infinitely
                     }
                     
                     $(divToSelect).addClass(meiEditorSettings.selectedClass);
                     $(divToSelect).css('background-color', 'rgba(0, 255, 0, 0.1)');
-                    meiEditor.updateCaches();
+                    updateCaches();
                 };
 
                 //shortcut to deselect all highlights
@@ -330,13 +350,13 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                 {
                     $(divToDeselect).css('background-color', 'rgba(255, 0, 0, 0.2)');
                     $(divToDeselect).toggleClass(meiEditorSettings.selectedClass);
-                    meiEditor.updateCaches();
+                    updateCaches();
                 };
 
                 /*
                     Saves highlights/resizable IDs while highlights are being reloaded.
                 */
-                meiEditor.updateCaches = function()
+                var updateCaches = function()
                 {
                     meiEditorSettings.selectedCache = [];
                     meiEditorSettings.resizableCache = [];
@@ -474,7 +494,6 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                         meiEditor.deselectAllHighlights();
                     }
                 });
-
 
 
 
