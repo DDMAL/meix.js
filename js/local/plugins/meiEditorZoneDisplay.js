@@ -56,7 +56,8 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     selectedCache: [],       //cache of highlighted items used to reload display once createHighlights is called
                     resizableCache: [],         //cache of resizable items used to reload display once createHighlights is called
                     selectedClass: "editorSelected", //class to identify selected highlights. NOT a selector.
-                    resizableClass: "editorResizable" //class to identify resizable highlights. NOT a selector.
+                    resizableClass: "editorResizable", //class to identify resizable highlights. NOT a selector.
+                    divaPages: []
                 };
 
                 $.extend(meiEditorSettings, globals);
@@ -230,8 +231,46 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                         meiEditor.localError("Multiple surfaces found. Can not reload zones.");
                         return false;
                     }
-                    meiEditor.localWarn("reloadOneToOneZones not implemented yet.");
-                    return false;
+
+                    zoneDict = {}; //reset this
+                    zoneIDs = []; //and this
+                    var curPage;
+
+                    for (curTitle in meiEditorSettings.pageData)
+                    {
+                        var divaIdx = getDivaIndexForPage(curTitle);
+                        if (divaIdx !== false)
+                        {
+                            zoneDict[divaIdx] = [];
+                            var linesArr = meiEditorSettings.pageData[curTitle].session.doc.getAllLines();
+                            for(line in linesArr)
+                            {
+                                var lineDict = parseXMLLine(linesArr[line]);
+                             
+                                //if there's no XML in the current line, we don't care    
+                                if (!lineDict) continue;
+                                else if (lineDict.hasOwnProperty('zone'))
+                                {
+                                    //assemble that dict in Diva highlight format
+                                    var highlightInfo = {'width': lineDict['zone']['lrx'] - lineDict['zone']['ulx'], 'height': lineDict['zone']['lry'] - lineDict['zone']['uly'], 'ulx':lineDict['zone']['ulx'], 'uly': lineDict['zone']['uly'], 'divID': lineDict['zone']['xml:id']};
+                                    zoneDict[divaIdx].push(highlightInfo);
+                                    zoneIDs.push(lineDict['zone']['xml:id']);
+                                }
+                            }
+                        }
+                    }
+
+                    //clear any existing highlights
+                    meiEditorSettings.divaInstance.resetHighlights();
+                    // iterate through the pages (by index) and feed them into diva
+                    for (page in zoneDict)
+                    {
+                        meiEditorSettings.divaInstance.highlightOnPage(page, zoneDict[page]);
+                    } 
+
+                    //publish an event that sends out the zone dict
+                    meiEditor.events.publish('ZonesWereUpdated', [zoneDict]);
+                    return true;
                 };
 
                 var reloadMultiPageZones = function()
@@ -274,11 +313,11 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     }
                     
                     //clear any existing highlights
-                    divaData.resetHighlights();
+                    meiEditorSettings.divaInstance.resetHighlights();
                     // iterate through the pages (by index) and feed them into diva
                     for (page in zoneDict)
                     {
-                        divaData.highlightOnPage(page, zoneDict[page]);
+                        meiEditorSettings.divaInstance.highlightOnPage(page, zoneDict[page]);
                     } 
 
                     //publish an event that sends out the zone dict
@@ -372,22 +411,35 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     }
                 };
 
+                /*
+                    Gets the diva page index for a specific page title by stripping extensions.
+                    MAKE SURE to === compare to false the result of this - 0 is a valid page index!
+                */
+                var getDivaIndexForPage = function(pageTitle)
+                {
+                    var splitName = pageTitle.split(".")[0];
+                    var pageIdx = meiEditorSettings.divaPages.length;
+                    while(pageIdx--)
+                    {
+                        if (splitName == meiEditorSettings.divaPages[pageIdx])
+                        {
+                            return pageIdx;
+                        }
+                    }
+                    return false;
+                };
+
 
                 meiEditor.events.subscribe("NewFile", function(a, fileName)
                 {
-                    //add new files to link-file select
-                    /*var result = meiEditor.autoLinkFile(fileName);
-                    if(!result)
-                    {
-                        meiEditor.localWarn("Could not automatically link " + fileName + ".");
-                        fileNameStripped = meiEditor.stripFilenameForJQuery(fileName);
-                        $("#selectfile-link").append("<option id='file-link-" + fileNameStripped + "' name='" + fileName + "'>" + fileName + "</option>");
-                    }
-                    else
-                    {
-                        meiEditor.localLog("Automatically linked " + fileName + ".");
-                    }*/
-                    meiEditorSettings.pageData[fileName].selection.on('changeCursor', meiEditor.cursorUpdate);
+                    //if the page is in Diva...
+                    var divaIdx = getDivaIndexForPage(fileName);
+                    if (divaIdx === false) return;
+                    
+                    //scroll to it
+                    meiEditorSettings.divaInstance.gotoPageByIndex(divaIdx);
+                    meiEditorSettings.pageData[fileName].selection.on('changeCursor', meiEditor.cursorUpdate);           
+                    meiEditor.events.publish('UpdateZones');
                 });
 
                 meiEditor.events.subscribe("ActivePageChanged", function(pageName)
@@ -475,13 +527,14 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     }*/
                 });
 
-                //to get default pages
+                //to get default editor pages
                 meiEditor.reapplyEditorClickListener();
                 for(fileName in meiEditorSettings.pageData)
                 {
                     meiEditorSettings.pageData[fileName].selection.on('changeCursor', meiEditor.cursorUpdate);
                 }
 
+                //click listener on diva; if the target is a highlight we want it. this will take all possible highlights.
                 $(meiEditorSettings.divaInstance.getSettings().parentObject).on('click', function(e)
                 {
                     if ($(e.target).hasClass(meiEditorSettings.divaInstance.getSettings().ID + "highlight"))
@@ -494,6 +547,12 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                         meiEditor.deselectAllHighlights();
                     }
                 });
+
+                for(curIdx in meiEditorSettings.divaInstance.getSettings().pages)
+                {
+                    //add all diva image filenames (without extension)
+                    meiEditorSettings.divaPages.push(meiEditorSettings.divaInstance.getSettings().pages[curIdx].f.split('.')[0]);
+                }
 
 
 
