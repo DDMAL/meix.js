@@ -418,18 +418,33 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                 var getDivaIndexForPage = function(pageTitle)
                 {
                     var splitName = pageTitle.split(".")[0];
-                    var pageIdx = meiEditorSettings.divaPages.length;
-                    while(pageIdx--)
+                    var divaIndex = meiEditorSettings.divaPages.length;
+                    while(divaIndex--)
                     {
-                        if (splitName == meiEditorSettings.divaPages[pageIdx])
+                        splitImage = meiEditorSettings.divaPages[divaIndex].split(".")[0];
+                        if (splitName == splitImage)
                         {
-                            return pageIdx;
+                            return divaIndex;
                         }
                     }
                     return false;
                 };
 
+                var pageTitleForDivaFilename = function(filename)
+                {
+                    var splitName = filename.split(".")[0];
+                    for (curPage in meiEditorSettings.pageData)
+                    {
+                        splitPage = curPage.split(".")[0];
+                        if (splitName == splitPage)
+                        {
+                            return curPage;
+                        }
+                    }
+                    return false;
+                };
 
+                //Various editor listeners for filename changes
                 meiEditor.events.subscribe("NewFile", function(a, fileName)
                 {
                     //if the page is in Diva...
@@ -442,89 +457,57 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     meiEditor.events.publish('UpdateZones');
                 });
 
-                meiEditor.events.subscribe("ActivePageChanged", function(pageName)
+                meiEditor.events.subscribe("ActivePageChanged", function(fileName)
                 {
-                    /*var lineArr = meiEditorSettings.pageData[pageName].getSession().doc.getAllLines();
-                    for(curLine in lineArr)
-                    {
-                        if(lineArr[curLine].match(/<neume/g))
-                        {
-                            var neumeNameString = lineArr[curLine].match(/name=".*"[ >]/g);
-                            var neumeNameSliced = neumeNameString[0].slice(6, -2);
-                            if (meiEditorSettings.activeNeumeChoices.indexOf(neumeNameSliced) == -1)
-                            {
-                                meiEditorSettings.activeNeumeChoices.push(neumeNameSliced);
-                            }
-                        }
-                    }
+                    //if the page is in Diva...
+                    var divaIdx = getDivaIndexForPage(fileName);
+                    if (divaIdx === false) return;
                     
-                    //also have diva automatically scroll
-                    for(curDiva in meiEditorSettings.divaImagesToMeiFiles)
-                    {
-                        if(meiEditorSettings.divaImagesToMeiFiles[curDiva] == pageName)
-                        {
-                            meiEditorSettings.divaInstance.gotoPageByName(curDiva);
-                            break;
-                        }
-                    }*/
+                    //scroll to it
+                    meiEditorSettings.divaInstance.gotoPageByIndex(divaIdx);
+                    meiEditorSettings.pageData[fileName].selection.on('changeCursor', meiEditor.cursorUpdate);           
+                    meiEditor.events.publish('UpdateZones');
                 });
 
                 meiEditor.events.subscribe("PageWasDeleted", function(pageName)
-                {
-                    /*
-                    //if the page was deleted, see if it was linked
-                    var retVal = meiEditor.meiIsLinked(pageName);
-                    var meiFileStripped = meiEditor.stripFilenameForJQuery(pageName);
-                    if (retVal)
-                    {
-                        //if it was, remove it from a lot and refresh highlights
-                        var imageName = retVal;
-                        var fileNameStripped = meiEditor.stripFilenameForJQuery(imageName);
-                        delete meiEditorSettings.divaImagesToMeiFiles[imageName];
-                        var dualOptionID = meiEditor.stripFilenameForJQuery(pageName) + "_" + meiEditor.stripFilenameForJQuery(imageName);
-                        $("#" + dualOptionID).remove();
-                        $("#diva-link-" + fileNameStripped).toggleOption(true);
-                        meiEditor.createHighlights();
-                        $("#resizableOverlay").remove();
-                    }
-                    $("#file-link-" + meiFileStripped).remove();
-
-                    //it's automatically removed from all other selects in the main meiEditor.js file
-                    */
+                {           
+                    meiEditor.events.publish('UpdateZones');
                 });
 
                 meiEditor.events.subscribe("PageEdited", meiEditor.reloadZones);
 
                 meiEditor.events.subscribe("PageWasRenamed", function(originalName, newName)
                 {
-                    /*var strippedOriginal = meiEditor.stripFilenameForJQuery(originalName);
-                    var strippedNew = meiEditor.stripFilenameForJQuery(newName);
-                    for (curImage in meiEditorSettings.divaImagesToMeiFiles)
+                    //if the page is in Diva...
+                    var divaIdx = getDivaIndexForPage(newName);
+                    if (divaIdx === false) return;
+                    
+                    //scroll to it
+                    meiEditorSettings.divaInstance.gotoPageByIndex(divaIdx);
+                    meiEditorSettings.pageData[newName].selection.on('changeCursor', meiEditor.cursorUpdate);           
+                    meiEditor.events.publish('UpdateZones');
+                });
+
+                //if diva scrolls to a new page that's loaded, switch to it in the tabs
+                diva.Events.subscribe("VisiblePageDidChange", function(pageNumber, fileName)
+                {
+                    var splitImage = fileName.split(".")[0];
+                    for(pageTitle in meiEditorSettings.pageData)
                     {
-                        //if it's linked
-                        if(meiEditorSettings.divaImagesToMeiFiles[curImage] == originalName)
+                        splitPage = pageTitle.split(".")[0];
+                        if(splitImage == splitPage)
                         {
-                            meiEditorSettings.divaImagesToMeiFiles[curImage] = newName;
-                            var foundChild = $("#selectUnlink").children("[id*='" + strippedOriginal + "']");
-                            var strippedImage = meiEditor.stripFilenameForJQuery(curImage);
-                            $(foundChild).attr('id', strippedNew + "_" + strippedImage).text(newName + " and " + curImage);
-
-                            return;
-                        }
+                            for(curIdx in meiEditorSettings.tabTitlesByIndex)
+                            {
+                                if (pageTitle == meiEditorSettings.tabTitlesByIndex[curIdx])
+                                {
+                                    $("#openPages").tabs("option", "active", curIdx);
+                                    return true;
+                                }
+                            }
+                        } 
                     }
-
-                    //or if we make it through the loop, basically treat it as a new file and see if we can auto-link it
-                    var result = meiEditor.autoLinkFile(newName);
-                    if(!result)
-                    {
-                        meiEditor.localWarn("Could not automatically link " + newName + ".");
-                        var newNameStripped = meiEditor.stripFilenameForJQuery(newName);
-                        $("#selectfile-link").append("<option id='file-link-" + newNameStripped + "' name='" + newName + "'>" + newName + "</option>");
-                    }
-                    else
-                    {
-                        meiEditor.localLog("Automatically linked " + newName + ".");
-                    }*/
+                    return false;
                 });
 
                 //to get default editor pages
@@ -539,6 +522,27 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                 {
                     if ($(e.target).hasClass(meiEditorSettings.divaInstance.getSettings().ID + "highlight"))
                     {
+                        //index of the page clicked on
+                        var clickedIdx = $(e.target).parent().attr('data-index');
+                        var clickedTitle = pageTitleForDivaFilename(meiEditorSettings.divaPages[clickedIdx]);
+                        
+                        //if the clicked page is not linked, return and do nothing
+                        if (clickedTitle === false)
+                        {
+                            meiEditor.deselectAllHighlights();
+                            return false;
+                        } 
+
+                        //diva index of the page currently clicked on
+                        var currentTitle = meiEditorSettings.activePageTitle;
+                        var currentIdx = meiEditorSettings.divaPages.indexOf(currentTitle.split(".")[0]);
+                        
+                        //if the two indices are not the same
+                        if (clickedIdx != currentIdx)
+                        {
+                            meiEditor.switchToPage(clickedTitle);
+                        }
+
                         meiEditor.deselectAllHighlights();
                         meiEditor.selectHighlight(e.target);
                     }
@@ -551,12 +555,8 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                 for(curIdx in meiEditorSettings.divaInstance.getSettings().pages)
                 {
                     //add all diva image filenames (without extension)
-                    meiEditorSettings.divaPages.push(meiEditorSettings.divaInstance.getSettings().pages[curIdx].f.split('.')[0]);
+                    meiEditorSettings.divaPages.push(meiEditorSettings.divaInstance.getSettings().pages[curIdx].f);
                 }
-
-
-
-
 
                 return true;
             }

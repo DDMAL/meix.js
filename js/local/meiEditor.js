@@ -43,7 +43,9 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
             animationInProgress: false, //prevents duplicate error console animations from happening at the same time.
             expandedTopbar: true,
             thresholdTopbarWidth: 0,
-            activePageTitle: ""
+            activePageTitle: "",
+            activeTabIndex: null,
+            tabTitlesByIndex: []
         };
 
         $.extend(settings, globals);
@@ -711,6 +713,25 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
             return false;
         };
 
+
+        /*
+            Switches to the jQueryUI tab that has a specific title.
+            @param pageTitle Title of the page to switch to.
+        */
+        this.switchToPage = function(pageTitle)
+        {
+            var idx = settings.tabTitlesByIndex.length;
+            while(idx--)
+            {
+                if (settings.tabTitlesByIndex[idx] == pageTitle)
+                {
+                    $($("#pagesList > li > a")[idx]).trigger('click');
+                    return true;
+                }
+            }
+            return false;
+        }
+
         /*
             Function ran on initialization.
         */
@@ -874,6 +895,13 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
 
                     var activePage = self.getActivePanel().text();
                     settings.activePageTitle = activePage;
+                    settings.activeTabIndex = ui.newTab.index();
+
+                    var tabArr = $("#pagesList > li > a");
+                    for (var curTabIndex = 0; curTabIndex < tabArr.length; curTabIndex++)
+                    {
+                        settings.tabTitlesByIndex[curTabIndex] = $(tabArr[curTabIndex]).text();
+                    }
                     
                     //resize components to make sure the newly activated tab is the right size
                     settings.pageData[activePage].resize();
