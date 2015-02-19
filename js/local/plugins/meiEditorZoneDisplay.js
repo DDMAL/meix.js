@@ -299,7 +299,6 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                             zoneIDs.push(lineDict.zone['xml:id']);
                         }
                     }
-
                     publishZones(zoneDict);
                 };
 
@@ -314,26 +313,26 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     {
                         if (zoneDict[curPage].length === 0) delete zoneDict[curPage];
                     }
+
+                    zoneCopy = JSON.parse(JSON.stringify(zoneDict));
                     
                     //clear any existing highlights
                     meiEditorSettings.divaInstance.resetHighlights();
                     // iterate through the pages (by index) and feed them into diva
-                    meiEditorSettings.divaInstance.highlightOnPages(Object.keys(zoneDict), zoneDict);
+                    meiEditorSettings.divaInstance.highlightOnPages(Object.keys(zoneCopy), zoneCopy);
 
-                    var paddingTop = meiEditorSettings.divaInstance.getSettings().verticalPadding;
-                    var paddingLeft = meiEditorSettings.divaInstance.getSettings().horizontalPadding;
+                    var paddingTop = 0;//meiEditorSettings.divaInstance.getSettings().verticalPadding;
+                    var paddingLeft = 0;//meiEditorSettings.divaInstance.getSettings().horizontalPadding;
                     
                     for (curPage in zoneDict)
                     {
                         var pageOffset = meiEditorSettings.divaInstance.getPageOffset(curPage);
-                        var pageTop = pageOffset.top;
-                        var pageLeft = pageOffset.left;
                         
                         for (var zoneIdx in zoneDict[curPage])
                         {
                             curZone = zoneDict[curPage][zoneIdx];
-                            curZone.ulx += paddingLeft + pageLeft;
-                            curZone.uly += paddingTop + pageTop;
+                            curZone.ulx += paddingLeft + pageOffset.left;
+                            curZone.uly += paddingTop + pageOffset.top;
                         }
                     }
 
