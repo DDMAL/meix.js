@@ -933,7 +933,7 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
 
 
             //create the initial ACE editor
-            if (settings.initializeWithFile)
+            if (settings.initializeWithFile !== null)
             {
                 $.ajax(settings.initializeWithFile, {
                     dataType: 'text',
@@ -961,16 +961,9 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
             settings.thresholdTopbarWidth = $("#site-logo").outerWidth() + $("#topbarContentWrapper").outerWidth() + $("#topbarRightContent").outerWidth() + parseInt($("#topbarContainer").css('padding-left'), 10);
             self.resizeComponents();
             $(window).on('resize', self.resizeComponents);
-
-            //if we didn't trigger the AJAX call, let everyone know this is loaded; otherwise it's done a bit above.
-            if (!settings.initializeWithFile)
-            {
-                $(window).trigger('meiEditorLoaded');
-            }
         };
 
         _init();
-
     };
 
     $.fn.AceMeiEditor = function (options)
@@ -989,6 +982,12 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
             // Otherwise, instantiate the document viewer
             var meiEditor = new AceMeiEditor(this, options);
             element.data('AceMeiEditor', meiEditor);
+
+            //if we didn't trigger the AJAX call, let everyone know this is loaded; otherwise it's done a bit above.
+            if (options.initializeWithFile === undefined)
+            {
+                $(window).trigger('meiEditorLoaded');
+            }
         });
     };
 
