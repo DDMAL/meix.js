@@ -250,7 +250,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                                 else if (lineDict.hasOwnProperty('zone'))
                                 {
                                     //assemble that dict in Diva highlight format
-                                    var highlightInfo = {'width': lineDict.zone.lrx - lineDict.zone.ulx, 'height': lineDict.zone.lry - lineDict.zone.uly, 'ulx':lineDict.zone.ulx, 'uly': lineDict.zone.uly, 'divID': lineDict.zone['xml:id']};
+                                    var highlightInfo = {'width': lineDict.zone.lrx - lineDict.zone.ulx, 'height': lineDict.zone.lry - lineDict.zone.uly, 'ulx': parseInt(lineDict.zone.ulx, 10), 'uly': parseInt(lineDict.zone.uly, 10), 'divID': lineDict.zone['xml:id']};
                                     zoneDict[divaIdx].push(highlightInfo);
                                     zoneIDs.push(lineDict.zone['xml:id']);
                                 }
@@ -258,17 +258,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                         }
                     }
 
-                    //clear any existing highlights
-                    meiEditorSettings.divaInstance.resetHighlights();
-                    // iterate through the pages (by index) and feed them into diva
-                    for (var page in zoneDict)
-                    {
-                        meiEditorSettings.divaInstance.highlightOnPage(page, zoneDict[page]);
-                    } 
-
-                    //publish an event that sends out the zone dict
-                    meiEditor.events.publish('ZonesWereUpdated', [zoneDict]);
-                    return true;
+                    publishZones(zoneDict);
                 };
 
                 var reloadMultiPageZones = function()
@@ -304,13 +294,23 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                         else if (lineDict.hasOwnProperty('zone'))
                         {
                             //assemble that dict in Diva highlight format
-                            var highlightInfo = {'width': lineDict.zone.lrx - lineDict.zone.ulx, 'height': lineDict.zone.lry - lineDict.zone.uly, 'ulx':lineDict.zone.ulx, 'uly': lineDict.zone.uly, 'divID': lineDict.zone['xml:id']};
+                            var highlightInfo = {'width': lineDict.zone.lrx - lineDict.zone.ulx, 'height': lineDict.zone.lry - lineDict.zone.uly, 'ulx': parseInt(lineDict.zone.ulx, 10), 'uly': parseInt(lineDict.zone.uly, 10), 'divID': lineDict.zone['xml:id']};
                             zoneDict[curPage].push(highlightInfo);
                             zoneIDs.push(lineDict.zone['xml:id']);
                         }
                     }
 
-                    for (curPage in zoneDict)
+                    publishZones(zoneDict);
+                };
+
+                /*
+                    This code is the same between the above two functions.
+                    Because anything that manipulates the zones will be manipulating them based off
+                        their position in the DOM (as opposed to on each image), add padding/offsets
+                */
+                var publishZones = function(zoneDict)
+                {
+                    for (var curPage in zoneDict)
                     {
                         if (zoneDict[curPage].length === 0) delete zoneDict[curPage];
                     }
@@ -320,17 +320,22 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     // iterate through the pages (by index) and feed them into diva
                     meiEditorSettings.divaInstance.highlightOnPages(Object.keys(zoneDict), zoneDict);
 
-                    /*for (curPage in zoneDict)
+                    var paddingTop = meiEditorSettings.divaInstance.getSettings().verticalPadding;
+                    var paddingLeft = meiEditorSettings.divaInstance.getSettings().horizontalPadding;
+                    
+                    for (curPage in zoneDict)
                     {
-                        var pageOffset = meiEditorSettings.divaInstance.getPageOffset(page);
+                        var pageOffset = meiEditorSettings.divaInstance.getPageOffset(curPage);
                         var pageTop = pageOffset.top;
                         var pageLeft = pageOffset.left;
                         
-                        for (curZone in zoneDict[curPage])
+                        for (var zoneIdx in zoneDict[curPage])
                         {
-                            curZone
+                            curZone = zoneDict[curPage][zoneIdx];
+                            curZone.ulx += paddingLeft + pageLeft;
+                            curZone.uly += paddingTop + pageTop;
                         }
-                    }*/
+                    }
 
                     //publish an event that sends out the zone dict
                     meiEditor.events.publish('ZonesWereUpdated', [zoneDict]);
@@ -549,7 +554,6 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                 //click listener on diva; if the target is a highlight we want it. this will take all possible highlights.
                 $(meiEditorSettings.divaInstance.getSettings().parentObject).on('click', function(e)
                 {
-                    console.log('click registered');
                     if ($(e.target).hasClass(meiEditorSettings.divaInstance.getSettings().ID + "highlight"))
                     {
                         //index of the page clicked on

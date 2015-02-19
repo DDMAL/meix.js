@@ -32,8 +32,8 @@ var MeiEditor = function(element, settingsIn, pluginsIn){
     //Checking for jQuery, jQueryUI, and Bootstrap 3+
     if (window.jQuery === undefined)
     {
-        require([window.meiEditorLocation + "js/lib/jquery.min.js"]);
         console.warn("The ACE MEI Editor did not find jQuery included. Loading from assets.");
+        require([window.meiEditorLocation + "js/lib/jquery.min.js"]);
     }
 
     if ($.ui === undefined)
