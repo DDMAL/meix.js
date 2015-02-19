@@ -250,9 +250,9 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                                 else if (lineDict.hasOwnProperty('zone'))
                                 {
                                     //assemble that dict in Diva highlight format
-                                    var highlightInfo = {'width': lineDict['zone']['lrx'] - lineDict['zone']['ulx'], 'height': lineDict['zone']['lry'] - lineDict['zone']['uly'], 'ulx':lineDict['zone']['ulx'], 'uly': lineDict['zone']['uly'], 'divID': lineDict['zone']['xml:id']};
+                                    var highlightInfo = {'width': lineDict.zone.lrx - lineDict.zone.ulx, 'height': lineDict.zone.lry - lineDict.zone.uly, 'ulx':lineDict.zone.ulx, 'uly': lineDict.zone.uly, 'divID': lineDict.zone['xml:id']};
                                     zoneDict[divaIdx].push(highlightInfo);
-                                    zoneIDs.push(lineDict['zone']['xml:id']);
+                                    zoneIDs.push(lineDict.zone['xml:id']);
                                 }
                             }
                         }
@@ -286,7 +286,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     var curPage;
 
                     // iterate through each line
-                    for(line in linesArr)
+                    for(var line in linesArr)
                     {
                         var lineDict = parseXMLLine(linesArr[line]);
                      
@@ -296,7 +296,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                         else if (lineDict.hasOwnProperty('surface'))
                         {
                             //set current page
-                            curPage = lineDict['surface']['n'];
+                            curPage = lineDict.surface.n;
 
                             //initialize that key of the dictionary
                             zoneDict[curPage] = [];
@@ -304,19 +304,33 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                         else if (lineDict.hasOwnProperty('zone'))
                         {
                             //assemble that dict in Diva highlight format
-                            var highlightInfo = {'width': lineDict['zone']['lrx'] - lineDict['zone']['ulx'], 'height': lineDict['zone']['lry'] - lineDict['zone']['uly'], 'ulx':lineDict['zone']['ulx'], 'uly': lineDict['zone']['uly'], 'divID': lineDict['zone']['xml:id']};
+                            var highlightInfo = {'width': lineDict.zone.lrx - lineDict.zone.ulx, 'height': lineDict.zone.lry - lineDict.zone.uly, 'ulx':lineDict.zone.ulx, 'uly': lineDict.zone.uly, 'divID': lineDict.zone['xml:id']};
                             zoneDict[curPage].push(highlightInfo);
-                            zoneIDs.push(lineDict['zone']['xml:id']);
+                            zoneIDs.push(lineDict.zone['xml:id']);
                         }
+                    }
+
+                    for (curPage in zoneDict)
+                    {
+                        if (zoneDict[curPage].length === 0) delete zoneDict[curPage];
                     }
                     
                     //clear any existing highlights
                     meiEditorSettings.divaInstance.resetHighlights();
                     // iterate through the pages (by index) and feed them into diva
-                    for (page in zoneDict)
+                    meiEditorSettings.divaInstance.highlightOnPages(Object.keys(zoneDict), zoneDict);
+
+                    /*for (curPage in zoneDict)
                     {
-                        meiEditorSettings.divaInstance.highlightOnPage(page, zoneDict[page]);
-                    } 
+                        var pageOffset = meiEditorSettings.divaInstance.getPageOffset(page);
+                        var pageTop = pageOffset.top;
+                        var pageLeft = pageOffset.left;
+                        
+                        for (curZone in zoneDict[curPage])
+                        {
+                            curZone
+                        }
+                    }*/
 
                     //publish an event that sends out the zone dict
                     meiEditor.events.publish('ZonesWereUpdated', [zoneDict]);
@@ -448,7 +462,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                 var pageTitleForDivaFilename = function(filename)
                 {
                     var splitName = filename.split(".")[0];
-                    for (curPage in meiEditorSettings.pageData)
+                    for (var curPage in meiEditorSettings.pageData)
                     {
                         splitPage = curPage.split(".")[0];
                         if (splitName == splitPage)
@@ -507,12 +521,12 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                 diva.Events.subscribe("VisiblePageDidChange", function(pageNumber, fileName)
                 {
                     var splitImage = fileName.split(".")[0];
-                    for(pageTitle in meiEditorSettings.pageData)
+                    for(var pageTitle in meiEditorSettings.pageData)
                     {
                         splitPage = pageTitle.split(".")[0];
                         if(splitImage == splitPage)
                         {
-                            for(curIdx in meiEditorSettings.tabTitlesByIndex)
+                            for(var curIdx in meiEditorSettings.tabTitlesByIndex)
                             {
                                 if (pageTitle == meiEditorSettings.tabTitlesByIndex[curIdx])
                                 {
@@ -527,7 +541,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
 
                 //to get default editor pages
                 meiEditor.reapplyEditorClickListener();
-                for(fileName in meiEditorSettings.pageData)
+                for(var fileName in meiEditorSettings.pageData)
                 {
                     meiEditorSettings.pageData[fileName].selection.on('changeCursor', meiEditor.cursorUpdate);
                 }
@@ -568,7 +582,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     }
                 });
 
-                for(curIdx in meiEditorSettings.divaInstance.getSettings().pages)
+                for(var curIdx in meiEditorSettings.divaInstance.getSettings().pages)
                 {
                     //add all diva image filenames (without extension)
                     meiEditorSettings.divaPages.push(meiEditorSettings.divaInstance.getSettings().pages[curIdx].f);
