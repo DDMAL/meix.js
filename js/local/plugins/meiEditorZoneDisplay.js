@@ -5,17 +5,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
     window.meiEditorPlugins.push((function()
     {
         var retval = 
-            {
-            divName: "zone-display",
-            title: 'Diva page manager',
-            dropdownOptions: 
-            {
-                "Link files to Diva images...": "file-link-dropdown",
-                "Unlink files from Diva images...": "file-unlink-dropdown",
-                "Auto-link files by filename": "auto-link-dropdown",
-                "Update Diva": "update-diva-dropdown",
-                "Clear selection": "clear-selection-dropdown"
-            },
+        {
             init: function(meiEditor, meiEditorSettings)
             {
                 /*
@@ -57,7 +47,8 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     resizableCache: [],         //cache of resizable items used to reload display once createHighlights is called
                     selectedClass: "editorSelected", //class to identify selected highlights. NOT a selector.
                     resizableClass: "editorResizable", //class to identify resizable highlights. NOT a selector.
-                    divaPages: []
+                    divaPages: [],
+                    oneToOneMEI: false
                 };
 
                 $.extend(meiEditorSettings, globals);
@@ -66,16 +57,18 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                 resizableSelector = "." + meiEditorSettings.resizableClass;
 
                 meiEditor.addToNavbar("Zone Display", "zone-display");
-                $("#dropdown-zone-display").append("<li><a id='file-link-dropdown'>Link files to Diva images...</a></li>" +
+                /*$("#dropdown-zone-display").append("<li><a id='file-link-dropdown'>Link files to Diva images...</a></li>" +
                     "<li><a id='file-unlink-dropdown'>Unlink files from Diva images...</a></li>" +
                     "<li><a id='update-diva-dropdown'>Update Diva</a></li>" +
                     "<li><a id='clear-selection-dropdown'>Clear selection</a></li>");
                 $("#dropdown-file-upload").append("<li><a id='default-mei-dropdown'>Create default MEI file</a></li>" +
                     "<li><a id='server-load-dropdown'>Load file from server...</a></li>" + 
-                    "<li><a id='manuscript-dropdown'>Close project</a></li>");
+                    "<li><a id='manuscript-dropdown'>Close project</a></li>");*/
                 $("#help-dropdown").append("<li><a id='zone-display-help'>Diva page manager</a></li>");
 
-                $("#file-link-dropdown").on('click', function()
+                $("#dropdown-zone-display").append("<li><a>One-to-one: <input type='checkbox' style='float:right' id='one-to-one-checkbox'></a></li>");
+
+                /*$("#file-link-dropdown").on('click', function()
                 {
                     $('#fileLinkModal').modal();
                 });
@@ -117,9 +110,9 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                 $("#default-mei-dropdown").on('click', function()
                 {
                     meiEditor.addDefaultPage(createDefaultMEIString());
-                });
+                });*/
 
-                createModal(meiEditorSettings.element, "fileLinkModal", false, 
+                /*createModal(meiEditorSettings.element, "fileLinkModal", false, 
                     "<span class='modalSubLeft'>" +
                     "Select an MEI file:<br>" +
                     createSelect("file-link", meiEditorSettings.pageData) +
@@ -160,7 +153,12 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     "<li style='margin-left:0.25in'>Pressing an arrow key will move a box slightly in the direction of the arrow.</li>" +
                     "<li style='margin-left:0.25in'>Press the 'Escape' key to leave resize/move mode.</li>" +
                     "<br><li>Press the 'delete' key on your keyboard to delete all selected highlights and the MEI lines associated with them.</li>");
-                
+                */
+
+                createModal(meiEditorSettings.element, "zoneHelpModal", false,
+                    "<h4>Help for 'Zone Display' menu:</h4>" +
+                    "<li>Just email Horwitz.</li>");
+
                 /*
                     Reloads highlights/resizable IDs after highlights have been reloaded.
                 */
@@ -180,7 +178,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
 
                 meiEditor.cursorUpdate = function(a, selection)
                 {
-                    /*var curRow = selection.getCursor().row;
+                    var curRow = selection.getCursor().row;
                     var UUIDs = selection.doc.getLine(curRow).match(/m-[\dabcdef]{8}-([\dabcdef]{4})-([\dabcdef]{4})-([\dabcdef]{4})-([\dabcdef]{12})/gi);
                     if(!UUIDs) return;
 
@@ -189,7 +187,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     while(curFacs--)
                     {
                         meiEditor.selectHighlight($("#" + UUIDs[curFacs]));
-                    }*/
+                    }
                 };
 
                 meiEditor.reapplyEditorClickListener = function()
@@ -236,14 +234,14 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     zoneIDs = []; //and this
                     var curPage;
 
-                    for (curTitle in meiEditorSettings.pageData)
+                    for (var curTitle in meiEditorSettings.pageData)
                     {
                         var divaIdx = getDivaIndexForPage(curTitle);
                         if (divaIdx !== false)
                         {
                             zoneDict[divaIdx] = [];
                             var linesArr = meiEditorSettings.pageData[curTitle].session.doc.getAllLines();
-                            for(line in linesArr)
+                            for(var line in linesArr)
                             {
                                 var lineDict = parseXMLLine(linesArr[line]);
                              
@@ -263,7 +261,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     //clear any existing highlights
                     meiEditorSettings.divaInstance.resetHighlights();
                     // iterate through the pages (by index) and feed them into diva
-                    for (page in zoneDict)
+                    for (var page in zoneDict)
                     {
                         meiEditorSettings.divaInstance.highlightOnPage(page, zoneDict[page]);
                     } 
@@ -325,8 +323,25 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     return true;
                 };
 
-                //public function to re-parse XML
-                meiEditor.reloadZones = (meiEditorSettings.oneToOneMEI ? reloadOneToOneZones : reloadMultiPageZones);
+                //worry about one to one stuff here - if default is on, set the checkbox
+                if(meiEditorSettings.oneToOneMEI) $("#one-to-one-checkbox").attr('checked', 'checked');
+
+                meiEditor.toggleOneToOne = function()
+                {
+                    if ($("#one-to-one-checkbox").prop('checked'))
+                    {
+                        meiEditor.reloadZones = reloadOneToOneZones;
+                    }
+                    else 
+                    {
+                        meiEditor.reloadZones = reloadMultiPageZones;
+                    }
+                };
+
+                //no matter what, trigger this once to make sure it's the right listener
+                meiEditor.toggleOneToOne();
+                $("#one-to-one-checkbox").on('change', meiEditor.toggleOneToOne);
+
                 //so zone reloading can be triggered
                 meiEditor.events.subscribe("ZonesWereUpdated", meiEditor.reloadFromCaches);             
                 meiEditor.events.subscribe('UpdateZones', meiEditor.reloadZones); 
@@ -520,6 +535,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                 //click listener on diva; if the target is a highlight we want it. this will take all possible highlights.
                 $(meiEditorSettings.divaInstance.getSettings().parentObject).on('click', function(e)
                 {
+                    console.log('click registered');
                     if ($(e.target).hasClass(meiEditorSettings.divaInstance.getSettings().ID + "highlight"))
                     {
                         //index of the page clicked on
