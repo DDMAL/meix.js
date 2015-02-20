@@ -279,7 +279,6 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
         */
         this.resetIconListeners = function()
         {
-
             for (var curIcon in settings.iconPane)
             {
                 var thisIcon = settings.iconPane[curIcon];
@@ -695,7 +694,8 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
         {
             var linesArr = settings.pageData[self.getActivePageTitle()].session.doc.getAllLines();
 
-            for(line in linesArr)
+            var line = 0;
+            while (line < linesArr.length)
             {
                 var retLine = parseInt(line, 10) + 1;
                 var lineDict = parseXMLLine(linesArr[line]);
@@ -710,6 +710,7 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
                             return [retLine, lineDict];
                     }
                 }
+                line++;
             }
             return false;
         };

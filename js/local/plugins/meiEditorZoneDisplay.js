@@ -16,7 +16,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                 */
                 if (!("divaInstance" in meiEditorSettings) || !("jsonFileLocation" in meiEditorSettings) || !("oneToOneMEI" in meiEditorSettings))
                 {
-                    console.error("MEI Editor error: The 'Diva Manager' plugin requires the 'divaInstance', 'jsonFileLocation', 'currentSite', and 'siglum_slug' settings present on intialization.");
+                    console.error("MEI Editor error: The 'Zone Display' plugin requires the 'divaInstance', 'jsonFileLocation', 'oneToOneMEI' settings present on intialization.");
                     return false;
                 }
 
@@ -314,12 +314,19 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                         if (zoneDict[curPage].length === 0) delete zoneDict[curPage];
                     }
 
-                    zoneCopy = JSON.parse(JSON.stringify(zoneDict));
+                    var zoneKeys = [];
+                    var zoneVals = [];
+                    var curKey;
+                    for (curKey in zoneDict) {
+                        zoneKeys.push(curKey);
+                        zoneVals.push(zoneDict[curKey]);
+                    }
+
                     
                     //clear any existing highlights
                     meiEditorSettings.divaInstance.resetHighlights();
                     // iterate through the pages (by index) and feed them into diva
-                    meiEditorSettings.divaInstance.highlightOnPages(Object.keys(zoneCopy), zoneCopy);
+                    meiEditorSettings.divaInstance.highlightOnPages(zoneKeys, zoneVals);
 
                     var paddingTop = 0;//meiEditorSettings.divaInstance.getSettings().verticalPadding;
                     var paddingLeft = 0;//meiEditorSettings.divaInstance.getSettings().horizontalPadding;
