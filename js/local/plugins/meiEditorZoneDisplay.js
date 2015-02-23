@@ -175,9 +175,16 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     }
                 };
 
+                var lastRow = 0;
                 meiEditor.cursorUpdate = function(a, selection)
                 {
                     var curRow = selection.getCursor().row;
+
+                    if (curRow === lastRow)
+                        return;
+                    else
+                        lastRow = curRow;
+
                     var UUIDs = selection.doc.getLine(curRow).match(/m-[\dabcdef]{8}-([\dabcdef]{4})-([\dabcdef]{4})-([\dabcdef]{4})-([\dabcdef]{12})/gi);
                     if(!UUIDs) return;
 
