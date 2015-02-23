@@ -190,6 +190,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
 
                     var curFacs = UUIDs.length;
                     meiEditor.deselectAllHighlights();
+
                     while(curFacs--)
                     {
                         meiEditor.selectHighlight($("#" + UUIDs[curFacs]));
@@ -199,7 +200,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                 meiEditor.reapplyEditorClickListener = function()
                 {
                     //commented out as per issue #36
-                    $(".aceEditorPane").on('click', function()
+                    /*$(".aceEditorPane").on('click', function()
                     {
                         var activeTab = meiEditor.getActivePanel().text();
                         if (true) //(meiEditor.meiIsLinked(activeTab))
@@ -222,7 +223,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                                 }
                             }
                         }
-                    });
+                    });*/
                 };
 
                 /*
@@ -396,7 +397,9 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                         //searches for the facs ID that is also the ID of the highlighted panel
                         var pageTitle = meiEditor.getActivePanel().text();
                         meiEditorSettings.pageData[pageTitle].selection.removeListener('changeCursor', meiEditor.cursorUpdate);
-
+                        
+                        var initCol = meiEditorSettings.pageData[pageTitle].selection.getCursor().column;
+                        
                         var pageRef = meiEditor.getPageData(pageTitle);
                         var facsSearch = pageRef.find(searchNeedle,
                         {
@@ -421,6 +424,10 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                             pageRef.findNext();
                             newRow = pageRef.getSelectionRange().start.row;
                         } while (newRow != initRow); //safety to make sure we wrap only once and not infinitely
+  
+                        if (newRow == initRow)
+                            meiEditorSettings.pageData[pageTitle].selection.moveCursorTo(newRow, initCol);
+                        
 
                         meiEditorSettings.pageData[pageTitle].selection.on('changeCursor', meiEditor.cursorUpdate);
                     }
