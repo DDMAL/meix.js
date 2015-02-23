@@ -4,7 +4,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
 {
     window.meiEditorPlugins.push((function()
     {
-        var retval = 
+        var retval =
         {
             init: function(meiEditor, meiEditorSettings)
             {
@@ -20,7 +20,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     return false;
                 }
 
-                /*var globals = 
+                /*var globals =
                 {
                     divaPageList: [],           //list of active pages in Diva
                     divaImagesToMeiFiles: {},   //keeps track of linked files
@@ -39,7 +39,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     pageLoadedByScrolling: false,
                 };*/
 
-                var globals = 
+                var globals =
                 {
                     zoneDict: {},              //dict of zones to highlight represented as {'UUID'(surface): [['ulx': ulx, 'uly': uly, 'lrx': lrx, 'lry': lry, 'divID': uuid(zone)}, {'ulx'...}]}
                     zoneIDs: [],               //an array of IDs for faster lookup
@@ -61,7 +61,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     "<li><a id='update-diva-dropdown'>Update Diva</a></li>" +
                     "<li><a id='clear-selection-dropdown'>Clear selection</a></li>");
                 $("#dropdown-file-upload").append("<li><a id='default-mei-dropdown'>Create default MEI file</a></li>" +
-                    "<li><a id='server-load-dropdown'>Load file from server...</a></li>" + 
+                    "<li><a id='server-load-dropdown'>Load file from server...</a></li>" +
                     "<li><a id='manuscript-dropdown'>Close project</a></li>");*/
                 $("#help-dropdown").append("<li><a id='zone-display-help'>Diva page manager</a></li>");
 
@@ -111,37 +111,37 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     meiEditor.addDefaultPage(createDefaultMEIString());
                 });*/
 
-                /*createModal(meiEditorSettings.element, "fileLinkModal", false, 
+                /*createModal(meiEditorSettings.element, "fileLinkModal", false,
                     "<span class='modalSubLeft'>" +
                     "Select an MEI file:<br>" +
                     createSelect("file-link", meiEditorSettings.pageData) +
                     "</span>" +
                     "<span class='modalSubRight'>" +
-                    "Select a Diva image:<br>" + 
-                    createSelect("diva-link", meiEditorSettings.divaPageList, true) + 
-                    "</span>" + 
-                    "<div class='clear'></div>" + 
-                    "<div class='centeredAccept'>" + 
-                    "<button id='link-files'>Link selected files</button>" + 
+                    "Select a Diva image:<br>" +
+                    createSelect("diva-link", meiEditorSettings.divaPageList, true) +
+                    "</span>" +
+                    "<div class='clear'></div>" +
+                    "<div class='centeredAccept'>" +
+                    "<button id='link-files'>Link selected files</button>" +
                     "</div>");
 
-                createModal(meiEditorSettings.element, "fileUnlinkModal", false, 
-                    "<div id='unlink-wrapper'>" + 
-                    "Unlink an MEI file from a Diva file:<br>" + 
-                    "<select id='selectUnlink'></select><br>" + 
-                    "<button id='unlink-files'>Unlink selected files</button>" + 
+                createModal(meiEditorSettings.element, "fileUnlinkModal", false,
+                    "<div id='unlink-wrapper'>" +
+                    "Unlink an MEI file from a Diva file:<br>" +
+                    "<select id='selectUnlink'></select><br>" +
+                    "<button id='unlink-files'>Unlink selected files</button>" +
                     "</div>");
 
                 createModal(meiEditorSettings.element, "zoneHelpModal", false,
-                    "<h4>Help for 'Zone Display' menu:</h4>" + 
-                    "<li>To get highlights from a file to show up in the Diva pane, click 'Link files to Diva images...' from the dropdown menu and select the files you want to link.</li>" + 
-                    "<br><li>'Auto-link files by filename' will automatically strip file extensions and try to match files so that '001.mei' and '001.tiff' become linked.</li>" + 
-                    "<br><li>Changes you make to the MEI document will not automatically transfer over; click the 'Update Diva' dropdown option to reload the highlighted objects in the image viewer.</li>" + 
+                    "<h4>Help for 'Zone Display' menu:</h4>" +
+                    "<li>To get highlights from a file to show up in the Diva pane, click 'Link files to Diva images...' from the dropdown menu and select the files you want to link.</li>" +
+                    "<br><li>'Auto-link files by filename' will automatically strip file extensions and try to match files so that '001.mei' and '001.tiff' become linked.</li>" +
+                    "<br><li>Changes you make to the MEI document will not automatically transfer over; click the 'Update Diva' dropdown option to reload the highlighted objects in the image viewer.</li>" +
                     "<br><li>Clicking on a highlight will select it and move the MEI editor to its line.</li>" +
                     "<li>Holding shift and clicking will select additional highlights.</li>" +
-                    "<li>Holding shift and click-dragging the mouse will select everything within a box.</li>" + 
+                    "<li>Holding shift and click-dragging the mouse will select everything within a box.</li>" +
                     "<li>To deselect a single highlight, hold shift and click on a selected highlight.</li>" +
-                    "<li>To deselect all highlights, choose the 'Clear selection' option of this dropdown.</li>" + 
+                    "<li>To deselect all highlights, choose the 'Clear selection' option of this dropdown.</li>" +
                     "<br><li>To create a new highlight, ctrl+click (Windows) or cmd+click (Mac) on empty space on the image. </li>" +
                     "<li style='margin-left:0.25in'>Only clicking will create a default box that can be resized later.</li>" +
                     "<li style='margin-left:0.25in'>Clicking and dragging will create a box with a specific size.</li>" +
@@ -223,7 +223,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                 */
                 var reloadOneToOneZones = function()
                 {
-                    if(!meiEditorSettings.oneToOneMEI) 
+                    if(!meiEditorSettings.oneToOneMEI)
                     {
                         meiEditor.localError("Multiple surfaces found. Can not reload zones.");
                         return false;
@@ -243,8 +243,8 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                             for(var line in linesArr)
                             {
                                 var lineDict = parseXMLLine(linesArr[line]);
-                             
-                                //if there's no XML in the current line, we don't care    
+
+                                //if there's no XML in the current line, we don't care
                                 if (!lineDict) continue;
                                 else if (lineDict.hasOwnProperty('zone'))
                                 {
@@ -262,7 +262,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
 
                 var reloadMultiPageZones = function()
                 {
-                    if(meiEditorSettings.oneToOneMEI) 
+                    if(meiEditorSettings.oneToOneMEI)
                     {
                         meiEditor.localError("Multiple surfaces not found. Can not reload zones.");
                         return false;
@@ -278,8 +278,8 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     for(var line in linesArr)
                     {
                         var lineDict = parseXMLLine(linesArr[line]);
-                     
-                        //if there's no XML in the current line, we don't care    
+
+                        //if there's no XML in the current line, we don't care
                         if (!lineDict) continue;
                         //if it's a surface, treat that as the "current page" as all zones are inside that
                         else if (lineDict.hasOwnProperty('surface'))
@@ -323,7 +323,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                         zoneKeys.push(curKey);
                         zoneVals.push(zoneCopy[curKey]);
                     }
-                    
+
                     //clear any existing highlights
                     meiEditorSettings.divaInstance.resetHighlights();
                     // iterate through the pages (by index) and feed them into diva
@@ -331,11 +331,11 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
 
                     var paddingTop = 0;//meiEditorSettings.divaInstance.getSettings().verticalPadding;
                     var paddingLeft = 0;//meiEditorSettings.divaInstance.getSettings().horizontalPadding;
-                    
+
                     for (curPage in zoneDict)
                     {
                         var pageOffset = meiEditorSettings.divaInstance.getPageOffset(curPage);
-                        
+
                         for (var zoneIdx in zoneDict[curPage])
                         {
                             curZone = zoneDict[curPage][zoneIdx];
@@ -358,7 +358,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     {
                         meiEditor.reloadZones = reloadOneToOneZones;
                     }
-                    else 
+                    else
                     {
                         meiEditor.reloadZones = reloadMultiPageZones;
                     }
@@ -369,9 +369,9 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                 $("#one-to-one-checkbox").on('change', meiEditor.toggleOneToOne);
 
                 //so zone reloading can be triggered
-                meiEditor.events.subscribe("ZonesWereUpdated", meiEditor.reloadFromCaches);             
-                meiEditor.events.subscribe('UpdateZones', meiEditor.reloadZones); 
-                
+                meiEditor.events.subscribe("ZonesWereUpdated", meiEditor.reloadFromCaches);
+                meiEditor.events.subscribe('UpdateZones', meiEditor.reloadZones);
+
                 /*
                     Highlight selection code:
                 */
@@ -388,10 +388,10 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
 
                         //searches for the facs ID that is also the ID of the highlighted panel
                         var pageTitle = meiEditor.getActivePanel().text();
-                        meiEditorSettings.pageData[pageTitle].session.removeListener('changeCursor', meiEditor.cursorUpdate);           
-                    
+                        meiEditorSettings.pageData[pageTitle].selection.removeListener('changeCursor', meiEditor.cursorUpdate);
+
                         var pageRef = meiEditor.getPageData(pageTitle);
-                        var facsSearch = pageRef.find(searchNeedle, 
+                        var facsSearch = pageRef.find(searchNeedle,
                         {
                             wrap: true,
                             range: null
@@ -414,10 +414,10 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                             pageRef.findNext();
                             newRow = pageRef.getSelectionRange().start.row;
                         } while (newRow != initRow); //safety to make sure we wrap only once and not infinitely
-                    
-                        meiEditorSettings.pageData[pageTitle].session.on('changeCursor', meiEditor.cursorUpdate);           
+
+                        meiEditorSettings.pageData[pageTitle].selection.on('changeCursor', meiEditor.cursorUpdate);
                     }
-                    
+
                     $(divToSelect).addClass(meiEditorSettings.selectedClass);
                     $(divToSelect).css('background-color', 'rgba(0, 255, 0, 0.1)');
                     updateCaches();
@@ -496,10 +496,10 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     //if the page is in Diva...
                     var divaIdx = getDivaIndexForPage(fileName);
                     if (divaIdx === false) return;
-                    
+
                     //scroll to it
                     meiEditorSettings.divaInstance.gotoPageByIndex(divaIdx);
-                    meiEditorSettings.pageData[fileName].selection.on('changeCursor', meiEditor.cursorUpdate);           
+                    meiEditorSettings.pageData[fileName].selection.on('changeCursor', meiEditor.cursorUpdate);
                     meiEditor.events.publish('UpdateZones');
                 });
 
@@ -508,15 +508,15 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     //if the page is in Diva...
                     var divaIdx = getDivaIndexForPage(fileName);
                     if (divaIdx === false) return;
-                    
+
                     //scroll to it
                     meiEditorSettings.divaInstance.gotoPageByIndex(divaIdx);
-                    meiEditorSettings.pageData[fileName].selection.on('changeCursor', meiEditor.cursorUpdate);           
+                    meiEditorSettings.pageData[fileName].selection.on('changeCursor', meiEditor.cursorUpdate);
                     meiEditor.events.publish('UpdateZones');
                 });
 
                 meiEditor.events.subscribe("PageWasDeleted", function(pageName)
-                {           
+                {
                     meiEditor.events.publish('UpdateZones');
                 });
 
@@ -527,10 +527,10 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     //if the page is in Diva...
                     var divaIdx = getDivaIndexForPage(newName);
                     if (divaIdx === false) return;
-                    
+
                     //scroll to it
                     meiEditorSettings.divaInstance.gotoPageByIndex(divaIdx);
-                    meiEditorSettings.pageData[newName].selection.on('changeCursor', meiEditor.cursorUpdate);           
+                    meiEditorSettings.pageData[newName].selection.on('changeCursor', meiEditor.cursorUpdate);
                     meiEditor.events.publish('UpdateZones');
                 });
 
@@ -551,7 +551,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                                     return true;
                                 }
                             }
-                        } 
+                        }
                     }
                     return false;
                 });
@@ -571,18 +571,18 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                         //index of the page clicked on
                         var clickedIdx = $(e.target).parent().attr('data-index');
                         var clickedTitle = pageTitleForDivaFilename(meiEditorSettings.divaPages[clickedIdx]);
-                        
+
                         //if the clicked page is not linked, return and do nothing
                         if (clickedTitle === false)
                         {
                             meiEditor.deselectAllHighlights();
                             return false;
-                        } 
+                        }
 
                         //diva index of the page currently clicked on
                         var currentTitle = meiEditorSettings.activePageTitle;
                         var currentIdx = meiEditorSettings.divaPages.indexOf(currentTitle.split(".")[0]);
-                        
+
                         //if the two indices are not the same
                         if (clickedIdx != currentIdx)
                         {
