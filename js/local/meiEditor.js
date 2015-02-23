@@ -358,6 +358,10 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
             //when the document is clicked
             $("#" + fileNameStripped).on('click', function(e) //parent of editorPane
             {
+                if ($(e.target).hasClass('ace_scroller')){
+                    return;
+                }
+
                 var pageName = $($(e.target).parent()).parent().attr('originalName');
                 var docRow = settings.pageData[pageName].getCursorPosition().row; //0-index to 1-index
 
@@ -369,7 +373,7 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
             });
 
             //pageDataKeys was called before page was added - if only an untitled page existed before, delete it
-            if(pageDataKeys.length = 1 && pageDataKeys[0] == "untitled")
+            if(pageDataKeys.length == 1 && pageDataKeys[0] == "untitled")
             {
                 if(settings.pageData["untitled"].getSession().doc.getLength() == 1 && settings.pageData["untitled"].getSession().doc.getLine(0) === "")
                 { 
