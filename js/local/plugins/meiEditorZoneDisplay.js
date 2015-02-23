@@ -47,8 +47,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     resizableCache: [],         //cache of resizable items used to reload display once createHighlights is called
                     selectedClass: "editorSelected", //class to identify selected highlights. NOT a selector.
                     resizableClass: "editorResizable", //class to identify resizable highlights. NOT a selector.
-                    divaPages: [],
-                    oneToOneMEI: false
+                    divaPages: []
                 };
 
                 $.extend(meiEditorSettings, globals);
@@ -317,11 +316,13 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     var zoneKeys = [];
                     var zoneVals = [];
                     var curKey;
-                    for (curKey in zoneDict) {
-                        zoneKeys.push(curKey);
-                        zoneVals.push(zoneDict[curKey]);
-                    }
 
+                    var zoneCopy = JSON.parse(JSON.stringify(zoneDict));
+
+                    for (curKey in zoneCopy) {
+                        zoneKeys.push(curKey);
+                        zoneVals.push(zoneCopy[curKey]);
+                    }
                     
                     //clear any existing highlights
                     meiEditorSettings.divaInstance.resetHighlights();
