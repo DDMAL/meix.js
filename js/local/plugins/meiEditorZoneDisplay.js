@@ -388,6 +388,8 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
 
                         //searches for the facs ID that is also the ID of the highlighted panel
                         var pageTitle = meiEditor.getActivePanel().text();
+                        meiEditorSettings.pageData[pageTitle].session.removeListener('changeCursor', meiEditor.cursorUpdate);           
+                    
                         var pageRef = meiEditor.getPageData(pageTitle);
                         var facsSearch = pageRef.find(searchNeedle, 
                         {
@@ -412,11 +414,14 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                             pageRef.findNext();
                             newRow = pageRef.getSelectionRange().start.row;
                         } while (newRow != initRow); //safety to make sure we wrap only once and not infinitely
+                    
+                        meiEditorSettings.pageData[pageTitle].session.on('changeCursor', meiEditor.cursorUpdate);           
                     }
                     
                     $(divToSelect).addClass(meiEditorSettings.selectedClass);
                     $(divToSelect).css('background-color', 'rgba(0, 255, 0, 0.1)');
                     updateCaches();
+
                 };
 
                 //shortcut to deselect all highlights
