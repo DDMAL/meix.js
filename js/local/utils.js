@@ -279,3 +279,28 @@ function jQueryStrip(fileName)
 }
 
 var meiParser = new window.DOMParser();
+
+function rewriteAce(editorRef)
+{
+    var length = editorRef.session.doc.getLength();
+    var newText = editorRef.parsed.documentElement.outerHTML;
+    var aceRange = require('ace/range').Range;
+    var range = new aceRange(0, 0, length, 0);
+
+    editorRef.session.doc.replace(range, newText);
+}
+
+//detects whether the current resizable object is too small to hold the ui-resizable icon
+var checkResizable = function(selector)
+{
+    //if it's so small that the icon would be outside of the box
+    var resizableIsTooSmall = ($(selector).width() < 16 || $(selector).height() < 16);
+    //if it has the classes
+    var resizableHasClasses = $(selector + " > .ui-resizable-se").hasClass("ui-icon");
+
+    //if these are even we need to toggle the classes
+    if(resizableIsTooSmall === resizableHasClasses)
+    {
+        $(selector + " > .ui-resizable-se").toggleClass("ui-icon ui-icon-gripsmall-diagonal-se");
+    }
+};
