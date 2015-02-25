@@ -60,9 +60,11 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
 
                 //local variables that don't need to be attached to the settings object
                 var highlightSingleClickTimeout;
-                var highlightHandle;
-                var selectedSelector = "." + meiEditorSettings.selectedClass;
-                var resizableSelector = "." + meiEditorSettings.resizableClass;
+                var editHandle;
+                var selectedClass = meiEditorSettings.selectedClass;
+                var selectedSelector = "." + selectedClass;
+                var resizableClass = meiEditorSettings.resizableClass;
+                var resizableSelector = "." + resizableClass;
 
                 meiEditor.addToNavbar("Zone Display", "zone-display");
                 /*$("#dropdown-zone-display").append("<li><a id='file-link-dropdown'>Link files to Diva images...</a></li>" +
@@ -170,17 +172,18 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                 /*
                     Reloads highlights/resizable IDs after highlights have been reloaded.
                 */
-                meiEditor.reloadFromCaches = function()
+                var reloadFromCaches = function()
                 {
-                    var curselectedCached = meiEditorSettings.selectedCache.length;
-                    while(curselectedCached--)
+                    var idx = meiEditorSettings.selectedCache.length;
+                    while(idx--)
                     {
-                        meiEditor.selectHighlight($('#' + meiEditorSettings.selectedCache[curselectedCached]));
+                        console.log(meiEditorSettings.selectedCache[idx]);
+                        meiEditor.selectHighlight($('#' + meiEditorSettings.selectedCache[idx]));
                     }
-                    var curResizableCached = meiEditorSettings.resizableCache.length;
-                    while(curResizableCached--)
+                    idx = meiEditorSettings.resizableCache.length;
+                    while(idx--)
                     {
-                        meiEditor.selectResizable('#' + meiEditorSettings.resizableCache[curResizableCached]);
+                        meiEditor.selectResizable('#' + meiEditorSettings.resizableCache[idx]);
                     }
                 };
 
@@ -347,12 +350,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     //publish an event that sends out the zone dict
                     meiEditor.events.publish('ZonesWereUpdated', [zoneDict]);
 
-                    if(highlightHandle !== undefined)
-                    {
-                        diva.Events.unsubscribe(highlightHandle);
-                        highlightHandle = undefined;
-                    }
-                    highlightHandle = diva.Events.subscribe("HighlightCompleted", applyHighlightHandlers);
+                    if(editHandle === undefined) editHandle = meiEditor.events.subscribe("PageEdited", meiEditor.reloadZones);
                     
                     // iterate through the pages (by index) and feed them into diva
                     meiEditorSettings.divaInstance.highlightOnPages(zoneKeys, zoneVals, undefined, HIGHLIGHT_CLASS);
@@ -371,7 +369,6 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                             curZone.uly += paddingTop + pageOffset.top;
                         }
                     }
-
                     return true;
                 };
 
@@ -395,7 +392,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                 $("#one-to-one-checkbox").on('change', meiEditor.toggleOneToOne);
 
                 //so zone reloading can be triggered
-                meiEditor.events.subscribe("ZonesWereUpdated", meiEditor.reloadFromCaches);
+                meiEditor.events.subscribe("ZonesWereUpdated", reloadFromCaches);
                 meiEditor.events.subscribe('UpdateZones', meiEditor.reloadZones);
 
                 /*
@@ -404,16 +401,12 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
 
                 /* Event listeners: */
 
-                $(meiEditorSettings.divaInstance.getSettings().parentObject).on('click', function(e)
-                {
-                    meiEditor.deselectAllHighlights();
-                });
-
                 var applyHighlightHandlers = function()
                 {
                     $(HIGHLIGHT_SELECTOR).on('click', highlightClickHandler);
                     $(HIGHLIGHT_SELECTOR).on('dblclick', highlightDoubleClickHandler);
                     $(HIGHLIGHT_SELECTOR).css('cursor', 'pointer');
+                    reloadFromCaches();
                 };
                 
                 var highlightDoubleClickHandler = function(e)
@@ -522,7 +515,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                         meiEditorSettings.pageData[pageTitle].selection.on('changeCursor', meiEditor.cursorUpdate);
                     }
 
-                    $(divToSelect).addClass(meiEditorSettings.selectedClass);
+                    $(divToSelect).addClass(selectedClass);
                     $(divToSelect).css('background-color', 'rgba(0, 255, 0, 0.1)');
                     updateCaches();
 
@@ -538,7 +531,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                 meiEditor.deselectHighlight = function(divToDeselect)
                 {
                     $(divToDeselect).css('background-color', 'rgba(255, 0, 0, 0.2)');
-                    $(divToDeselect).toggleClass(meiEditorSettings.selectedClass);
+                    $(divToDeselect).toggleClass(selectedClass);
                     updateCaches();
                 };
 
@@ -548,10 +541,10 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     //change color to yellow, pop on top of everything
                     $(object).css({'z-index': 150,
                         'background-color': 'rgba(255, 255, 0, 0.5)'});
-                    $(object).addClass(meiEditorSettings.resizableClass);
+                    $(object).addClass(resizableClass);
 
                     //make sure all previous events are unbound
-                    //$(document).unbind('keyup', resizableKeyListeners);
+                    $(document).unbind('keyup', resizableKeyListeners);
 
                     //jQuery UI resizable, when resize stops update the box's position in the document
                     if(!$(object).data('uiResizable') && !meiEditorSettings.editModeActive)
@@ -598,8 +591,33 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     });
 
                     //escape gets you out of this
-                    //$(document).on('keyup', resizableKeyListeners);
+                    $(document).on('keyup', resizableKeyListeners);
                     updateCaches();
+                };
+
+                //deselects a resizable object
+                meiEditor.deselectResizable = function(object)
+                {
+                    if($(object).length !== 0)
+                    {
+                        //return it to normal
+                        $(object).draggable('destroy');
+                        $(object).resizable('destroy');
+                        $(object).css('z-index', $(".overlay-box").css('z-index'));
+                        $(object).css('background-color', 'rgba(255, 0, 0, 0.2)');
+                        $(object).toggleClass(resizableClass);
+                    }
+
+                    //remove overlay and restore key bindings to Diva
+                    $("#resizableOverlay").remove();
+                    $(document).unbind('keyup', resizableKeyListeners);
+                    meiEditorSettings.divaInstance.enableScrollable();
+                    //reapplyBoxListeners();
+                    $("#diva-wrapper").unbind('resize');
+                    updateCaches();
+                    
+                    //regenerate the highlights, reset the listeners, reselect the same box
+                    //meiEditor.createHighlights();
                 };
 
                 //writes changes to an object into the document
@@ -641,10 +659,47 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                         }
                     }
 
-                    rewriteAce(pageRef);
+                    //this will be re-subscribed to in publishBoxes
+                    if(editHandle)
+                    {
+                        meiEditor.events.unsubscribe(editHandle);
+                        editHandle = undefined;
+                    }
 
-                    //meiEditor.events.publish('UpdateZones');
+                    rewriteAce(pageRef);
                 };
+
+                //detects whether or not a keypress was the escape key and triggers
+                var resizableKeyListeners = function(e)
+                {
+                    if (e.keyCode == 27) 
+                    { 
+                        meiEditor.deselectResizable(resizableSelector);
+                    } 
+                    else if ((e.keyCode) < 41 && (e.keyCode > 36))
+                    {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        switch (e.keyCode) 
+                        {
+                            case 37:
+                                $(resizableSelector).offset({'left': $(resizableSelector).offset().left - 1});
+                                break;
+                            case 38:
+                                $(resizableSelector).offset({'top': $(resizableSelector).offset().top - 1});
+                                break;
+                            case 39:
+                                $(resizableSelector).offset({'left': $(resizableSelector).offset().left + 1});
+                                break;
+                            case 40:
+                                $(resizableSelector).offset({'top': $(resizableSelector).offset().top + 1});
+                                break;
+                            default:
+                                break;
+                        }
+                        meiEditor.updateBox(resizableSelector);
+                    }
+                };   
 
                 /*
                     Saves highlights/resizable IDs while highlights are being reloaded.
@@ -728,7 +783,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     meiEditor.events.publish('UpdateZones');
                 });
 
-                meiEditor.events.subscribe("PageEdited", meiEditor.reloadZones);
+                editHandle = meiEditor.events.subscribe("PageEdited", meiEditor.reloadZones);
 
                 meiEditor.events.subscribe("PageWasRenamed", function(originalName, newName)
                 {
@@ -743,6 +798,8 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                 });
 
                 //if diva scrolls to a new page that's loaded, switch to it in the tabs
+                diva.Events.subscribe("HighlightCompleted", applyHighlightHandlers);
+                diva.Events.subscribe("ZoomLevelDidChange", updateCaches);
                 diva.Events.subscribe("VisiblePageDidChange", function(pageNumber, fileName)
                 {
                     var splitImage = fileName.split(".")[0];
