@@ -176,7 +176,8 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/FileSaver.js'], functio
 
                 meiEditor.events.subscribe("NewFile", function(a, fileName)
                 {
-                    $("#selectSave").append("<option id='save-" + fileName + "' name='" + fileName + "'>" + fileName + "</option>");
+                    var strippedFilename = jQueryStrip(fileName);
+                    $("#selectSave").append("<option id='save-" + strippedFilename + "'>" + fileName + "</option>");
                 });
 
                 meiEditor.events.subscribe("PageWasDeleted", function(pageName)
@@ -186,7 +187,10 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/FileSaver.js'], functio
 
                 meiEditor.events.subscribe("PageWasRenamed", function(oldName, newName)
                 {
-                    $("#save-" + meiEditor.stripFilenameForJQuery(oldName)).attr('id', "save-" + meiEditor.stripFilenameForJQuery(newName)).attr('name', meiEditor.stripFilenameForJQuery(newName));
+                    var strippedOld = jQueryStrip(oldName);
+                    var strippedNew = jQueryStrip(newName);
+                    $("#save-" + strippedOld).attr('id', "save-" + strippedNew);
+                    $("#save-" + strippedNew).text(newName);
                 });
 
                 $("#fileLoadModal-close").on('click', function()

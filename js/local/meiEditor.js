@@ -135,15 +135,6 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
         }());   
 
         /*
-            Strips a file name of characters that jQuery selectors may misinterpret.
-            @param fileName The filename to strip.
-        */
-        this.stripFilenameForJQuery = function(fileName)
-        {
-            return fileName.replace(/\W+/g, "");
-        };
-
-        /*
             Makes a string formatted for the tab header out of the iconPane object.
         */
         this.makeIconString = function()
@@ -316,7 +307,7 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
         {
             var pageDataKeys = Object.keys(settings.pageData);
 
-            var fileNameStripped = self.stripFilenameForJQuery(fileName);
+            var fileNameStripped = jQueryStrip(fileName);
             //add a new tab to the editor
             $("#pagesList").append("<li id='" + fileNameStripped + "-listitem'><a href='#" + fileNameStripped + "-wrapper' class='linkWrapper'>" + fileName + "</a>" + self.makeIconString() + "</li>");
             $("#openPages").append("<div id='" + fileNameStripped + "-wrapper'>" + //necessary for CSS to work
@@ -408,7 +399,7 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
         {
             saveDelete = function(pageName)
             {
-                var pageNameStripped = self.stripFilenameForJQuery(pageName);
+                var pageNameStripped = jQueryStrip(pageName);
                 var activeIndex = $("#openPages").tabs("option", "active");
 
                 //if removed panel is active, set it to one less than the current or keep it at 0 if this is 0
@@ -509,13 +500,13 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
                     newInput.remove();
                     parentListItem.children("a").css('display', 'block');
                 }
-                else if (self.stripFilenameForJQuery(newName) === "")
+                else if (jQueryStrip(newName) === "")
                 {
                     self.localError("Error in renaming " + originalName + ": please choose a filename that contains alphanumeric characters.");
                     newInput.remove();
                     parentListItem.children("a").css('display', 'block');
                 }
-                else if ($("#"+self.stripFilenameForJQuery(newName)).length)
+                else if ($("#"+jQueryStrip(newName)).length)
                 {
                     self.localError("Error in renaming " + originalName + ": this filename is too similar to one that already exists in this project. Please close the other or choose a different name.");
                     newInput.remove();
@@ -526,23 +517,23 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
                     var activeHold = $("#openPages").tabs("option", "active");
                     //change the link's text and href
                     parentListItem.children("a").text(newName);
-                    parentListItem.children("a").attr('href', '#' + self.stripFilenameForJQuery(newName));
+                    parentListItem.children("a").attr('href', '#' + jQueryStrip(newName));
                     
                     //remove the input and make the original link visible again
                     newInput.remove();
                     parentListItem.children("a").css('display', 'block');
 
                     //change this for the listitem, editor and wrapper as well
-                    var listitemDiv = $("#" + self.stripFilenameForJQuery(originalName) + "-listitem");
-                    listitemDiv.attr('id', self.stripFilenameForJQuery(newName) + "-listitem");
-                    $(listitemDiv.children("a")[0]).attr("href", "#" + self.stripFilenameForJQuery(newName) + "-wrapper");
+                    var listitemDiv = $("#" + jQueryStrip(originalName) + "-listitem");
+                    listitemDiv.attr('id', jQueryStrip(newName) + "-listitem");
+                    $(listitemDiv.children("a")[0]).attr("href", "#" + jQueryStrip(newName) + "-wrapper");
 
-                    var editorDiv = $("#" + self.stripFilenameForJQuery(originalName));
-                    editorDiv.attr('id', self.stripFilenameForJQuery(newName));
+                    var editorDiv = $("#" + jQueryStrip(originalName));
+                    editorDiv.attr('id', jQueryStrip(newName));
                     editorDiv.attr('originalName', newName);
 
-                    var wrapperDiv = $("#" + self.stripFilenameForJQuery(originalName) + "-wrapper");
-                    wrapperDiv.attr('id', self.stripFilenameForJQuery(newName) + "-wrapper");
+                    var wrapperDiv = $("#" + jQueryStrip(originalName) + "-wrapper");
+                    wrapperDiv.attr('id', jQueryStrip(newName) + "-wrapper");
 
                     //refresh to make sure all these IDs are set
                     $("#openPages").tabs("refresh");
@@ -561,7 +552,7 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
             };
 
             //get a pointer to the <li> and the rename object, get the original name to feed into the input item
-            var parentListItem = $("#" + self.stripFilenameForJQuery(pageName) + "-listitem");
+            var parentListItem = $("#" + jQueryStrip(pageName) + "-listitem");
             var clicked = parentListItem.children("span.rename");
             var containedLink = parentListItem.children("a");
             var originalName = containedLink.text();

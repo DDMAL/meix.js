@@ -231,44 +231,49 @@ jQuery.fn.hasVisibleOptions = function()
         }
         return false;
     }
-}
+};
 
 String.prototype.endsWith = function(suffix) {
     return this.indexOf(suffix, this.length - suffix.length) !== -1;
 };
 
+String.prototype.findall = function(needle) 
+{
+    var matches = [], found;
+    while ((found = needle.exec(this)) !== null) {
+        matches.push(found[0]);
+    }
+    return matches;
+};
+
 //returns a dictionary where {'elementTag': {'attr': 'val', 'attr2': 'val2'}} etc.
 function parseXMLLine(text)
 {
-    var splits = text.split(" ");
-    var returnDict = {};
-    var returnDictKey;
+    //if it's just a closing tag or if it's whitespace, we don't want it
+    if ((text.match(/<\/[^ ]*?>/g)) || !(/\S/.test(text))) return false;
+
+    var splits = text.findall(/\S*="[^"]*?"/g);
+    var tag = text.findall(/<[^ ]*/g)[0].substring(1); //matches < then any amount of non-space chars
+    var xmlDict = {};
+    
     for (idx in splits)
     {
         curSplit = splits[idx];
 
-        if(!curSplit || curSplit == " ") continue; //just a blank space
-
-        if(curSplit.match(/\/>/g)) //strip off the last two characters of single-line elements
-        {
-            curSplit = curSplit.slice(0, -2);
-        }
-        else if(curSplit.match(/>/g)) //strip last character off multi-line elements
-        {
-            curSplit = curSplit.slice(0, -1);
-        }
-
-        if (curSplit.match(/</g)) //if it's the first one, initialize the dict
-        {
-            returnDictKey = curSplit.substring(1);
-            returnDict[returnDictKey] = {};
-        }
-
-        else //add to the dict
-        {
-            var kv = curSplit.split("=");
-            returnDict[returnDictKey][kv[0]] = kv[1].slice(1, -1); 
-        }
+        var keyVal = curSplit.split("=");
+        xmlDict[keyVal[0]] = keyVal[1].slice(1, -1); //get rid of the first quote mark and last quote mark/trailing space 
     }
+
+    var returnDict = {};
+    returnDict[tag] = xmlDict;
     return returnDict;
+}
+
+/*
+    Strips a file name of characters that jQuery selectors may misinterpret.
+    @param fileName The filename to strip.
+*/
+function jQueryStrip(fileName)
+{
+    return fileName.replace(/\W+/g, "");
 }

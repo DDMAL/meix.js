@@ -249,7 +249,7 @@ require(['meiEditor', window.meiEditorLocation + 'js/local/meilint.js'], functio
                 //subscribe to some events
                 meiEditor.events.subscribe("NewFile", function(a, fileName)
                 {
-                    $("#selectValidate").append("<option id='validate-" + meiEditor.stripFilenameForJQuery(fileName) + "' name='" + fileName + "'>" + fileName + "</option>");
+                    $("#selectValidate").append("<option id='validate-" + jQueryStrip(fileName) + "' name='" + fileName + "'>" + fileName + "</option>");
                 });
 
                 meiEditor.events.subscribe("PageWasDeleted", function(fileName)
@@ -259,7 +259,7 @@ require(['meiEditor', window.meiEditorLocation + 'js/local/meilint.js'], functio
 
                 meiEditor.events.subscribe("PageWasRenamed", function(oldName, newName)
                 {
-                    $("#validate-" + meiEditor.stripFilenameForJQuery(oldName)).attr('id', "validate-" + meiEditor.stripFilenameForJQuery(newName)).attr('name', meiEditor.stripFilenameForJQuery(newName));
+                    $("#validate-" + jQueryStrip(oldName)).attr('id', "validate-" + jQueryStrip(newName)).attr('name', jQueryStrip(newName));
                 });
 
                 meiEditor.events.subscribe("NewValidator", function(validatorName)
