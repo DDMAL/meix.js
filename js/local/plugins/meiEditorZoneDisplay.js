@@ -52,8 +52,16 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
 
                 $.extend(meiEditorSettings, globals);
 
-                selectedSelector = "." + meiEditorSettings.selectedClass;
-                resizableSelector = "." + meiEditorSettings.resizableClass;
+                //"Macro" variables
+                var HIGHLIGHT_CLASS = "mei-highlight";
+                var HIGHLIGHT_SELECTOR = "." + HIGHLIGHT_CLASS
+
+
+                //local variables that don't need to be attached to the settings object
+
+                var highlightSingleClickTimeout;
+                var selectedSelector = "." + meiEditorSettings.selectedClass;
+                var resizableSelector = "." + meiEditorSettings.resizableClass;
 
                 meiEditor.addToNavbar("Zone Display", "zone-display");
                 /*$("#dropdown-zone-display").append("<li><a id='file-link-dropdown'>Link files to Diva images...</a></li>" +
@@ -197,35 +205,6 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     }
                 };
 
-                meiEditor.reapplyEditorClickListener = function()
-                {
-                    //commented out as per issue #36
-                    /*$(".aceEditorPane").on('click', function()
-                    {
-                        var activeTab = meiEditor.getActivePanel().text();
-                        if (true) //(meiEditor.meiIsLinked(activeTab))
-                        {
-                            //if only one is selected, don't multiselect
-                            if($(selectedSelector).length == 1)
-                            {
-                                meiEditor.deselectAllHighlights();
-                            }
-                            var row = meiEditorSettings.pageData[activeTab].getSelectionRange().start.row;
-                            var rowText = meiEditorSettings.pageData[activeTab].session.doc.getLine(row);
-                            var matchArr = rowText.match(/m-[(0-9|a-f)]{8}(-[(0-9|a-f)]{4}){3}-[(0-9|a-f)]{12}/g);
-                            if (!matchArr) return false;
-                            var curMatch = matchArr.length;
-                            while (curMatch--)
-                            {
-                                if ($("#"+matchArr[curMatch]).length)
-                                {
-                                    meiEditor.selectHighlight($("#"+matchArr[curMatch]), true);
-                                }
-                            }
-                        }
-                    });*/
-                };
-
                 /*
                     Highlight reloading code:
                 */
@@ -244,28 +223,34 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     for (var curTitle in meiEditorSettings.pageData)
                     {
                         var divaIdx = getDivaIndexForPage(curTitle);
+
                         if (divaIdx !== false)
                         {
-                            zoneDict[divaIdx] = [];
-                            var linesArr = meiEditorSettings.pageData[curTitle].session.doc.getAllLines();
-                            for(var line in linesArr)
-                            {
-                                var lineDict = parseXMLLine(linesArr[line]);
+                            var editorRef = meiEditorSettings.pageData[curTitle];
+                            var xmlString = editorRef.session.doc.getAllLines().join("\n");
+                            editorRef.parsed = meiParser.parseFromString(xmlString, 'text/xml');
 
-                                //if there's no XML in the current line, we don't care
-                                if (!lineDict) continue;
-                                else if (lineDict.hasOwnProperty('zone'))
-                                {
-                                    //assemble that dict in Diva highlight format
-                                    var highlightInfo = {'width': lineDict.zone.lrx - lineDict.zone.ulx, 'height': lineDict.zone.lry - lineDict.zone.uly, 'ulx': parseInt(lineDict.zone.ulx, 10), 'uly': parseInt(lineDict.zone.uly, 10), 'divID': lineDict.zone['xml:id']};
-                                    zoneDict[divaIdx].push(highlightInfo);
-                                    zoneIDs.push(lineDict.zone['xml:id']);
-                                }
+                            zoneDict[divaIdx] = [];
+                            var linesArr = editorRef.parsed.getElementsByTagName('zone');
+                            var lineIdx = linesArr.length;
+                            while(lineIdx--)
+                            {
+                                var line = linesArr[lineIdx];
+                                var ulx = line.getAttribute('ulx');
+                                var uly = line.getAttribute('uly');
+                                var lrx = line.getAttribute('lrx');
+                                var lry = line.getAttribute('lry');
+                                var xmlID = line.getAttribute('xml:id');
+
+                                //assemble that dict in Diva highlight format
+                                var highlightInfo = {'width': lrx - ulx, 'height': lry - uly, 'ulx': ulx, 'uly': uly, 'divID': xmlID};
+                                zoneDict[divaIdx].push(highlightInfo);
+                                zoneIDs.push(xmlID);
                             }
                         }
                     }
 
-                    publishZones(zoneDict);
+                    return publishZones(zoneDict);
                 };
 
                 var reloadMultiPageZones = function()
@@ -275,6 +260,30 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                         meiEditor.localError("Multiple surfaces not found. Can not reload zones.");
                         return false;
                     }
+
+                    /*var activePage = meiEditor.getActivePageTitle();
+                    var editorRef = meiEditorSettings.pageData[activePage];
+                    var xmlString = editorRef.session.doc.getAllLines().join("\n");
+                    editorRef.parsed = meiParser.parseFromString(xmlString, 'text/xml');
+                    zoneDict = {}; //reset this
+                    zoneIDs = []; //and this
+                    var curPage;
+
+                    var surfaceArr = editorRef.parsed.getElementsByTagName('surface');
+                    var surfaceIdx = surfaceArr.length;
+
+                    while(surfaceIdx--)
+                    {
+                            //set current page
+                            curPage = lineDict.surface.n;
+
+                            //initialize that key of the dictionary
+                            zoneDict[curPage] = [];
+                        
+                    }
+
+                    var zoneArr = editorRef.parsed.getElementsByTagName('zone');
+                    var zoneIdx = zoneArr.length;*/
 
                     var activePage = meiEditor.getActivePageTitle();
                     var linesArr = meiEditorSettings.pageData[activePage].session.doc.getAllLines();
@@ -306,7 +315,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                             zoneIDs.push(lineDict.zone['xml:id']);
                         }
                     }
-                    publishZones(zoneDict);
+                    return publishZones(zoneDict);
                 };
 
                 /*
@@ -335,10 +344,10 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     //clear any existing highlights
                     meiEditorSettings.divaInstance.resetHighlights();
                     // iterate through the pages (by index) and feed them into diva
-                    meiEditorSettings.divaInstance.highlightOnPages(zoneKeys, zoneVals);
+                    meiEditorSettings.divaInstance.highlightOnPages(zoneKeys, zoneVals, undefined, HIGHLIGHT_CLASS);
 
-                    var paddingTop = 0;//meiEditorSettings.divaInstance.getSettings().verticalPadding;
-                    var paddingLeft = 0;//meiEditorSettings.divaInstance.getSettings().horizontalPadding;
+                    var paddingTop = 0;
+                    var paddingLeft = 0;
 
                     for (curPage in zoneDict)
                     {
@@ -568,41 +577,78 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     return false;
                 });
 
-                //to get default editor pages
-                meiEditor.reapplyEditorClickListener();
                 for(var fileName in meiEditorSettings.pageData)
                 {
                     meiEditorSettings.pageData[fileName].selection.on('changeCursor', meiEditor.cursorUpdate);
                 }
 
+                var highlightSingleClick = function(e)
+                {
+                    //index of the page clicked on
+                    var clickedIdx = $(e.target).parent().attr('data-index');
+                    var clickedTitle = pageTitleForDivaFilename(meiEditorSettings.divaPages[clickedIdx]);
+
+                    //if the clicked page is not linked, return and do nothing
+                    if (clickedTitle === false)
+                    {
+                        meiEditor.deselectAllHighlights();
+                        return false;
+                    }
+
+                    //diva index of the page currently clicked on
+                    var currentTitle = meiEditorSettings.activePageTitle;
+                    var currentIdx = meiEditorSettings.divaPages.indexOf(currentTitle.split(".")[0]);
+
+                    //if the two indices are not the same
+                    if (clickedIdx != currentIdx)
+                    {
+                        meiEditor.switchToPage(clickedTitle);
+                    }
+
+                    meiEditor.deselectAllHighlights();
+                    meiEditor.selectHighlight(e.target);
+                    return true;
+                };
+
+                //on doubleclick, move this specific div into resizable mode
+                $(HIGHLIGHT_SELECTOR).dblclick(function(e)
+                {
+                    clearTimeout(meiEditorSettings.boxSingleTimeout);
+                    e.stopPropagation();
+
+                    //turn off scrollability and put the overlay down
+                    meiEditorSettings.divaInstance.disableScrollable();
+                    $("#diva-wrapper").append("<div id='resizableOverlay'></div>");
+                    $("#resizableOverlay").offset({'top': $("#diva-wrapper").offset().top, 'left': $("#diva-wrapper").offset().left});
+                    $("#resizableOverlay").width($("#diva-wrapper").width());
+                    $("#resizableOverlay").height($("#diva-wrapper").height());
+
+                    origObject = e.target;           
+                    $("#hover-div").css('display', 'none'); //hides the div
+                    $("#hover-div").html("");
+                    unbindBoxListeners();
+
+                    meiEditor.selectResizable(origObject);
+                });
+
                 //click listener on diva; if the target is a highlight we want it. this will take all possible highlights.
                 $(meiEditorSettings.divaInstance.getSettings().parentObject).on('click', function(e)
                 {
+                    //if the click was on a highlight
                     if ($(e.target).hasClass(meiEditorSettings.divaInstance.getSettings().ID + "highlight"))
                     {
-                        //index of the page clicked on
-                        var clickedIdx = $(e.target).parent().attr('data-index');
-                        var clickedTitle = pageTitleForDivaFilename(meiEditorSettings.divaPages[clickedIdx]);
+                        /*
+                        no matter what, clear the old one. 
+                            -in the case of a double-click, this'll clear the first
+                            -in the case of a single, this will clear the old before it's set.
+                            -regardless, this will clear the old one; reclearing an old one is not harmful
+                        */
+                        clearTimeout(highlightSingleClickTimeout);
 
-                        //if the clicked page is not linked, return and do nothing
-                        if (clickedTitle === false)
+                        highlightSingleClickTimeout = setTimeout(function()
                         {
-                            meiEditor.deselectAllHighlights();
-                            return false;
-                        }
-
-                        //diva index of the page currently clicked on
-                        var currentTitle = meiEditorSettings.activePageTitle;
-                        var currentIdx = meiEditorSettings.divaPages.indexOf(currentTitle.split(".")[0]);
-
-                        //if the two indices are not the same
-                        if (clickedIdx != currentIdx)
-                        {
-                            meiEditor.switchToPage(clickedTitle);
-                        }
-
-                        meiEditor.deselectAllHighlights();
-                        meiEditor.selectHighlight(e.target);
+                            highlightSingleClick(e);
+                        }, 300);
                     }
                     else
                     {

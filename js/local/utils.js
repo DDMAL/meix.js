@@ -255,7 +255,7 @@ function parseXMLLine(text)
     var splits = text.findall(/\S*="[^"]*?"/g);
     var tag = text.findall(/<[^ ]*/g)[0].substring(1); //matches < then any amount of non-space chars
     var xmlDict = {};
-    
+
     for (idx in splits)
     {
         curSplit = splits[idx];
@@ -277,3 +277,5 @@ function jQueryStrip(fileName)
 {
     return fileName.replace(/\W+/g, "");
 }
+
+var meiParser = new window.DOMParser();
