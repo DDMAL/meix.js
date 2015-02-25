@@ -304,3 +304,16 @@ var checkResizable = function(selector)
         $(selector + " > .ui-resizable-se").toggleClass("ui-icon ui-icon-gripsmall-diagonal-se");
     }
 };
+
+//safely removes an element from a DOMParser along with the textnode before it representing its indentation
+var safelyRemove = function(element)
+{
+    var parent = element.parentElement;
+    var prev = element.previousSibling;
+    parent.removeChild(element);
+    if (prev !== null && 
+        prev.nodeType == Node.TEXT_NODE &&
+        prev.nodeValue.trim().length === 0) {
+        parent.removeChild(prev);
+    }
+};

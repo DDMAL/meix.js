@@ -65,6 +65,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                 var selectedSelector = "." + selectedClass;
                 var resizableClass = meiEditorSettings.resizableClass;
                 var resizableSelector = "." + resizableClass;
+                var editorLastFocus = true; //true if something on the editor side was the last thing clicked, false otherwise
 
                 meiEditor.addToNavbar("Zone Display", "zone-display");
                 /*$("#dropdown-zone-display").append("<li><a id='file-link-dropdown'>Link files to Diva images...</a></li>" +
@@ -177,7 +178,6 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     var idx = meiEditorSettings.selectedCache.length;
                     while(idx--)
                     {
-                        console.log(meiEditorSettings.selectedCache[idx]);
                         meiEditor.selectHighlight($('#' + meiEditorSettings.selectedCache[idx]));
                     }
                     idx = meiEditorSettings.resizableCache.length;
@@ -543,9 +543,6 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                         'background-color': 'rgba(255, 255, 0, 0.5)'});
                     $(object).addClass(resizableClass);
 
-                    //make sure all previous events are unbound
-                    $(document).unbind('keyup', resizableKeyListeners);
-
                     //jQuery UI resizable, when resize stops update the box's position in the document
                     if(!$(object).data('uiResizable') && !meiEditorSettings.editModeActive)
                     {
@@ -590,8 +587,6 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                         e.preventDefault();
                     });
 
-                    //escape gets you out of this
-                    $(document).on('keyup', resizableKeyListeners);
                     updateCaches();
                 };
 
@@ -610,54 +605,31 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
 
                     //remove overlay and restore key bindings to Diva
                     $("#resizableOverlay").remove();
-                    $(document).unbind('keyup', resizableKeyListeners);
                     meiEditorSettings.divaInstance.enableScrollable();
                     //reapplyBoxListeners();
                     $("#diva-wrapper").unbind('resize');
                     updateCaches();
-                    
-                    //regenerate the highlights, reset the listeners, reselect the same box
-                    //meiEditor.createHighlights();
                 };
 
                 //writes changes to an object into the document
                 meiEditor.updateBox = function(box)
                 {
                     var boxPosition = $(box).position();
-                    var boxID = $(box).attr('id');
+                    var itemID = $(box).attr('id');
                     var ulx = meiEditorSettings.divaInstance.translateToMaxZoomLevel(boxPosition.left);
                     var uly = meiEditorSettings.divaInstance.translateToMaxZoomLevel(boxPosition.top);
                     var lrx = meiEditorSettings.divaInstance.translateToMaxZoomLevel(boxPosition.left + $(box).outerWidth());
                     var lry = meiEditorSettings.divaInstance.translateToMaxZoomLevel(boxPosition.top + $(box).outerHeight());
 
-                    //search to get the line number where the zone object is
-                    /*var searchNeedle = new RegExp("<zone.*" + $(box).attr('id'), "g");
-                    var pageTitle = meiEditor.getActivePanel().text();
-                    var searchRange = meiEditorSettings.pageData[pageTitle].find(searchNeedle, 
-                    {
-                        wrap: true,
-                        range: null
-                    });
-
-                    //get the text of that line, removing the whitespace at the beginning
-                    var line = meiEditorSettings.pageData[pageTitle].session.doc.getLine(searchRange.start.row).trim();
-                   */
                     var pageTitle = meiEditor.getActivePanel().text();
                     var pageRef = meiEditor.getPageData(pageTitle);
 
-                    var zoneArr = pageRef.parsed.getElementsByTagName('zone');
-                    var zoneIdx = zoneArr.length;
-                    while(zoneIdx--)
-                    {
-                        var curZone = zoneArr[zoneIdx];
-                        if (curZone.getAttribute("xml:id") == boxID)
-                        {
-                            curZone.setAttribute('ulx', ulx);
-                            curZone.setAttribute('uly', uly);
-                            curZone.setAttribute('lrx', lrx);
-                            curZone.setAttribute('lry', lry);
-                        }
-                    }
+                    var zoneArr = pageRef.parsed.querySelectorAll('zone[*|id="' + itemID + '"]');
+                    var curZone = zoneArr[0];
+                    curZone.setAttribute('ulx', ulx);
+                    curZone.setAttribute('uly', uly);
+                    curZone.setAttribute('lrx', lrx);
+                    curZone.setAttribute('lry', lry);
 
                     //this will be re-subscribed to in publishBoxes
                     if(editHandle)
@@ -670,16 +642,27 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                 };
 
                 //detects whether or not a keypress was the escape key and triggers
-                var resizableKeyListeners = function(e)
+                $(document).on('keyup', function(e)
                 {
-                    if (e.keyCode == 27) 
+                    var resizableActive = ($(resizableSelector).length > 0);
+                    var selectedActive = ($(selectedSelector).length > 0);
+                    
+                    //if the editor was the last thing clicked, we don't want to listen
+                    //console.log(editorLastFocus);
+                    //if (editorLastFocus) return;
+
+                    //escape to quit whatever the current selection is
+                    if (e.keyCode == 27 && (resizableActive || selectedActive)) 
                     { 
-                        meiEditor.deselectResizable(resizableSelector);
+                        e.stopPropagation();
+                        ($(resizableSelector).length > 0) ? meiEditor.deselectResizable(resizableSelector) : meiEditor.deselectAllHighlights();
                     } 
-                    else if ((e.keyCode) < 41 && (e.keyCode > 36))
+                    //arrow keys to nudge resizable
+                    else if ((e.keyCode < 41) && (e.keyCode > 36) && resizableActive)
                     {
                         e.stopPropagation();
                         e.preventDefault();
+
                         switch (e.keyCode) 
                         {
                             case 37:
@@ -699,7 +682,39 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                         }
                         meiEditor.updateBox(resizableSelector);
                     }
-                };   
+                    //delete when one is either resizable or selected
+                    else if((e.keyCode == 46 || e.keyCode == 8) && (selectedActive || resizableActive))
+                    {
+                        e.stopPropagation();
+                        e.preventDefault();
+
+                        //if double-click active, we want to remove only the resizable, otherwise we want to remove the selected
+                        var selector = ($(resizableSelector).length > 0) ? resizableSelector : selectedSelector;
+                        
+                        var pageTitle = meiEditor.getActivePanel().text();
+                        var pageRef = meiEditor.getPageData(pageTitle);
+
+                        var curItemIndex = $(selector).length;
+                        var zoneArr = [];
+                        while (curItemIndex--) //in case there's multiple
+                        {
+                            var curItem = $(selector)[curItemIndex];    
+                            var itemID = $(curItem).attr('id');
+
+                            //regenerate these every time
+                            zoneArr = pageRef.parsed.querySelectorAll('zone[*|id=' + itemID + ']');
+                            safelyRemove(zoneArr[0]);
+
+                            zoneArr = pageRef.parsed.querySelectorAll('[facs=' + itemID + ']');
+                            safelyRemove(zoneArr[0]);
+                        }
+
+                        (selector === resizableSelector) ? meiEditor.deselectResizable(resizableSelector) : meiEditor.deselectAllHighlights();
+
+                        rewriteAce(pageRef);
+                        meiEditor.localLog("Deleted highlights."); 
+                    }
+                });   
 
                 /*
                     Saves highlights/resizable IDs while highlights are being reloaded.
@@ -831,6 +846,17 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     //add all diva image filenames (without extension)
                     meiEditorSettings.divaPages.push(meiEditorSettings.divaInstance.getSettings().pages[curIdx].f);
                 }
+
+                $(document).on('click', function(e)
+                {
+                    if ($(e.target).closest('#mei-editor').length) {
+                        editorLastFocus = true;
+                    }
+                    else if ($(e.target).closest('#diva-wrapper').length) {
+                        editorLastFocus = false;
+                        document.activeElement.blur();
+                    }
+                });
 
                 return true;
             }
