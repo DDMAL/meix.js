@@ -7,6 +7,22 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/FileSaver.js'], functio
         {
             init: function(meiEditor, meiEditorSettings)
             {
+                //if true, keeps track of whether the page has been edited since the user last saved it
+                var actionSinceSaved = false;
+                
+                //taken from http://stackoverflow.com/a/21455923
+                var myEvent = window.attachEvent || window.addEventListener;
+                var chkevent = window.attachEvent ? 'onbeforeunload' : 'beforeunload'; /// make IE7, IE8 compitable
+
+                myEvent(chkevent, function(e) { // For >=IE7, Chrome, Firefox
+                    if(meiEditorSettings.warnBeforeClosing && actionSinceSaved)
+                    {
+                        var confirmationMessage = 'There are unsaved changes to a file. Are you sure you want to quit?';  // a space
+                        (e || window.event).returnValue = confirmationMessage;
+                        return confirmationMessage;
+                    }
+                });
+
                 meiEditor.addToNavbar("File", "file-upload");
                 $("#dropdown-file-upload").append("<li><a id='file-load-dropdown'>Open files...</a></li>");
                 $("#dropdown-file-upload").append("<li><a id='file-save-dropdown'>Save a file...</a></li>");
@@ -51,6 +67,8 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/FileSaver.js'], functio
                     saveAs(pageBlob, pageName); //download it! from FileSaver.js
                     $("#fileSaveModal-close").trigger('click');
                     meiEditor.localLog("Saved " + pageName + " to your computer.");
+                    actionSinceSaved = false;
+                    $("#" + jQueryStrip(pageName) + "-tab").children().remove();
                 };
 
                 /*
@@ -191,6 +209,12 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/FileSaver.js'], functio
                     var strippedNew = jQueryStrip(newName);
                     $("#save-" + strippedOld).attr('id', "save-" + strippedNew);
                     $("#save-" + strippedNew).text(newName);
+                });
+
+                meiEditor.events.subscribe("PageEdited", function(pageTitle)
+                {
+                    actionSinceSaved = true;
+                    $("#" + jQueryStrip(pageTitle) + "-tab").append("<span>*</span>");
                 });
 
                 $("#fileLoadModal-close").on('click', function()

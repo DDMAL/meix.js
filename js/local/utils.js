@@ -29,6 +29,18 @@ $.fn.toPx = function(settings)
     return that * scopeVal;
 };
 
+$.fn.nochildtext = function() {
+    var str = '';
+
+    this.contents().each(function() {
+        if (this.nodeType == 3) {
+            str += this.textContent || this.innerText || '';
+        }
+    });
+
+    return str;
+};
+
 /*
     Shorthand function for creating an HTML select object from the keys of a JSON object/values of an array.
     @param idAppend A string to append to the ID of the select object to make it unique.

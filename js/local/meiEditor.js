@@ -150,7 +150,7 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
         /*
             Returns active panel of the jQuery tab object.
         */
-        this.getActivePanel = function()
+        var getActivePanel = function()
         {
             var tabIndex = $("#openPages").tabs("option", "active");
             if (tabIndex === 0)
@@ -168,7 +168,7 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
         };
 
         /*
-            Gets/sets pageData for a specific page title (accessible by this.getActivePanel.text())
+            Gets/sets pageData for a specific page title (accessible by getActivePanel.text())
         */
         this.getPageData = function(pageTitle)
         {
@@ -211,7 +211,7 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
 
             $("#openPages").height(workableHeight - heightDiff);
 
-            var activeTab = self.getActivePanel().attr('href');
+            var activeTab = getActivePanel().attr('href');
             $(activeTab).css('padding', '0em');
             $(activeTab).height($("#openPages").height() - $("#pagesList").height() - heightDiff);
             $(activeTab + " > .aceEditorPane").height($(activeTab).height());
@@ -320,7 +320,7 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
 
             var fileNameStripped = jQueryStrip(fileName);
             //add a new tab to the editor
-            $("#pagesList").append("<li id='" + fileNameStripped + "-listitem'><a href='#" + fileNameStripped + "-wrapper' class='linkWrapper'>" + fileName + "</a>" + self.makeIconString() + "</li>");
+            $("#pagesList").append("<li id='" + fileNameStripped + "-listitem'><a href='#" + fileNameStripped + "-wrapper' id='" + fileNameStripped +"-tab' class='linkWrapper'>" + fileName + "</a>" + self.makeIconString() + "</li>");
             $("#openPages").append("<div id='" + fileNameStripped + "-wrapper'>" + //necessary for CSS to work
                 "<div id='" + fileNameStripped + "' originalName='" + fileName + "' class='aceEditorPane'>" +
                 "</div></div>");
@@ -852,7 +852,7 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
                     $("#openPages").height(newHeight);
 
                     //make the active child of openPages and its subcomponents match above
-                    var activePanel = self.getActivePanel();
+                    var activePanel = getActivePanel();
                     var activeTab = activePanel.attr('href');
                     $(activeTab).css('padding', '0em');
                     $(activeTab).height($("#openPages").height() - $("#pagesList").height() - heightDiff);
@@ -903,7 +903,7 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
                     $("input.input-ui-emulator").remove();
                     $(".linkWrapper").css('display', 'inline-block');
 
-                    var activePage = self.getActivePanel().text();
+                    var activePage = getActivePanel().nochildtext();
                     settings.activePageTitle = activePage;
                     settings.activeTabIndex = ui.newTab.index();
 

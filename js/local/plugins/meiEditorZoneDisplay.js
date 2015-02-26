@@ -74,7 +74,10 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                 $("#dropdown-file-upload").append("<li><a id='default-mei-dropdown'>Create default MEI file</a></li>" +
                     "<li><a id='server-load-dropdown'>Load file from server...</a></li>" +
                     "<li><a id='manuscript-dropdown'>Close project</a></li>");*/
-                $("#help-dropdown").append("<li><a id='zone-display-help'>Diva page manager</a></li>");
+                $("#help-dropdown").append("<li><a id='zone-display-help'>Zone display</a></li>");
+                $("#zone-display-help").on('click', function(){
+                    $("#zoneHelpModal").modal();
+                });
 
                 $("#dropdown-zone-display").append("<li><a>One-to-one: <input type='checkbox' style='float:right' id='one-to-one-checkbox'></a></li>");
 
@@ -480,7 +483,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                         var searchNeedle = new RegExp(divToSelect.id, "g");
 
                         //searches for the facs ID that is also the ID of the highlighted panel
-                        var pageTitle = meiEditor.getActivePanel().text();
+                        var pageTitle = meiEditor.getActivePageTitle();
                         meiEditor.getPageData(pageTitle).selection.removeListener('changeCursor', meiEditor.cursorUpdate);
                         
                         var initSelection = meiEditor.getPageData(pageTitle).selection.getCursor().column;
@@ -621,7 +624,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     var lrx = meiEditorSettings.divaInstance.translateToMaxZoomLevel(boxPosition.left + $(box).outerWidth());
                     var lry = meiEditorSettings.divaInstance.translateToMaxZoomLevel(boxPosition.top + $(box).outerHeight());
 
-                    var pageTitle = meiEditor.getActivePanel().text();
+                    var pageTitle = meiEditor.getActivePageTitle();
                     var pageRef = meiEditor.getPageData(pageTitle);
 
                     var zoneArr = pageRef.parsed.querySelectorAll('zone[*|id="' + itemID + '"]');
@@ -691,7 +694,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                         //if double-click active, we want to remove only the resizable, otherwise we want to remove the selected
                         var selector = ($(resizableSelector).length > 0) ? resizableSelector : selectedSelector;
                         
-                        var pageTitle = meiEditor.getActivePanel().text();
+                        var pageTitle = meiEditor.getActivePageTitle();
                         var pageRef = meiEditor.getPageData(pageTitle);
 
                         var curItemIndex = $(selector).length;

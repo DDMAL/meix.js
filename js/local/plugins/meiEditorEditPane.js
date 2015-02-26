@@ -113,9 +113,8 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/UndoStack.js'], functio
                             var texts = arr[0];
                             var cursorPos = arr[1];
                             var activeDoc = arr[2];
-                            meiEditor.events.publish("PageEdited");
                             meiEditorSettings.undoManager.save('PageEdited', [texts, cursorPos, activeDoc]);
-                            meiEditor.events.publish("PageEdited");
+                            meiEditor.events.publish("PageEdited", [meiEditorSettings.tabTitlesByIndex[activeDoc]]);
                         }, 500, [meiEditor.getAllTexts(), meiEditorSettings.initCursor, meiEditorSettings.initDoc]); //after no edits have been done for a second, save the page in the undo stack
                     });
                 };
@@ -174,13 +173,13 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/UndoStack.js'], functio
                         meiEditor.getPageData(curTitle).focus();
                     }
 
-                    meiEditor.events.publish("PageEdited", [curTitle]);
 
                     //swap back to that tab
                     $("#openPages").tabs('option', 'active', doc);
 
                     //move cursor to before first alpha-numberic character of most recent change
-                    var title = meiEditor.getActivePanel().text();
+                    var title = meiEditor.getActivePageTitle();
+                    meiEditor.events.publish("PageEdited", [title]);
                     var newCursor = currentState.parameters[1];
 
                     meiEditor.getPageData(title).gotoLine(newCursor.row + 1, newCursor.column, true); //because 1-indexing is always the right choice
