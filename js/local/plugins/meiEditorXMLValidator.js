@@ -101,19 +101,19 @@ require(['meiEditor', window.meiEditorLocation + 'js/local/meilint.js'], functio
                             //if the line number is in, but not the word "error", it's less important so it's colored yellow
 
                             //if it already exists and it's an error, do nothing
-                            if (zeroedRowNumber in meiEditorSettings.pageData[pageName].getSession().$decorations)
+                            if (zeroedRowNumber in meiEditor.getPageData(pageName).getSession().$decorations)
                             {
                                 //if it was a warning and is now an error, replace it
-                                if ((gutterClass == "gutterError") && (meiEditorSettings.pageData[pageName].getSession().$decorations[rowNumber] == "gutterWarning"))
+                                if ((gutterClass == "gutterError") && (meiEditor.getPageData(pageName).session.$decorations[rowNumber] == "gutterWarning"))
                                 {
-                                    meiEditorSettings.pageData[pageName].getSession().removeGutterDecoration(zeroedRowNumber, meiEditorSettings.pageData[pageName].highlightedLines[docRow]);
-                                    meiEditorSettings.pageData[pageName].getSession().addGutterDecoration(zeroedRowNumber, gutterClass);
+                                    meiEditor.getPageData(pageName).session.removeGutterDecoration(zeroedRowNumber, meiEditor.getPageData(pageName).highlightedLines[docRow]);
+                                    meiEditor.getPageData(pageName).session.addGutterDecoration(zeroedRowNumber, gutterClass);
                                 }
                             }
                             //if it doesn't know there's an error already, put it in
                             else
                             {
-                                meiEditorSettings.pageData[pageName].getSession().addGutterDecoration(zeroedRowNumber, gutterClass);
+                                meiEditor.getPageData(pageName).session.addGutterDecoration(zeroedRowNumber, gutterClass);
                             }
                         }
                         //it's not an error
@@ -125,7 +125,7 @@ require(['meiEditor', window.meiEditorLocation + 'js/local/meilint.js'], functio
 
                     var Module = 
                     {
-                        xml: meiEditorSettings.pageData[pageName].getSession().doc.getAllLines().join("\n"),
+                        xml: meiEditor.getPageData(pageName).session.doc.getAllLines().join("\n"),
                         schema: meiEditorSettings.validators[validatorName],
                         xmlTitle: pageName,
                         schemaTitle: validatorName
@@ -233,7 +233,7 @@ require(['meiEditor', window.meiEditorLocation + 'js/local/meilint.js'], functio
 
 
                 //create some modals
-                var fileSelectString = createSelect("Validate", meiEditorSettings.pageData);
+                var fileSelectString = createSelect("Validate", meiEditor.getPageTitles());
                 var validatorSelectString = createSelect("Validators", meiEditorSettings.validators);
                 var validatorListString = createList("Validators", meiEditorSettings.validators);
 

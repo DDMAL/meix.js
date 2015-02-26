@@ -42,9 +42,9 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/FileSaver.js'], functio
                     };
                     
                     var formattedData = [];
-                    var lastRow = meiEditorSettings.pageData[pageName].getSession().doc.getLength() - 1; //0-indexed
+                    var lastRow = meiEditor.getPageData(pageName).getSession().doc.getLength() - 1; //0-indexed
 
-                    meiEditorSettings.pageData[pageName].getSession().doc.getLines(0, lastRow).forEach(formatToSave); //format each
+                    meiEditor.getPageData(pageName).getSession().doc.getLines(0, lastRow).forEach(formatToSave); //format each
 
                     var pageBlob = new Blob(formattedData, {type: "text/plain;charset=utf-8"}); //create a blob
 
@@ -75,7 +75,7 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/FileSaver.js'], functio
                             { 
                                 fileName = this.file.name;
 
-                                if (fileName in meiEditorSettings.pageData)
+                                if (fileName in meiEditor.getPageTitles())
                                 {
                                     meiEditor.localError("Error in adding " + fileName + ": a file with the same name is already in the project. Please change a file's name and try readding the file.");
                                     return;
@@ -161,7 +161,7 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/FileSaver.js'], functio
                 addNewFileInput();
 
                 createModal(meiEditorSettings.element, 'fileSaveModal', true, '<h4>Save a file:</h4>' +
-                    createSelect("Save", meiEditorSettings.pageData), "Save file");
+                    createSelect("Save", meiEditor.getPageTitles()), "Save file");
 
                 createModal(meiEditorSettings.element, 'fileHelpModal', false, '<h4>Help for "Files" menu:</h4>' +
                     '<li>The "Open files..." option will let you load files into the project as new tabs in the editor. You can only select one file per input, but more spaces for uploading files will appear as you use existing ones.</li>' +

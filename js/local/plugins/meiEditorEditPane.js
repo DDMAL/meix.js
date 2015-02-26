@@ -45,7 +45,7 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/UndoStack.js'], functio
 
                 $("#find-dropdown").on('click', function()
                 {
-                    var editor = meiEditorSettings.pageData[meiEditor.getActivePanel().text()];
+                    var editor = meiEditor.getPageData(meiEditor.getActivePanel().text());
                     var config = require("ace/config");
 
                     config.loadModule("ace/ext/searchbox", function(e)
@@ -56,7 +56,7 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/UndoStack.js'], functio
 
                 $("#replace-dropdown").on('click', function()
                 {
-                    var editor = meiEditorSettings.pageData[meiEditor.getActivePanel().text()];
+                    var editor = meiEditor.getPageData(meiEditor.getActivePanel().text());
                     var config = require("ace/config");
 
                     config.loadModule("ace/ext/searchbox", function(e)
@@ -86,7 +86,7 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/UndoStack.js'], functio
                     }
 
                     //when each document changes
-                    meiEditorSettings.pageData[fileName].on('change', function(delta, editor)
+                    meiEditor.getPageData(fileName).on('change', function(delta, editor)
                     {
                         //clear the previous doc and get the current cursor/document settings
                         window.clearTimeout(meiEditorSettings.editTimeout);
@@ -141,10 +141,13 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/UndoStack.js'], functio
                     }
                 });
 
-                $.each(meiEditorSettings.pageData, function(fileName, pageData)
+                var pageTitles = meiEditor.getPageTitles();
+                var idx = pageTitles.length;
+
+                while(idx--)
                 {
-                    meiEditor.reloadUndoListeners(fileName);
-                });
+                    meiEditor.reloadUndoListeners(pageTitles[idx]);
+                }
 
                 meiEditor.events.subscribe("NewFile", function(fileData, fileName)
                 {
@@ -158,18 +161,20 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/UndoStack.js'], functio
                     meiEditorSettings.undoManager.save('PageEdited', [meiEditor.getAllTexts(), [{'row':0, 'column':0}], $("#pagesList li").length - 1]);
                 });
 
+                meiEditor.events.subscribe("PageEdited", meiEditor.reparseAce);
+
                 //when editor pane changes are undone
                 meiEditorSettings.undoManager.newAction('PageEdited', function(texts, cursor, doc, currentState)
                 {
                     //replace the editsession for that title
                     for (var curTitle in texts)
                     {
-                        meiEditorSettings.pageData[curTitle].setSession(new ace.EditSession(texts[curTitle]));
-                        meiEditorSettings.pageData[curTitle].resize();
-                        meiEditorSettings.pageData[curTitle].focus();
+                        meiEditor.getPageData(curTitle).setSession(new ace.EditSession(texts[curTitle]));
+                        meiEditor.getPageData(curTitle).resize();
+                        meiEditor.getPageData(curTitle).focus();
                     }
 
-                    meiEditor.events.publish("PageEdited");
+                    meiEditor.events.publish("PageEdited", [curTitle]);
 
                     //swap back to that tab
                     $("#openPages").tabs('option', 'active', doc);
@@ -178,8 +183,8 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/UndoStack.js'], functio
                     var title = meiEditor.getActivePanel().text();
                     var newCursor = currentState.parameters[1];
 
-                    meiEditorSettings.pageData[title].gotoLine(newCursor.row + 1, newCursor.column, true); //because 1-indexing is always the right choice
-                    meiEditorSettings.pageData[title].resize();
+                    meiEditor.getPageData(title).gotoLine(newCursor.row + 1, newCursor.column, true); //because 1-indexing is always the right choice
+                    meiEditor.getPageData(title).resize();
                 });
 
                 return true;

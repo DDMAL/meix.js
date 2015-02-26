@@ -36,23 +36,22 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
         $.extend(settings, options);
 
         var globals = {
-            pageData: {},           //stores the editors and all associated data for all pages.
             element: $(element),    //jQuery reference to the object that contains the MEI editor
             iconPane: {},           //stores a template for all icon objects to display on open tabs
             oldPageY: "",           //saves position of editor console/editor divider to facilitate resizing.
             recentDelete: "",       //saves name of almost-deleted file to allow for a confirmation screen.
-            animationInProgress: false, //prevents duplicate error console animations from happening at the same time.
-            expandedTopbar: true,
-            thresholdTopbarWidth: 0,
-            activePageTitle: "",
-            activeTabIndex: null,
-            tabTitlesByIndex: []
+            expandedTopbar: true,   //true if all plugins are displayed in the topbar, false if it's condensed
+            thresholdTopbarWidth: 0,//threshold at which to toggle the expanded bar
+            activePageTitle: "",    //title of the currently visible tab
+            activeTabIndex: null,   //index of the currently visible tab
+            tabTitlesByIndex: []    //array of the two above
         };
 
         $.extend(settings, globals);
 
-        //for topbar plugins
-        var previousSizes = {};
+        //various globals that don't need to be in settings
+        var addingPage = false;     //if a page is being added, don't throw the "activate" event
+        var pageData = {};           //stores the editors and all associated data for all pages.
 
         this.events = (function ()
         {
@@ -173,8 +172,19 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
         */
         this.getPageData = function(pageTitle)
         {
-            return settings.pageData[pageTitle];
-        }
+            return pageData[pageTitle];
+        };
+
+        this.getPageTitles = function()
+        {
+            return Object.keys(pageData);
+        };
+
+        this.reparseAce = function(pageTitle)
+        {
+            var xmlString = pageData[pageTitle].session.doc.getAllLines().join("\n");
+            pageData[pageTitle].parsed = meiParser.parseFromString(xmlString, 'text/xml');
+        };
 
         /*
             Function called when window is resized/editor pane is changed.
@@ -290,7 +300,7 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
             //check for a new version of "untitled__" that's not in use
             var newPageTitle = "untitled";
             var suffixNumber = 1;
-            while (newPageTitle in settings.pageData)
+            while (newPageTitle in pageData)
             {
                 suffixNumber += 1;
                 newPageTitle = "untitled" + suffixNumber;
@@ -299,13 +309,14 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
         };
 
         /*
-            Called to add file to settings.pageData.
+            Called to add file to pageData.
             @param fileData Data in the original file.
             @param fileName Original file name.
         */
         this.addFileToProject = function(fileData, fileName)
         {
-            var pageDataKeys = Object.keys(settings.pageData);
+            addingPage = true;
+            var pageDataKeys = Object.keys(pageData);
 
             var fileNameStripped = jQueryStrip(fileName);
             //add a new tab to the editor
@@ -317,8 +328,8 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
             self.resetIconListeners();
 
             //add the data to the pageData object and initialize the editor
-            settings.pageData[fileName] = ace.edit(fileNameStripped); //add the file's data into a "pageData" array that will eventually feed into the ACE editor
-            editor = settings.pageData[fileName];
+            pageData[fileName] = ace.edit(fileNameStripped); //add the file's data into a "pageData" array that will eventually feed into the ACE editor
+            editor = pageData[fileName];
             editor.$blockScrolling = Infinity;
             editor.resize();
             editor.setTheme(settings.aceTheme);
@@ -340,11 +351,13 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
                 readOnly: true
             });
 
+            self.reparseAce(fileName);
+
             //refresh the tab list with the new one in mind
             var numTabs = $("#pagesList li").length - 1;
             $("#openPages").tabs("refresh");
             $("#openPages").tabs({active: numTabs}); //load straight to the new one
-            settings.pageData[fileName].resize();
+            pageData[fileName].resize();
         
             //when the document is clicked
             $("#" + fileNameStripped).on('click', function(e) //parent of editorPane
@@ -354,19 +367,19 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
                 }
 
                 var pageName = $($(e.target).parent()).parent().attr('originalName');
-                var docRow = settings.pageData[pageName].getCursorPosition().row; //0-index to 1-index
+                var docRow = pageData[pageName].getCursorPosition().row; //0-index to 1-index
 
                 //if the document row that was clicked on has a gutter decoration, remove it
-                if (docRow in settings.pageData[pageName].getSession().$decorations)
+                if (docRow in pageData[pageName].getSession().$decorations)
                 {
-                    settings.pageData[pageName].getSession().removeGutterDecoration(parseInt(docRow, 10), settings.pageData[pageName].getSession().$decorations[docRow].substring(1));
+                    pageData[pageName].getSession().removeGutterDecoration(parseInt(docRow, 10), pageData[pageName].getSession().$decorations[docRow].substring(1));
                 } 
             });
 
             //pageDataKeys was called before page was added - if only an untitled page existed before, delete it
             if(pageDataKeys.length == 1 && pageDataKeys[0] == "untitled")
             {
-                if(settings.pageData["untitled"].getSession().doc.getLength() == 1 && settings.pageData["untitled"].getSession().doc.getLine(0) === "")
+                if(pageData["untitled"].getSession().doc.getLength() == 1 && pageData["untitled"].getSession().doc.getLine(0) === "")
                 { 
                     self.removePageFromProject("untitled", true);
                 }
@@ -375,6 +388,7 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
             self.localLog("Added " + fileName + " to project.");
 
             self.events.publish("NewFile", [fileData, fileName]);
+            addingPage = false;
         };
 
         /*
@@ -383,9 +397,9 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
         this.getAllTexts = function()
         {
             var textArr = {};
-            for (var curPageTitle in settings.pageData)
+            for (var curPageTitle in pageData)
             {
-                textArr[curPageTitle] = settings.pageData[curPageTitle].session.doc.getAllLines();
+                textArr[curPageTitle] = pageData[curPageTitle].session.doc.getAllLines();
             }
             return textArr;
         };
@@ -430,7 +444,7 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
                 //remove the editor div
                 $("#" + pageNameStripped + "-wrapper").remove();
                 //delete the pageData item
-                delete settings.pageData[pageName];
+                delete pageData[pageName];
 
                 self.events.publish("PageWasDeleted", [pageName]); //let whoever is interested know 
                 self.localLog("Removed " + pageName + " from the project.")
@@ -489,7 +503,7 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
                 var newName = newInput.val();
 
                 //if this name already exists (including if it's unchanged)
-                if (newInput.val() in settings.pageData)
+                if (newInput.val() in pageData)
                 {
                     //if it's not the same as it was
                     if (newName !== parentListItem.children("a").css('display', 'block').text())
@@ -540,8 +554,8 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
                     $("#openPages").tabs("option", "active", activeHold);
                     
                     //change it in the pageData variable
-                    settings.pageData[newName] = settings.pageData[originalName];
-                    delete settings.pageData[originalName];
+                    pageData[newName] = pageData[originalName];
+                    delete pageData[originalName];
 
                     self.localLog("Renamed " + originalName + " to " + newName + ".");
                     self.events.publish('PageWasRenamed', [originalName, newName]);
@@ -643,7 +657,6 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
                     {
                         duration: 300,
                         complete: function(){
-                            settings.animationInProgress = false;
                             $("#console" + curDate.getTime()).css('font-weight', 'normal');
                         }
                     });
@@ -687,7 +700,7 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
         */
         this.findLineInEditor = function(tag, att, val)
         {
-            var linesArr = settings.pageData[self.getActivePageTitle()].session.doc.getAllLines();
+            var linesArr = pageData[self.getActivePageTitle()].session.doc.getAllLines();
 
             var line = 0;
             while (line < linesArr.length)
@@ -847,7 +860,7 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
 
                     //reload the editor to fit
                     var pageName = activePanel.text();
-                    settings.pageData[pageName].resize();
+                    pageData[pageName].resize();
 
                     //resize console to take up rest of the screen
                     var consoleDiff = $("#editorConsole").outerHeight() - $("#editorConsole").height();
@@ -901,13 +914,13 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
                     }
                     
                     //resize components to make sure the newly activated tab is the right size
-                    settings.pageData[activePage].resize();
+                    pageData[activePage].resize();
                     self.resizeComponents(); 
 
                     //usually, the URL bar will change to the last tab visited because jQueryUI tabs use <a> href attributes; this prevents that by repalcing every URL change with "index.html" and no ID information
                     var urlArr = document.URL.split("/");
                     window.history.replaceState("","", urlArr[urlArr.length - 1]);
-                    self.events.publish('ActivePageChanged', [activePage]);
+                    if (!addingPage) self.events.publish('ActivePageChanged', [activePage]);
                 }
             });
 

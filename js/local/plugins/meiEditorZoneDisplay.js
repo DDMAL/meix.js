@@ -11,12 +11,11 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                 /*
                 Required settings:
                     divaInstance: A reference to the Diva object created from initializing Diva.
-                    jsonFileLocation: A link to the .json file retrieved from Diva's process/generateJson.py files
                     oneToOneMEI: A boolean flag, true if one MEI file refers to one Diva page, false if one MEI file contains multiple surfaces where each surface refers to a Diva page.
                 */
-                if (!("divaInstance" in meiEditorSettings) || !("jsonFileLocation" in meiEditorSettings) || !("oneToOneMEI" in meiEditorSettings))
+                if (!("divaInstance" in meiEditorSettings) || !("oneToOneMEI" in meiEditorSettings))
                 {
-                    console.error("MEI Editor error: The 'Zone Display' plugin requires the 'divaInstance', 'jsonFileLocation', 'oneToOneMEI' settings present on intialization.");
+                    console.error("MEI Editor error: The 'Zone Display' plugin requires the 'divaInstance' and 'oneToOneMEI' settings present on intialization.");
                     return false;
                 }
 
@@ -126,7 +125,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                 /*createModal(meiEditorSettings.element, "fileLinkModal", false,
                     "<span class='modalSubLeft'>" +
                     "Select an MEI file:<br>" +
-                    createSelect("file-link", meiEditorSettings.pageData) +
+                    createSelect("file-link", meiEditor.getPageTitles()) +
                     "</span>" +
                     "<span class='modalSubRight'>" +
                     "Select a Diva image:<br>" +
@@ -223,19 +222,18 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     zoneDict = {}; //reset this
                     zoneIDs = []; //and this
                     var curPage;
+                    var pageTitles = meiEditor.getPageTitles();
+                    var idx = pageTitles.length;
 
-                    for (var curTitle in meiEditorSettings.pageData)
+                    while(idx--)
                     {
+                        var curTitle = pageTitles[idx];
                         var divaIdx = getDivaIndexForPage(curTitle);
 
                         if (divaIdx !== false)
                         {
-                            var editorRef = meiEditorSettings.pageData[curTitle];
-                            var xmlString = editorRef.session.doc.getAllLines().join("\n");
-                            editorRef.parsed = meiParser.parseFromString(xmlString, 'text/xml');
-
                             zoneDict[divaIdx] = [];
-                            var linesArr = editorRef.parsed.getElementsByTagName('zone');
+                            var linesArr = meiEditor.getPageData(curTitle).parsed.getElementsByTagName('zone');
                             var lineIdx = linesArr.length;
                             while(lineIdx--)
                             {
@@ -265,8 +263,10 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                         return false;
                     }
 
+                    //parsing is now done on page editing in the main code body
+
                     /*var activePage = meiEditor.getActivePageTitle();
-                    var editorRef = meiEditorSettings.pageData[activePage];
+                    var editorRef = meiEditor.getPageData(activePage);
                     var xmlString = editorRef.session.doc.getAllLines().join("\n");
                     editorRef.parsed = meiParser.parseFromString(xmlString, 'text/xml');
                     zoneDict = {}; //reset this
@@ -290,7 +290,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     var zoneIdx = zoneArr.length;*/
 
                     var activePage = meiEditor.getActivePageTitle();
-                    var linesArr = meiEditorSettings.pageData[activePage].session.doc.getAllLines();
+                    var linesArr = meiEditor.getPageData(activePage).session.doc.getAllLines();
                     zoneDict = {}; //reset this
                     zoneIDs = []; //and this
                     var curPage;
@@ -481,9 +481,9 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
 
                         //searches for the facs ID that is also the ID of the highlighted panel
                         var pageTitle = meiEditor.getActivePanel().text();
-                        meiEditorSettings.pageData[pageTitle].selection.removeListener('changeCursor', meiEditor.cursorUpdate);
+                        meiEditor.getPageData(pageTitle).selection.removeListener('changeCursor', meiEditor.cursorUpdate);
                         
-                        var initSelection = meiEditorSettings.pageData[pageTitle].selection.getCursor().column;
+                        var initSelection = meiEditor.getPageData(pageTitle).selection.getCursor().column;
                         var initRow = initSelection.row;
                         var initCol = initSelection.column;
 
@@ -512,7 +512,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                             newRow = pageRef.getSelectionRange().start.row;
                         }
 
-                        meiEditorSettings.pageData[pageTitle].selection.on('changeCursor', meiEditor.cursorUpdate);
+                        meiEditor.getPageData(pageTitle).selection.on('changeCursor', meiEditor.cursorUpdate);
                     }
 
                     $(divToSelect).addClass(selectedClass);
@@ -757,9 +757,13 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                 var pageTitleForDivaFilename = function(filename)
                 {
                     var splitName = filename.split(".")[0];
-                    for (var curPage in meiEditorSettings.pageData)
+                    var pageTitles = meiEditor.getPageTitles();
+                    var idx = pageTitles.length;
+                    var splitPage;
+
+                    while(idx--)
                     {
-                        splitPage = curPage.split(".")[0];
+                        splitPage = pageTitles[idx].split(".")[0];
                         if (splitName == splitPage)
                         {
                             return curPage;
@@ -777,7 +781,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
 
                     //scroll to it
                     meiEditorSettings.divaInstance.gotoPageByIndex(divaIdx);
-                    meiEditorSettings.pageData[fileName].selection.on('changeCursor', meiEditor.cursorUpdate);
+                    meiEditor.getPageData(fileName).selection.on('changeCursor', meiEditor.cursorUpdate);
                     meiEditor.events.publish('UpdateZones');
                 });
 
@@ -789,7 +793,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
 
                     //scroll to it
                     meiEditorSettings.divaInstance.gotoPageByIndex(divaIdx);
-                    meiEditorSettings.pageData[fileName].selection.on('changeCursor', meiEditor.cursorUpdate);
+                    meiEditor.getPageData(fileName).selection.on('changeCursor', meiEditor.cursorUpdate);
                     meiEditor.events.publish('UpdateZones');
                 });
 
@@ -808,7 +812,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
 
                     //scroll to it
                     meiEditorSettings.divaInstance.gotoPageByIndex(divaIdx);
-                    meiEditorSettings.pageData[newName].selection.on('changeCursor', meiEditor.cursorUpdate);
+                    meiEditor.getPageData(newName).selection.on('changeCursor', meiEditor.cursorUpdate);
                     meiEditor.events.publish('UpdateZones');
                 });
 
@@ -818,8 +822,13 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                 diva.Events.subscribe("VisiblePageDidChange", function(pageNumber, fileName)
                 {
                     var splitImage = fileName.split(".")[0];
-                    for(var pageTitle in meiEditorSettings.pageData)
+                    var pageTitles = meiEditor.getPageTitles();
+                    var idx = pageTitles.length;
+                    var splitPage;
+
+                    while(idx--)
                     {
+                        pageTitle = pageTitles[idx];
                         splitPage = pageTitle.split(".")[0];
                         if(splitImage == splitPage)
                         {
@@ -835,10 +844,13 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     }
                     return false;
                 });
+                
+                var pageTitles = meiEditor.getPageTitles();
+                var idx = pageTitles.length;
 
-                for(var fileName in meiEditorSettings.pageData)
+                while(idx--)
                 {
-                    meiEditorSettings.pageData[fileName].selection.on('changeCursor', meiEditor.cursorUpdate);
+                    meiEditor.getPageData(pageTitles[idx]).selection.on('changeCursor', meiEditor.cursorUpdate);
                 }
 
                 for(var curIdx in meiEditorSettings.divaInstance.getSettings().pages)
