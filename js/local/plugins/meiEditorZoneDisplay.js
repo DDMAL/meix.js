@@ -399,75 +399,84 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
 
                 /* Event listeners: */
 
+                var highlightMouseEnterHandler = function(e)
+                {
+                    //if there is a box currently being drawn, don't do anything
+                    if (meiEditorSettings.dragActive === true)
+                    {
+                        return;
+                    }
+
+                    var currentTarget = e.target.id;
+
+                    var pageTitle = meiEditor.getActivePageTitle();
+                    var pageRef = meiEditor.getPageData(pageTitle);
+
+                    var object = pageRef.parsed.querySelectorAll('[*|facs="' + currentTarget + '"]')[0];
+
+                    if(!object) return;
+
+                    console.log(object);
+                    var idx = object.attributes.length;
+                    var string = object.tagName + ":<br>";
+
+                    while(idx--)
+                    {
+                        curAtt = object.attributes[idx];
+                        if (curAtt.name !== "xml:id" && curAtt.name !== "facs")
+                            string += "<div style='margin-left:5px'>" + curAtt.name + ": " + curAtt.value + "</div>";
+                    }
+
+                    $("#hover-div").html(string + "<br>Click to find in document.");
+                    $("#hover-div").css(//create a div with the name of the hovered neume
+                    {
+                        'height': 'auto',
+                        'top': e.pageY - 10,
+                        'left': e.pageX + 10,
+                        'padding': '5px',
+                        'border': 'thin black solid',
+                        'background-color': '#FFFFFF',
+                        'display': 'block',
+                        'vertical-align': 'middle'
+                    });
+
+                    //if this isn't selected, change the color 
+                    if (!$("#" + currentTarget).hasClass('selectedHover'))
+                    {
+                        $("#"+currentTarget).css('background-color', 'rgba(255, 0, 0, 0.1)');
+                    }
+
+                    //needs to be separate function as we have separate document.mousemoves that need to be unbound separately
+                    $(document).on('mousemove', changeHoverPosition);
+                };
+
+                var highlightMouseLeaveHandler = function(e)
+                {
+                    currentTarget = e.target.id;
+                    $(document).unbind('mousemove', changeHoverPosition); //stops moving the div
+                    $("#hover-div").css('display', 'none'); //hides the div
+                    $("#hover-div").html("");
+
+                    //if this isn't selected, change the color back to normal
+                    if(!$("#" + currentTarget).hasClass('selectedHover'))
+                    {
+                        $("#" + currentTarget).css('background-color', 'rgba(255, 0, 0, 0.2)');
+                    }
+                };
+
                 //applies various handlers for the highlights; the three parameters are Diva data
                 var applyHighlightHandlers = function(pageIdx, filename, pageSelector)
                 {
                     $(HIGHLIGHT_SELECTOR).unbind('click', highlightClickHandler);
                     $(HIGHLIGHT_SELECTOR).unbind('dblclick', highlightDoubleClickHandler);
+                    $(HIGHLIGHT_SELECTOR).unbind('mouseenter', highlightMouseEnterHandler).on('mouseleave', highlightMouseLeaveHandler);
                     $(HIGHLIGHT_SELECTOR).on('click', highlightClickHandler);
                     $(HIGHLIGHT_SELECTOR).on('dblclick', highlightDoubleClickHandler);
+                    $(HIGHLIGHT_SELECTOR).on('mouseenter', highlightMouseEnterHandler).on('mouseleave', highlightMouseLeaveHandler);
                     $(HIGHLIGHT_SELECTOR).css('cursor', 'pointer');
 
                     var idx = $(HIGHLIGHT_SELECTOR).length;
                     var curID, pageTitle, pageRef, xmlObj, hoverString;
-
-                    while(idx--)
-                    {
-                        curID = $(HIGHLIGHT_SELECTOR)[idx].id;
-                        $(curID).hover(function(e) //when the hover starts for an overlay-box
-                        {
-                            console.log("hovering?");
-                            //if there is a box currently being drawn, don't do anything
-                            if (meiEditorSettings.dragActive === true)
-                            {
-                                return;
-                            }
-
-                            currentTarget = e.target.id;
-
-                            pageTitle = meiEditor.getActivePageTitle();
-                            pageRef = meiEditor.getPageData(pageTitle);
-
-                            zoneArr = pageRef.parsed.querySelectorAll('[*|facs="' + itemID + '"]');
-
-                            console.log(zoneArr);
-
-                            $("#hover-div").html("Whee<br>Click to find in document.");
-                            $("#hover-div").css(//create a div with the name of the hovered neume
-                            {
-                                'height': 'auto',
-                                'top': e.pageY - 10,
-                                'left': e.pageX + 10,
-                                'padding-left': '10px',
-                                'padding-right': '10px',
-                                'border': 'thin black solid',
-                                'background-color': '#FFFFFF',
-                                'display': 'block',
-                                'vertical-align': 'middle'
-                            });
-
-                            //if this isn't selected, change the color 
-                            if (!$("#" + currentTarget).hasClass('selectedHover'))
-                            {
-                                $("#"+currentTarget).css('background-color', 'rgba(255, 0, 0, 0.1)');
-                            }
-
-                            //needs to be separate function as we have separate document.mousemoves that need to be unbound separately
-                            $(document).on('mousemove', changeHoverPosition);
-                        }, function(e)
-                        {
-                            currentTarget = e.target.id;
-                            $(document).unbind('mousemove', changeHoverPosition); //stops moving the div
-                            $("#hover-div").css('display', 'none'); //hides the div
-                            $("#hover-div").html("");
-
-                            //if this isn't selected, change the color back to normal
-                            if(!$("#" + currentTarget).hasClass('selectedHover'))
-                            {
-                                $("#" + currentTarget).css('background-color', 'rgba(255, 0, 0, 0.2)');
-                            }
-                        });
-                    }
 
                     //reload highlights from caches
                     if(meiEditorSettings.selectedCache.hasOwnProperty(pageIdx))
