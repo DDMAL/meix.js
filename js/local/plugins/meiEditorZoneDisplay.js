@@ -1,5 +1,4 @@
 require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
-
 (function ($)
 {
     window.meiEditorPlugins.push((function()
@@ -230,7 +229,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     {
                         var curTitle = pageTitles[idx];
                         var divaIdx = getDivaIndexForPage(curTitle);
-
+                        
                         if (divaIdx !== false)
                         {
                             zoneDict[divaIdx] = [];
@@ -368,6 +367,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                             curZone.uly += paddingTop + pageOffset.top;
                         }
                     }
+
                     return true;
                 };
 
@@ -416,7 +416,6 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
 
                     if(!object) return;
 
-                    console.log(object);
                     var idx = object.attributes.length;
                     var string = object.tagName + ":<br>";
 
@@ -428,20 +427,16 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     }
 
                     $("#hover-div").html(string + "<br>Click to find in document.");
-                    $("#hover-div").css(//create a div with the name of the hovered neume
+                    $("#hover-div").css(
                     {
                         'height': 'auto',
                         'top': e.pageY - 10,
                         'left': e.pageX + 10,
-                        'padding': '5px',
-                        'border': 'thin black solid',
-                        'background-color': '#FFFFFF',
-                        'display': 'block',
-                        'vertical-align': 'middle'
+                        'display': 'block'
                     });
 
                     //if this isn't selected, change the color 
-                    if (!$("#" + currentTarget).hasClass('selectedHover'))
+                    if (!$("#" + currentTarget).hasClass(selectedClass))
                     {
                         $("#"+currentTarget).css('background-color', 'rgba(255, 0, 0, 0.1)');
                     }
@@ -458,7 +453,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     $("#hover-div").html("");
 
                     //if this isn't selected, change the color back to normal
-                    if(!$("#" + currentTarget).hasClass('selectedHover'))
+                    if(!$("#" + currentTarget).hasClass(selectedClass))
                     {
                         $("#" + currentTarget).css('background-color', 'rgba(255, 0, 0, 0.2)');
                     }
@@ -484,7 +479,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                         idx = meiEditorSettings.selectedCache[pageIdx].length;
                         while(idx--)
                         {
-                            meiEditor.selectHighlight($('#' + meiEditorSettings.selectedCache[pageIdx][idx]));
+                            meiEditor.selectHighlight($('#' + meiEditorSettings.selectedCache[pageIdx][idx]), true);
                         }
                     }
 
@@ -493,7 +488,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                         idx = meiEditorSettings.resizableCache[pageIdx].length;
                         while(idx--)
                         {
-                            meiEditor.selectResizable('#' + meiEditorSettings.resizableCache[pageIdx][idx]);
+                            meiEditor.selectResizable('#' + meiEditorSettings.resizableCache[pageIdx][idx], true);
                         }
                     }
                 };
@@ -502,6 +497,9 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                 {
                     clearTimeout(highlightSingleClickTimeout);
                     e.stopPropagation();
+
+                    //don't want multiple resizable
+                    if ($(".ui-resizable").length > 0) return;
 
                     //turn off scrollability and put the overlay down
                     meiEditorSettings.divaInstance.disableScrollable();
@@ -513,7 +511,10 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     $("#hover-div").html("");
 
                     //unbindBoxListeners(); //replaced with...
-                    $("#hover-div").on('click', function(e){e.stopPropagation();});
+                    $("#hover-div").on('click', function(e)
+                    {
+                        e.stopPropagation();
+                    });
 
                     origObject = e.target;  
                     meiEditor.selectResizable(origObject);
@@ -557,6 +558,47 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     }, SINGLE_CLICK_TIMEOUT);
                 };
 
+                var gotoLineWithID = function(id)
+                {
+                    var searchNeedle = new RegExp(id, "g");
+
+                    //searches for the facs ID that is also the ID of the highlighted panel
+                    var pageTitle = meiEditor.getActivePageTitle();
+                    meiEditor.getPageData(pageTitle).selection.removeListener('changeCursor', cursorUpdate);
+                    
+                    var initSelection = meiEditor.getPageData(pageTitle).selection.getCursor().column;
+                    var initRow = initSelection.row;
+                    var initCol = initSelection.column;
+
+                    var pageRef = meiEditor.getPageData(pageTitle);
+                    var facsSearch = pageRef.find(searchNeedle,
+                    {
+                        wrap: true,
+                        range: null
+                    });
+
+                    var newRow = facsSearch.start.row;
+                    var lineText;
+
+                    while (newRow != initRow) {
+                        //gets the full text from the search result row
+                        lineText = pageRef.session.doc.getLine(newRow);
+
+                        //if it doesn't include "zone" it's what we want
+                        if (!lineText.match(/zone/g))
+                        {
+                            break;
+                        }
+
+                        //if we didn't break, find the next one
+                        pageRef.findNext();
+                        newRow = pageRef.getSelectionRange().start.row;
+                    }
+
+                    meiEditor.getPageData(pageTitle).selection.on('changeCursor', cursorUpdate);
+
+                };
+
                 /*
                     Selects a highlight.
                     @param divToSelect The highlight to select.
@@ -564,45 +606,10 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                 */
                 meiEditor.selectHighlight = function(divToSelect, findOverride)
                 {
-                    if(!findOverride)
-                    {
-                        var searchNeedle = new RegExp(divToSelect.id, "g");
+                    //don't select resizables
+                    if($(divToSelect).hasClass("ui-resizable")) return;
 
-                        //searches for the facs ID that is also the ID of the highlighted panel
-                        var pageTitle = meiEditor.getActivePageTitle();
-                        meiEditor.getPageData(pageTitle).selection.removeListener('changeCursor', cursorUpdate);
-                        
-                        var initSelection = meiEditor.getPageData(pageTitle).selection.getCursor().column;
-                        var initRow = initSelection.row;
-                        var initCol = initSelection.column;
-
-                        var pageRef = meiEditor.getPageData(pageTitle);
-                        var facsSearch = pageRef.find(searchNeedle,
-                        {
-                            wrap: true,
-                            range: null
-                        });
-
-                        var newRow = facsSearch.start.row;
-                        var lineText;
-
-                        while (newRow != initRow) {
-                            //gets the full text from the search result row
-                            lineText = pageRef.session.doc.getLine(newRow);
-
-                            //if it doesn't include "zone" it's what we want
-                            if (!lineText.match(/zone/g))
-                            {
-                                break;
-                            }
-
-                            //if we didn't break, find the next one
-                            pageRef.findNext();
-                            newRow = pageRef.getSelectionRange().start.row;
-                        }
-
-                        meiEditor.getPageData(pageTitle).selection.on('changeCursor', cursorUpdate);
-                    }
+                    if(!findOverride) gotoLineWithID(divToSelect.id);
 
                     $(divToSelect).addClass(selectedClass);
                     $(divToSelect).css('background-color', 'rgba(0, 255, 0, 0.1)');
@@ -625,7 +632,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                 };
 
                 //function to make a div resizable
-                meiEditor.selectResizable = function(object)
+                meiEditor.selectResizable = function(object, findOverride)
                 {
                     //change color to yellow, pop on top of everything
                     $(object).css({'z-index': 150,
@@ -669,6 +676,8 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                             }
                         });
                     }
+
+                    if(!findOverride) gotoLineWithID(object.id);
 
                     //this prevents a graphical glitch with Diva
                     $("#diva-wrapper").on('resize', function(e){
@@ -722,7 +731,10 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
 
                     //rewriting will trigger an edit, which in turn will trigger reloading the zones
                     //because this acts like an edit, it can be run multiple times in quick succession and will only upload zones when it's done
+                    
+                    meiEditor.getPageData(pageTitle).selection.removeListener('changeCursor', cursorUpdate);
                     rewriteAce(pageRef);
+                    meiEditor.getPageData(pageTitle).selection.on('changeCursor', cursorUpdate);
                 };
 
                 //detects whether or not a keypress was the escape key and triggers
