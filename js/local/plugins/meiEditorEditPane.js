@@ -113,8 +113,11 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/UndoStack.js'], functio
                             var texts = arr[0];
                             var cursorPos = arr[1];
                             var activeDoc = arr[2];
+                            var pageTitle = meiEditorSettings.tabTitlesByIndex[activeDoc];
                             meiEditorSettings.undoManager.save('PageEdited', [texts, cursorPos, activeDoc]);
-                            meiEditor.events.publish("PageEdited", [meiEditorSettings.tabTitlesByIndex[activeDoc]]);
+                            meiEditor.reparseAce(pageTitle);
+
+                            meiEditor.events.publish("PageEdited", [pageTitle]);
                         }, 500, [meiEditor.getAllTexts(), meiEditorSettings.initCursor, meiEditorSettings.initDoc]); //after no edits have been done for a second, save the page in the undo stack
                     });
                 };
@@ -160,8 +163,6 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/UndoStack.js'], functio
                     meiEditorSettings.undoManager.save('PageEdited', [meiEditor.getAllTexts(), [{'row':0, 'column':0}], $("#pagesList li").length - 1]);
                 });
 
-                meiEditor.events.subscribe("PageEdited", meiEditor.reparseAce);
-
                 //when editor pane changes are undone
                 meiEditorSettings.undoManager.newAction('PageEdited', function(texts, cursor, doc, currentState)
                 {
@@ -179,7 +180,6 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/UndoStack.js'], functio
 
                     //move cursor to before first alpha-numberic character of most recent change
                     var title = meiEditor.getActivePageTitle();
-                    meiEditor.events.publish("PageEdited", [title]);
                     var newCursor = currentState.parameters[1];
 
                     meiEditor.getPageData(title).gotoLine(newCursor.row + 1, newCursor.column, true); //because 1-indexing is always the right choice
