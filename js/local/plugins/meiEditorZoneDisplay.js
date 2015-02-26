@@ -914,6 +914,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     //if the page is in Diva...
                     var divaIdx = getDivaIndexForPage(newName);
                     if (divaIdx === false) return;
+                    if (newName !== meiEditor.getActivePageTitle()) return;
 
                     //scroll to it
                     meiEditorSettings.divaInstance.gotoPageByIndex(divaIdx);

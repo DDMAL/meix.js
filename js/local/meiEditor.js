@@ -557,6 +557,9 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
                     pageData[newName] = pageData[originalName];
                     delete pageData[originalName];
 
+                    self.reparseAce(newName);
+                    if(originalName === settings.activePageTitle) settings.activePageTitle = newName;
+
                     self.localLog("Renamed " + originalName + " to " + newName + ".");
                     self.events.publish('PageWasRenamed', [originalName, newName]);
                 }
