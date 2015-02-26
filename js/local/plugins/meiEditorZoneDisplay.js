@@ -63,7 +63,15 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                 var selectedSelector = "." + selectedClass;
                 var resizableClass = meiEditorSettings.resizableClass;
                 var resizableSelector = "." + resizableClass;
+                var overlayID = "overlay-div";
+                var overlaySelector = "#" + overlayID;
+                var dragID = "drag-div";
+                var dragSelector = "#" + dragID;
                 var editorLastFocus = true; //true if something on the editor side was the last thing clicked, false otherwise
+                var shiftKeyDown = false;
+
+                var initDragTop, initDragLeft;
+
 
                 meiEditor.addToNavbar("Zone Display", "zone-display");
                 /*$("#dropdown-zone-display").append("<li><a id='file-link-dropdown'>Link files to Diva images...</a></li>" +
@@ -492,6 +500,33 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                         }
                     }
                 };
+
+                var createOverlay = function()
+                {
+                    meiEditorSettings.divaInstance.disableScrollable();
+                    $("#diva-wrapper").append("<div id='" + overlayID + "'></div>");
+                    $(overlaySelector).offset({'top': $("#diva-wrapper").offset().top, 'left': $("#diva-wrapper").offset().left});
+                    $(overlaySelector).width($("#diva-wrapper").width());
+                    $(overlaySelector).height($("#diva-wrapper").height());    
+                    $(overlaySelector).css('background-color', 'rgba(0, 0, 0, 0.5)');
+                    $("#hover-div").css('display', 'none'); //hides the div
+                    $("#hover-div").html("");
+
+
+                    //this prevents a graphical glitch with Diva
+                    $("#diva-wrapper").on('resize', function(e){
+                        e.stopPropagation();
+                        e.preventDefault();
+                    });
+                };
+
+                var destroyOverlay = function()
+                {
+                    //remove overlay and restore key bindings to Diva
+                    $(overlaySelector).remove();
+                    meiEditorSettings.divaInstance.enableScrollable();
+                    $("#diva-wrapper").unbind('resize');
+                };
                 
                 var highlightDoubleClickHandler = function(e)
                 {
@@ -502,15 +537,8 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     if ($(".ui-resizable").length > 0) return;
 
                     //turn off scrollability and put the overlay down
-                    meiEditorSettings.divaInstance.disableScrollable();
-                    $("#diva-wrapper").append("<div id='resizableOverlay'></div>");
-                    $("#resizableOverlay").offset({'top': $("#diva-wrapper").offset().top, 'left': $("#diva-wrapper").offset().left});
-                    $("#resizableOverlay").width($("#diva-wrapper").width());
-                    $("#resizableOverlay").height($("#diva-wrapper").height());       
-                    $("#hover-div").css('display', 'none'); //hides the div
-                    $("#hover-div").html("");
+                    createOverlay();
 
-                    //unbindBoxListeners(); //replaced with...
                     $("#hover-div").on('click', function(e)
                     {
                         e.stopPropagation();
@@ -679,12 +707,6 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
 
                     if(!findOverride) gotoLineWithID(object.id);
 
-                    //this prevents a graphical glitch with Diva
-                    $("#diva-wrapper").on('resize', function(e){
-                        e.stopPropagation();
-                        e.preventDefault();
-                    });
-
                     updateCaches();
                 };
 
@@ -701,11 +723,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                         $(object).toggleClass(resizableClass);
                     }
 
-                    //remove overlay and restore key bindings to Diva
-                    $("#resizableOverlay").remove();
-                    meiEditorSettings.divaInstance.enableScrollable();
-                    //reapplyBoxListeners();
-                    $("#diva-wrapper").unbind('resize');
+                    destroyOverlay();
                     updateCaches();
                 };
 
@@ -737,6 +755,187 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     meiEditor.getPageData(pageTitle).selection.on('changeCursor', cursorUpdate);
                 };
 
+                var prepNewHighlight = function(e)
+                {
+                    $(overlaySelector).append('<div id="' + dragID + '"></div>');
+                    $(dragSelector).css('z-index', $(overlaySelector).css('z-index') + 1);
+                    initDragTop = e.pageY;
+                    initDragLeft = e.pageX;
+                    $(dragSelector).offset({'top': e.pageY, 'left':e.pageX});
+
+                    //as you drag, resize it - separate function as we have two document.mousemoves that we need to unbind separately
+                    $(document).on('mousemove', changeDragSize);
+
+                    $(document).on('mouseup', createHighlight);
+                };
+
+                //updates the size of the drag-div box (spawned on shift/meta+drag)
+                var changeDragSize = function(e)
+                {
+                    clearSelections();
+
+                    //original four sides
+                    var dragLeft = $(dragSelector).offset().left;
+                    var dragTop = $(dragSelector).offset().top;
+                    var dragRight = dragLeft + $(dragSelector).width();
+                    var dragBottom = dragTop + $(dragSelector).height();           
+
+                    //if we're moving left
+                    if (e.pageX < meiEditorSettings.initDragLeft)
+                    {
+                        $(dragSelector).offset({'left': e.pageX});
+                        $(dragSelector).width(dragRight - e.pageX);
+                    }
+                    //moving right
+                    else $(dragSelector).width(e.pageX - dragLeft);
+
+                    //moving up
+                    if (e.pageY < meiEditorSettings.initDragTop)
+                    {
+                        $(dragSelector).offset({'top': e.pageY});
+                        $(dragSelector).height(dragBottom - e.pageY);
+                    }
+                    //moving down
+                    else $(dragSelector).height(e.pageY - dragTop);
+                };
+
+                var createHighlight = function(e)
+                {
+                    //unbind everything that could have caused this
+                    $(document).unbind('mousemove', changeDragSize);
+                    $(document).unbind('mouseup', createHighlight);
+                    
+                    //if the clicked page is not linked, warn and do nothing
+                    var clickedIdx = meiEditorSettings.divaInstance.getPageIndexForPageXYValues(initDragLeft, initDragTop);
+                    if(meiEditorSettings.divaPages[clickedIdx] === undefined) return false;
+                    var clickedTitle = pageTitleForDivaFilename(meiEditorSettings.divaPages[clickedIdx]);
+                    if (clickedTitle === false)
+                    {
+                        meiEditor.localError("Current Diva image is not linked.");
+                        $(dragSelector).remove();
+                        return false;
+                    }
+
+                    //aliasing a function for readability here
+                    divaTranslate = meiEditorSettings.divaInstance.translateToMaxZoomLevel;
+
+                    //if this was just a click
+                    if ($(dragSelector).width() < 2 && $(dragSelector).height() < 2)
+                    {
+                        //get the click
+                        var centerX = e.pageX;
+                        var centerY = e.pageY;
+
+                        var divaPageObj = $("#1-diva-page-" + meiEditorSettings.divaInstance.getCurrentPageIndex());
+                        centerY = divaTranslate(centerY - divaPageObj.offset().top);
+                        centerX = divaTranslate(centerX - divaPageObj.offset().left);
+
+                        //create a new 200*200 object
+                        insertNewNeume(centerX - 100, centerY - 100, centerX + 100, centerY + 100);
+                    }
+                    //else if we dragged to create a neume
+                    else 
+                    {
+                        var divaPageObj = $("#1-diva-page-" + meiEditorSettings.divaInstance.getCurrentPageIndex());
+
+                        //left position
+                        var draggedBoxLeft = $(dragSelector).offset().left - divaPageObj.offset().left;
+                        //translated right position (converted to max zoom level)
+                        var draggedBoxRight = divaTranslate(draggedBoxLeft + $(dragSelector).outerWidth());
+                        //translated left - we needed the original left to get the right translation, so we translate it now
+                        draggedBoxLeft = divaTranslate(draggedBoxLeft);
+
+                        //same vertical
+                        var draggedBoxTop = $(dragSelector).offset().top - divaPageObj.offset().top;
+                        var draggedBoxBottom = divaTranslate(draggedBoxTop + $(dragSelector).outerHeight());
+                        draggedBoxTop = divaTranslate(draggedBoxTop);
+
+                        //create the neume
+                        insertNewNeume(draggedBoxLeft, draggedBoxTop, draggedBoxRight, draggedBoxBottom);
+                    }
+
+                    $(dragSelector).remove();
+                };
+
+                //code to insert a new neume, takes the four corner positions (upper left x/y, lower right x/y) as params
+                var insertNewNeume = function(ulx, uly, lrx, lry)
+                {
+                    meiEditor.localLog("Got a new neume at " + ulx + " " + uly + " " + lrx + " " + lry);
+                    /*//generate some UUIDs
+                    var zoneID = genUUID();
+                    var neumeID = genUUID();
+
+                    //generate the element strings
+                    var zoneStringToAdd = '<zone xml:id="' + zoneID + '" ulx="' + ulx + '" uly="' + uly + '" lrx="' + lrx + '" lry="' + lry + '"/>';
+                    var neumeStringToAdd = '<neume xml:id="' + neumeID + '" facs="' + zoneID + '"'; //not closed so name can be added
+                    
+                    //if the "estimate line numbers" dropdown box is checked, it will make its best guess and automatically insert them
+                    neumeStringToAdd += ' name=""/>';
+                    var chosenDoc = meiEditor.getActivePanel().text();
+                    var editorRef = meiEditorSettings.pageData[chosenDoc];
+
+                    //finds the first instance of "surface"
+                    var surfaceSearch = editorRef.find(/surface/g, 
+                    {
+                        wrap: true,
+                        range: null
+                    });
+
+                    if(surfaceSearch === undefined)
+                    {
+                        meiEditor.localError("Could not find MEI 'surface' element to insert 'zone' element. Aborted neume creation.");
+                        return false;
+                    }
+
+                    var surfaceLine = surfaceSearch.start.row + 2; //converting from 0-index to 1-index, adding 1 to get the line after
+
+                    //finds the first instance of "layer"
+                    var layerSearch = editorRef.find(/layer/g, 
+                    {
+                        wrap: true,
+                        range: null
+                    });
+                    if(layerSearch === undefined)
+                    {
+                        meiEditor.localError("Could not find MEI 'layer' element to insert 'neume' element. Aborted neume creation.");
+                        return false;
+                    }
+                    
+                    var layerLine = layerSearch.start.row + 2; //converting from 0-index to 1-index, adding 1 to get the line after
+                
+                    //finds out how much white space was at these lines before
+                    var zoneWhiteSpace = meiEditorSettings.pageData[chosenDoc].session.doc.getLine(surfaceLine).split("<")[0];
+                    var neumeWhiteSpace = meiEditorSettings.pageData[chosenDoc].session.doc.getLine(layerLine).split("<")[0];
+                    
+                    //inserts the new zone and neume lines
+                    meiEditorSettings.pageData[chosenDoc].session.doc.insertLines(surfaceLine, [zoneWhiteSpace + zoneStringToAdd]);
+                    meiEditorSettings.pageData[chosenDoc].session.doc.insertLines(layerLine, [neumeWhiteSpace + neumeStringToAdd]);
+
+                    meiEditor.createHighlights();
+
+                    //moves the editor to the newly entered neume line
+                    var searchNeedle = new RegExp("<neume.*" + neumeID, "g");
+
+                    var testSearch = editorRef.find(searchNeedle, 
+                    {
+                        wrap: true,
+                        range: null
+                    });
+
+                    return true;*/
+                };
+
+                $(document).on('keydown', function(e)
+                {
+                    if (e.shiftKey && !shiftKeyDown)
+                    {
+                        shiftKeyDown = true;
+                        e.stopPropagation();
+                        createOverlay();
+                        $(overlaySelector).on('mousedown', prepNewHighlight);
+                    } 
+                });
+
                 //detects whether or not a keypress was the escape key and triggers
                 $(document).on('keyup', function(e)
                 {
@@ -747,8 +946,15 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     //console.log(editorLastFocus);
                     //if (editorLastFocus) return;
 
+                    if (!e.shiftKey && shiftKeyDown) 
+                    {
+                        shiftKeyDown = false;
+                        e.stopPropagation();
+                        $(overlaySelector).unbind('mousedown', prepNewHighlight);
+                        destroyOverlay();
+                    }
                     //escape to quit whatever the current selection is
-                    if (e.keyCode == 27 && (resizableActive || selectedActive)) 
+                    else if (e.keyCode == 27 && (resizableActive || selectedActive)) 
                     { 
                         e.stopPropagation();
                         ($(resizableSelector).length > 0) ? meiEditor.deselectResizable(resizableSelector) : meiEditor.deselectAllHighlights();

@@ -329,3 +329,14 @@ var safelyRemove = function(element)
         parent.removeChild(prev);
     }
 };
+
+function clearSelections() {
+    if (window.getSelection)
+    {
+        window.getSelection().removeAllRanges();
+    }
+    else if (document.selection)
+    {
+        document.selection.empty();
+    }
+}
