@@ -344,3 +344,13 @@ function clearSelections() {
 function isIn(test, min, max) {
     return ((test >= min) && (test <= max));
 }
+
+
+//credit to http://stackoverflow.com/questions/11660090/
+function condense(a) { 
+    var b = []; 
+    for(var i = 0;i < a.length;i++) { 
+        if (a[i] !== undefined && a[i] !== null) b.push(a[i]); 
+    } 
+    return b; 
+}

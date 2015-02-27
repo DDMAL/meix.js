@@ -861,6 +861,11 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                 //code to insert a new neume, takes the four corner positions (upper left x/y, lower right x/y) as params
                 var insertNewZone = function(divaIndex, ulx, uly, lrx, lry)
                 {
+                    ulx = parseInt(ulx, 10);
+                    uly = parseInt(uly, 10);
+                    lrx = parseInt(lrx, 10);
+                    lry = parseInt(lry, 10);
+                    
                     meiEditor.localLog("Got a new neume at " + ulx + " " + uly + " " + lrx + " " + lry);
                     if (meiEditorSettings.oneToOneMEI)
                     {
@@ -964,7 +969,6 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                                 added = false;
                             }
                         }
-                        console.log(JSON.parse( JSON.stringify(clusters)));
 
                         //and in case two clusters developed independently:
                         var toDel = [];
@@ -981,21 +985,21 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                                     if (compCluster.lry > curCluster.lry) curCluster.lry = compCluster.lry;
                                     if (compCluster.uly < curCluster.uly) curCluster.uly = compCluster.uly;
                                     var arr = curCluster.ids;
-                                    curCluster.ids = curCluster.ids.concat(compCluster.ids);
-                                    console.log(curCluster.ids, compCluster.ids, JSON.parse( JSON.stringify(arr)));
+                                    var compArr = compCluster.ids;
+                                    var combArr = arr.concat(compArr);
 
-                                    curCluster.ids = arr;
-                                    console.log(curCluster.ids);
+                                    curCluster.ids = combArr;
 
                                     toDel.push(compIdx);
                                 }
                             }
                         }
 
-                        for (x in toDel)
+                        for (var x in toDel)
                         {
                             delete clusters[toDel[x]];
                         }
+                        clusters = condense(clusters);
                         console.log(clusters);
 
                     }
