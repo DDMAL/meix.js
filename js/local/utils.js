@@ -340,3 +340,7 @@ function clearSelections() {
         document.selection.empty();
     }
 }
+
+function isIn(test, min, max) {
+    return ((test >= min) && (test <= max));
+}

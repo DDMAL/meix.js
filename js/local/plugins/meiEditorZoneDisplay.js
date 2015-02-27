@@ -386,10 +386,12 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                 {
                     if ($("#one-to-one-checkbox").prop('checked'))
                     {
+                        meiEditorSettings.oneToOneMEI = true;
                         meiEditor.reloadZones = reloadOneToOneZones;
                     }
                     else
                     {
+                        meiEditorSettings.oneToOneMEI = false;
                         meiEditor.reloadZones = reloadMultiPageZones;
                     }
                 };
@@ -818,7 +820,8 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
 
                     //aliasing a function for readability here
                     divaTranslate = meiEditorSettings.divaInstance.translateToMaxZoomLevel;
-
+                    var divaPageObj = $("#1-diva-page-" + meiEditorSettings.divaInstance.getCurrentPageIndex());
+                        
                     //if this was just a click
                     if ($(dragSelector).width() < 2 && $(dragSelector).height() < 2)
                     {
@@ -826,18 +829,15 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                         var centerX = e.pageX;
                         var centerY = e.pageY;
 
-                        var divaPageObj = $("#1-diva-page-" + meiEditorSettings.divaInstance.getCurrentPageIndex());
                         centerY = divaTranslate(centerY - divaPageObj.offset().top);
                         centerX = divaTranslate(centerX - divaPageObj.offset().left);
 
                         //create a new 200*200 object
-                        insertNewNeume(centerX - 100, centerY - 100, centerX + 100, centerY + 100);
+                        insertNewZone(clickedIdx, centerX - 100, centerY - 100, centerX + 100, centerY + 100);
                     }
                     //else if we dragged to create a neume
                     else 
                     {
-                        var divaPageObj = $("#1-diva-page-" + meiEditorSettings.divaInstance.getCurrentPageIndex());
-
                         //left position
                         var draggedBoxLeft = $(dragSelector).offset().left - divaPageObj.offset().left;
                         //translated right position (converted to max zoom level)
@@ -851,16 +851,155 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                         draggedBoxTop = divaTranslate(draggedBoxTop);
 
                         //create the neume
-                        insertNewNeume(draggedBoxLeft, draggedBoxTop, draggedBoxRight, draggedBoxBottom);
+                        insertNewZone(clickedIdx, draggedBoxLeft, draggedBoxTop, draggedBoxRight, draggedBoxBottom);
                     }
 
                     $(dragSelector).remove();
+                    return true;
                 };
 
                 //code to insert a new neume, takes the four corner positions (upper left x/y, lower right x/y) as params
-                var insertNewNeume = function(ulx, uly, lrx, lry)
+                var insertNewZone = function(divaIndex, ulx, uly, lrx, lry)
                 {
                     meiEditor.localLog("Got a new neume at " + ulx + " " + uly + " " + lrx + " " + lry);
+                    if (meiEditorSettings.oneToOneMEI)
+                    {
+                        var divaFilename = meiEditorSettings.divaInstance.getFilenames()[divaIndex];
+                        var pageTitle = pageTitleForDivaFilename(divaFilename);
+                        if (pageTitle === false)
+                        {
+                            meiEditor.localWarn("This neume was not on a linked page; it was made on the image " + divaFilename + ". Can't add to MEI.");
+                            return false;
+                        }
+
+                        var parsed = meiEditor.getPageData(pageTitle).parsed;
+                        var zones = parsed.getElementsByTagName('zone');
+                        var idx = zones.length;
+
+                        //create an array of [xml:id, uly, lry, centerY] for each zone
+                        var highlights = []; 
+                        var curZone, xmlID, uly, lry;
+
+                        while(idx--)
+                        {
+                            curZone = zones[idx];
+                            xmlID = curZone.getAttribute('xml:id');
+                            uly = parseInt(curZone.getAttribute('uly'), 10);
+                            lry = parseInt(curZone.getAttribute('lry'), 10);
+                            highlights.push({'xmlID': xmlID, 'uly':uly, 'lry':lry, 'centerY':((uly-lry)/2 + lry)});
+                        }
+
+                        //sort these zones by their center point
+                        var centeredPoints = highlights.sort(function(a, b){
+                            return a.centerY - b.centerY;
+                        });
+
+                        //start at the second one from the end because we're sorting by pairs
+                        idx = centeredPoints.length - 2; 
+
+                        //totalCenterGaps is the total distance between the center points of every adjacent pair of highlights
+                        var totalCenterGaps = 0;
+
+                        //totalPosGaps is the total distance between all sets of non-overlapping highlights
+                        //var totalPosGaps = 0;
+                        //var posGaps = 0;
+                        var diff;
+
+                        //calculate these
+                        while(idx >= 0)
+                        {
+                            totalCenterGaps += centeredPoints[idx + 1].centerY - centeredPoints[idx].centerY;
+
+                            /*diff = centeredPoints[idx + 1].uly - centeredPoints[idx].lry; 
+                            if (diff > 0)
+                            {
+                                totalPosGaps += diff;
+                                posGaps++;
+                            }*/
+                            idx--;
+                        }
+
+                        //get the averages for both the center gaps and the posGaps
+                        var avgCenterGap = (totalCenterGaps / (centeredPoints.length - 1));
+                        //var avgPosGap = totalPosGaps / posGaps;
+
+                        //I'm not sure what this variable actually is, but I'm pretty sure there's some official definition
+                        //var avgGap = avgPosGap / avgCenterGap;
+                        var avgGap = avgCenterGap;
+
+                        //re-initialize the array one last time
+                        idx = centeredPoints.length - 1;
+                        var clusters = [{'ids': [centeredPoints[idx].xmlID], 'uly': centeredPoints[idx].uly, 'lry': centeredPoints[idx].lry}]; //initialize one cluster with the ID of the first object
+                        var added = false;
+
+                        while(idx--)
+                        {
+                            curPoint = centeredPoints[idx];
+                            clIdx = clusters.length;
+                            while(clIdx--)
+                            {
+                                curCluster = clusters[clIdx];
+                                if(isIn(curPoint.lry, curCluster.uly - avgGap, curCluster.lry + avgGap))
+                                {
+                                    added = clIdx;
+                                    break;
+                                }
+                                else if(isIn(curPoint.uly, curCluster.uly - avgGap, curCluster.lry + avgGap))
+                                {
+                                    added = clIdx;
+                                    break;
+                                }
+                            }
+                            if (added === false)
+                            {
+                                clusters.push({'ids': [curPoint.xmlID], 'uly': curPoint.uly, 'lry': curPoint.lry});
+                            }
+                            else
+                            {
+                                curCluster = clusters[added];
+                                curCluster.ids.push(curPoint.xmlID);
+                                
+                                if (curPoint.lry > curCluster.lry) curCluster.lry = curPoint.lry;
+                                if (curPoint.uly < curCluster.uly) curCluster.uly = curPoint.uly;
+                                added = false;
+                            }
+                        }
+                        console.log(JSON.parse( JSON.stringify(clusters)));
+
+                        //and in case two clusters developed independently:
+                        var toDel = [];
+
+                        for (idx = 0; idx < clusters.length; idx++)
+                        {
+                            curCluster = clusters[idx];
+
+                            for (compIdx = (idx + 1); compIdx < clusters.length; compIdx++)
+                            {
+                                compCluster = clusters[compIdx];
+                                if (isIn(curCluster.lry, compCluster.uly, compCluster.lry) || isIn(curCluster.uly, compCluster.uly, compCluster.lry))
+                                {
+                                    if (compCluster.lry > curCluster.lry) curCluster.lry = compCluster.lry;
+                                    if (compCluster.uly < curCluster.uly) curCluster.uly = compCluster.uly;
+                                    var arr = curCluster.ids;
+                                    curCluster.ids = curCluster.ids.concat(compCluster.ids);
+                                    console.log(curCluster.ids, compCluster.ids, JSON.parse( JSON.stringify(arr)));
+
+                                    curCluster.ids = arr;
+                                    console.log(curCluster.ids);
+
+                                    toDel.push(compIdx);
+                                }
+                            }
+                        }
+
+                        for (x in toDel)
+                        {
+                            delete clusters[toDel[x]];
+                        }
+                        console.log(clusters);
+
+                    }
+
                     /*//generate some UUIDs
                     var zoneID = genUUID();
                     var neumeID = genUUID();
