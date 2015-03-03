@@ -189,6 +189,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     if(!UUIDs) return;
 
                     var curFacs = UUIDs.length;
+
                     meiEditor.deselectAllHighlights();
 
                     while(curFacs--)
@@ -427,7 +428,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     });
 
                     //if this isn't selected, change the color 
-                    if (!$("#" + currentTarget).hasClass(selectedClass))
+                    if (!$("#" + currentTarget).hasClass(selectedClass) && !$("#" + currentTarget).hasClass(resizableClass))
                     {
                         $("#"+currentTarget).css('background-color', 'rgba(255, 0, 0, 0.1)');
                     }
@@ -444,7 +445,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     $("#hover-div").html("");
 
                     //if this isn't selected, change the color back to normal
-                    if(!$("#" + currentTarget).hasClass(selectedClass))
+                    if(!$("#" + currentTarget).hasClass(selectedClass) && !$("#" + currentTarget).hasClass(resizableClass))
                     {
                         $("#" + currentTarget).css('background-color', 'rgba(255, 0, 0, 0.2)');
                     }
@@ -577,9 +578,16 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     var pageTitle = meiEditor.getActivePageTitle();
                     meiEditor.getPageData(pageTitle).selection.removeListener('changeCursor', cursorUpdate);
                     
-                    var initSelection = meiEditor.getPageData(pageTitle).selection.getCursor().column;
+                    var initSelection = meiEditor.getPageData(pageTitle).selection.getCursor();
                     var initRow = initSelection.row;
                     var initCol = initSelection.column;
+
+                    //this is needed to prevent a glitch where if the editor is not clicked first, find sometimes does not work
+                    //I will permanently fix this later, but as of now this will suffice
+                    if(initRow === 0 && initCol === 0)
+                    {
+                        meiEditor.getPageData(pageTitle).selection.selectTo(1, 1);
+                    }
 
                     var pageRef = meiEditor.getPageData(pageTitle);
                     var facsSearch = pageRef.find(searchNeedle,
@@ -606,6 +614,8 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                         newRow = pageRef.getSelectionRange().start.row;
                     }
 
+                    //meiEditor.getPageData(pageTitle).selection.selectTo(initRow, initCol, true); //because 1-indexing is always the right choice
+                    
                     meiEditor.getPageData(pageTitle).selection.on('changeCursor', cursorUpdate);
 
                 };
@@ -992,7 +1002,6 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     } 
                 });
 
-                //detects whether or not a keypress was the escape key and triggers
                 $(document).on('keyup', function(e)
                 {
                     var resizableActive = ($(resizableSelector).length > 0);

@@ -943,7 +943,6 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
             //deletion conformation modal
             createModal(settings.element, 'fileRemoveModal', true, 'Are you sure you want to remove "<span id="deletionName"></span>" from this project?', 'Remove file');
 
-
             //create the initial ACE editor
             if (settings.initializeWithFile !== null)
             {

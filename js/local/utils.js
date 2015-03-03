@@ -294,12 +294,20 @@ var meiParser = new window.DOMParser();
 
 function rewriteAce(editorRef)
 {
+    var initSelection = editorRef.selection.getCursor();
+
+    //keep all the processing instruction lines (<?xml ... ?>)
+    var startRow = 0;
+    while(editorRef.session.doc.getLine(startRow).match(/\?xml/g) !== null) startRow++;
+
     var length = editorRef.session.doc.getLength();
     var newText = editorRef.parsed.documentElement.outerHTML;
     var aceRange = require('ace/range').Range;
-    var range = new aceRange(0, 0, length, 0);
+    var range = new aceRange(startRow, 0, length, 0);
 
     editorRef.session.doc.replace(range, newText);
+    //+1 is because 1-indexing the accessor but 0-indexing the setter is an AMAZING idea
+    editorRef.gotoLine(initSelection.row + 1, initSelection.column, false);
 }
 
 //detects whether the current resizable object is too small to hold the ui-resizable icon
