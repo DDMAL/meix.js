@@ -961,13 +961,11 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                             }
                         }
 
-                        clusters = condense(clusters);
+                        clusters = condense(clusters).reverse();
 
-                        var chosenIdx = undefined, afterIdx;
-                        var lastIdx = undefined;
+                        var chosenIdx = undefined, lastIdx = undefined;
 
-                        //we're going top-down through everything
-                        for (idx = clusters.length - 1; idx >= 0; idx--)
+                        for (idx = 0; idx < clusters.length; idx++)
                         {
                             curCluster = clusters[idx];
                             //if the new zone is inside a cluster, we want to stop
@@ -977,7 +975,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                                 break;
                             }
                             //else if it's below the zone, save the last index
-                            else if (lry < curCluster.uly)
+                            else if (lry > curCluster.uly)
                             {
                                 lastIdx = idx;
                             }
@@ -1005,47 +1003,49 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                         //if we didn't find the right cluster
                         if (chosenIdx === undefined)
                         {
-                            console.log("not in a cluster");
                             //if we found a cluster before the new zone
-                            if (lastIdx) 
+                            if (lastIdx === undefined) 
                             {
-                                console.log("but after one");
-                                sorted = orderCluster(clusters[lastIdx]);
-                                prevZone = sorted[sorted.length - 1].zoneRef;
-
-                                sorted = orderCluster(clusters[lastIdx - 1]);
+                                sorted = orderCluster(clusters[0]);
                                 nextZone = sorted[0].zoneRef;
                             }
                             //if we didn't
                             else
                             {
-                                console.log("before a cluster...");
-                                sorted = orderCluster(clusters[clusters.length - 1]);
-                                nextZone = sorted[0].zoneRef;
+                                sorted = orderCluster(clusters[lastIdx]);
+                                prevZone = sorted[sorted.length - 1].zoneRef;
+
+                                if (clusters[lastIdx + 1] !== undefined)
+                                {
+                                    sorted = orderCluster(clusters[lastIdx + 1]);
+                                    nextZone = sorted[0].zoneRef;
+                                }
                             }
                         }
                         //if we did find the right cluster
                         else
                         {
-                            console.log("in a cluster");
                             sorted = orderCluster(clusters[chosenIdx]);
 
+                            //if it's before everything in the cluster
                             if (ulx < sorted[0].ulx)
                             {
                                 nextZone = sorted[0].zoneRef;
-                                if (clusters[chosenIdx + 1] !== undefined)
-                                {
-                                    sorted = orderCluster(clusters[chosenIdx + 1]);
-                                    prevZone = sorted[sorted.length - 1].zoneRef;
-                                }
-                            }
-                            else if (ulx > sorted[sorted.length - 1].ulx)
-                            {
-                                prevZone = sorted[sorted.length - 1].zoneRef;
-                                console.log(prevZone);
+                                //grab the last one of the previous cluster if it exists to position it after
                                 if (clusters[chosenIdx - 1] !== undefined)
                                 {
                                     sorted = orderCluster(clusters[chosenIdx - 1]);
+                                    prevZone = sorted[sorted.length - 1].zoneRef;
+                                }
+                            }
+                            //if it's after everything in the cluster
+                            else if (ulx > sorted[sorted.length - 1].ulx)
+                            {
+                                prevZone = sorted[sorted.length - 1].zoneRef;
+                                //grab the first one of the next cluster
+                                if (clusters[chosenIdx + 1] !== undefined)
+                                {
+                                    sorted = orderCluster(clusters[chosenIdx + 1]);
                                     nextZone = sorted[0].zoneRef;
                                 }
                             } 
@@ -1108,11 +1108,14 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     var resizableActive = ($(resizableSelector).length > 0);
                     var selectedActive = ($(selectedSelector).length > 0);
                     
+                    console.log("down with focus", editorLastFocus);
                     //if the editor was the last thing clicked, we don't want to listen
                     if (editorLastFocus) return;
 
+                    console.log("down but", e.shiftKey, shiftKeyDown);
                     if (!e.shiftKey && shiftKeyDown) 
                     {
+                        console.log("destroying");
                         shiftKeyDown = false;
                         e.stopPropagation();
                         $(overlaySelector).unbind('mousedown', prepNewHighlight);
