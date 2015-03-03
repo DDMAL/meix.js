@@ -614,8 +614,6 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                         newRow = pageRef.getSelectionRange().start.row;
                     }
 
-                    //meiEditor.getPageData(pageTitle).selection.selectTo(initRow, initCol, true); //because 1-indexing is always the right choice
-                    
                     meiEditor.getPageData(pageTitle).selection.on('changeCursor', cursorUpdate);
 
                 };
@@ -867,17 +865,17 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                         var zones = parsed.getElementsByTagName('zone');
                         var idx = zones.length;
 
-                        //create an array of [xml:id, uly, lry, centerY] for each zone
+                        //create a [xml:id, uly, lry, centerY] object for each zone
                         var highlights = []; 
-                        var curZone, xmlID, uly, lry;
+                        var curZone, xmlID, curUly, curLry;
 
                         while(idx--)
                         {
                             curZone = zones[idx];
                             xmlID = curZone.getAttribute('xml:id');
-                            uly = parseInt(curZone.getAttribute('uly'), 10);
-                            lry = parseInt(curZone.getAttribute('lry'), 10);
-                            highlights.push({'xmlID': xmlID, 'uly':uly, 'lry':lry, 'centerY':((uly-lry)/2 + lry)});
+                            curUly = parseInt(curZone.getAttribute('uly'), 10);
+                            curLry = parseInt(curZone.getAttribute('lry'), 10);
+                            highlights.push({'xmlID': xmlID, 'uly':curUly, 'lry':curLry, 'centerY':((curUly-curLry)/2 + curLry)});
                         }
 
                         //sort these zones by their center point
@@ -885,66 +883,45 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                             return a.centerY - b.centerY;
                         });
 
-                        //start at the second one from the end because we're sorting by pairs
-                        idx = centeredPoints.length - 2; 
-
                         //totalCenterGaps is the total distance between the center points of every adjacent pair of highlights
                         var totalCenterGaps = 0;
 
-                        //totalPosGaps is the total distance between all sets of non-overlapping highlights
-                        //var totalPosGaps = 0;
-                        //var posGaps = 0;
-                        var diff;
-
-                        //calculate these
-                        while(idx >= 0)
+                        //start at the second one from the end because we're sorting by pairs; calculate average
+                        for(idx = centeredPoints.length - 2; idx >= 0; idx--)
                         {
                             totalCenterGaps += centeredPoints[idx + 1].centerY - centeredPoints[idx].centerY;
-
-                            /*diff = centeredPoints[idx + 1].uly - centeredPoints[idx].lry; 
-                            if (diff > 0)
-                            {
-                                totalPosGaps += diff;
-                                posGaps++;
-                            }*/
                             idx--;
                         }
-
-                        //get the averages for both the center gaps and the posGaps
-                        var avgCenterGap = (totalCenterGaps / (centeredPoints.length - 1));
-                        //var avgPosGap = totalPosGaps / posGaps;
-
-                        //I'm not sure what this variable actually is, but I'm pretty sure there's some official definition
-                        //var avgGap = avgPosGap / avgCenterGap;
-                        var avgGap = avgCenterGap;
+                        var avgGap = (totalCenterGaps / (centeredPoints.length - 1));
 
                         //re-initialize the array one last time
                         idx = centeredPoints.length - 1;
                         var clusters = [{'ids': [centeredPoints[idx].xmlID], 'uly': centeredPoints[idx].uly, 'lry': centeredPoints[idx].lry}]; //initialize one cluster with the ID of the first object
                         var added = false;
 
+                        //cluster everything together
                         while(idx--)
                         {
                             curPoint = centeredPoints[idx];
                             clIdx = clusters.length;
+                            //go through all existing clusters for each point
                             while(clIdx--)
                             {
                                 curCluster = clusters[clIdx];
-                                if(isIn(curPoint.lry, curCluster.uly - avgGap, curCluster.lry + avgGap))
-                                {
-                                    added = clIdx;
-                                    break;
-                                }
-                                else if(isIn(curPoint.uly, curCluster.uly - avgGap, curCluster.lry + avgGap))
+                                //if either extreme point is in the cluster, save the index and break
+                                if(isIn(curPoint.lry, curCluster.uly - avgGap, curCluster.lry + avgGap) || isIn(curPoint.uly, curCluster.uly - avgGap, curCluster.lry + avgGap))
                                 {
                                     added = clIdx;
                                     break;
                                 }
                             }
+
+                            //if it's not inside anything, make a new cluster
                             if (added === false)
                             {
                                 clusters.push({'ids': [curPoint.xmlID], 'uly': curPoint.uly, 'lry': curPoint.lry});
                             }
+                            //if it's inside something, add it to that cluster and update the extremes
                             else
                             {
                                 curCluster = clusters[added];
@@ -956,16 +933,19 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                             }
                         }
 
-                        //and in case two clusters developed independently:
+                        //and in case any two clusters developed independently, condense them
                         var toDel = [];
 
                         for (idx = 0; idx < clusters.length; idx++)
                         {
                             curCluster = clusters[idx];
+                            if (curCluster === undefined) continue;
 
                             for (compIdx = (idx + 1); compIdx < clusters.length; compIdx++)
                             {
                                 compCluster = clusters[compIdx];
+                                if (compCluster === undefined) continue;
+
                                 if (isIn(curCluster.lry, compCluster.uly, compCluster.lry) || isIn(curCluster.uly, compCluster.uly, compCluster.lry))
                                 {
                                     if (compCluster.lry > curCluster.lry) curCluster.lry = compCluster.lry;
@@ -975,21 +955,122 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                                     var combArr = arr.concat(compArr);
 
                                     curCluster.ids = combArr;
-
-                                    toDel.push(compIdx);
+                                    delete clusters[compIdx];
                                 }
                             }
                         }
 
-                        for (var x in toDel)
-                        {
-                            delete clusters[toDel[x]];
-                        }
                         clusters = condense(clusters);
-                        console.log(clusters);
+
+                        var chosenIdx = undefined, afterIdx;
+                        var lastIdx = undefined;
+
+                        //we're going top-down through everything
+                        for (idx = clusters.length - 1; idx >= 0; idx--)
+                        {
+                            curCluster = clusters[idx];
+                            //if the new zone is inside a cluster, we want to stop
+                            if (isIn(uly, curCluster.uly - avgGap, curCluster.lry + avgGap) || isIn(lry, curCluster.uly - avgGap, curCluster.lry + avgGap))
+                            {
+                                chosenIdx = idx;
+                                break;
+                            }
+                            //else if it's below the zone, save the last index
+                            else if (lry < curCluster.uly)
+                            {
+                                lastIdx = idx;
+                            }
+                        }
+
+                        var orderCluster = function(cluster)
+                        {
+                            var ids = cluster.ids;
+                            var xPoses = [];
+
+                            for (idx = 0; idx < ids.length; idx++)
+                            {
+                                curZone = parsed.querySelectorAll('zone[*|id=' + ids[idx] + ']')[0];
+                                xPoses.push({'zoneRef': curZone, 'ulx': parseInt(curZone.getAttribute('ulx'), 10)});
+                            }
+
+                            return xPoses.sort(function(a, b){
+                                return a.ulx - b.ulx;
+                            });
+                        };
+
+                        //find the ID to insert things after
+                        var prevZone, nextZone, indentNode;
+
+                        //if we didn't find the right cluster
+                        if (!chosenIdx)
+                        {
+                            console.log("not in a cluster");
+                            //if we found a cluster before the new zone
+                            if (lastIdx) 
+                            {
+                                console.log("but after one");
+                                sorted = orderCluster(clusters[lastIdx]);
+                                prevZone = sorted[sorted.length - 1].zoneRef;
+
+                                sorted = orderCluster(clusters[lastIdx + 1]);
+                                nextZone = sorted[0].zoneRef;
+                            }
+                            //if we didn't
+                            else
+                            {
+                                console.log("before a cluster...");
+                                sorted = orderCluster(clusters[clusters.length - 1]);
+                                nextZone = sorted[0].zoneRef;
+                            }
+                        }
+                        //if we did find the right cluster
+                        else
+                        {
+                            console.log("in a cluster");
+                            sorted = orderCluster(clusters[chosenIdx]);
+
+                            if (ulx < sorted[0].ulx)
+                            {
+                                nextZone = sorted[0].zoneRef;
+                                sorted = orderCluster(clusters[chosenIdx - 1]);
+                                prevZone = sorted[sorted.length - 1].zoneRef;
+                            }
+                            else if (ulx > sorted[sorted.length - 1].ulx)
+                            {
+                                prevZone = sorted[sorted.length - 1].zoneRef;
+                                sorted = orderCluster(clusters[chosenIdx + 1]);
+                                nextZone = sorted[0].zoneRef;
+                            } 
+                            else
+                            {
+                                for (idx = 0; idx < sorted.length; idx++)
+                                {
+                                    if (ulx < sorted[idx].ulx){
+                                        prevZone = sorted[idx - 1].zoneRef;
+                                        nextZone = sorted[idx].zoneRef;
+                                        var indentIndex = Array.prototype.indexOf.call(prevZone.parentElement.childNodes, prevZone);
+                                        indentNode = prevZone.parentElement.childNodes[indentIndex + 1].cloneNode(false);
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+
+                        var toInsert = parsed.createElement('zone');
+                        toInsert.setAttribute('xml:id', 'h'+genUUID());
+                        toInsert.setAttribute('ulx', ulx);
+                        toInsert.setAttribute('uly', uly);
+                        toInsert.setAttribute('lrx', lrx);
+                        toInsert.setAttribute('lry', lry);
+                        nextZone.parentElement.insertBefore(toInsert, nextZone);
+                        nextZone.parentElement.insertBefore(indentNode, nextZone);
+
+                        rewriteAce(meiEditor.getPageData(pageTitle));
 
                     }
                 };
+
+                /******** Various event listeners ********/
 
                 $(document).on('keydown', function(e)
                 {
