@@ -185,7 +185,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     else
                         lastRow = curRow;
 
-                    var UUIDs = selection.doc.getLine(curRow).match(/m-[\dabcdef]{8}-([\dabcdef]{4})-([\dabcdef]{4})-([\dabcdef]{4})-([\dabcdef]{12})/gi);
+                    var UUIDs = selection.doc.getLine(curRow).match(/[hm]*-[\dabcdef]{8}-([\dabcdef]{4})-([\dabcdef]{4})-([\dabcdef]{4})-([\dabcdef]{12})/gi);
                     if(!UUIDs) return;
 
                     var curFacs = UUIDs.length;
@@ -597,11 +597,11 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     });
 
                     var newRow = facsSearch.start.row;
-                    var lineText;
+                    var nextRow = newRow, lineText;
 
-                    while (newRow != initRow) {
+                    do {
                         //gets the full text from the search result row
-                        lineText = pageRef.session.doc.getLine(newRow);
+                        lineText = pageRef.session.doc.getLine(nextRow);
 
                         //if it doesn't include "zone" it's what we want
                         if (!lineText.match(/zone/g))
@@ -611,8 +611,9 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
 
                         //if we didn't break, find the next one
                         pageRef.findNext();
-                        newRow = pageRef.getSelectionRange().start.row;
-                    }
+                        nextRow = pageRef.getSelectionRange().start.row;
+
+                    } while (newRow != nextRow); 
 
                     meiEditor.getPageData(pageTitle).selection.on('changeCursor', cursorUpdate);
 
@@ -999,10 +1000,10 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                         };
 
                         //find the ID to insert things after
-                        var prevZone, nextZone, indentNode;
+                        var prevZone, nextZone, indentIndex, indentNode;
 
                         //if we didn't find the right cluster
-                        if (!chosenIdx)
+                        if (chosenIdx === undefined)
                         {
                             console.log("not in a cluster");
                             //if we found a cluster before the new zone
@@ -1012,7 +1013,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                                 sorted = orderCluster(clusters[lastIdx]);
                                 prevZone = sorted[sorted.length - 1].zoneRef;
 
-                                sorted = orderCluster(clusters[lastIdx + 1]);
+                                sorted = orderCluster(clusters[lastIdx - 1]);
                                 nextZone = sorted[0].zoneRef;
                             }
                             //if we didn't
@@ -1032,14 +1033,21 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                             if (ulx < sorted[0].ulx)
                             {
                                 nextZone = sorted[0].zoneRef;
-                                sorted = orderCluster(clusters[chosenIdx - 1]);
-                                prevZone = sorted[sorted.length - 1].zoneRef;
+                                if (clusters[chosenIdx + 1] !== undefined)
+                                {
+                                    sorted = orderCluster(clusters[chosenIdx + 1]);
+                                    prevZone = sorted[sorted.length - 1].zoneRef;
+                                }
                             }
                             else if (ulx > sorted[sorted.length - 1].ulx)
                             {
                                 prevZone = sorted[sorted.length - 1].zoneRef;
-                                sorted = orderCluster(clusters[chosenIdx + 1]);
-                                nextZone = sorted[0].zoneRef;
+                                console.log(prevZone);
+                                if (clusters[chosenIdx - 1] !== undefined)
+                                {
+                                    sorted = orderCluster(clusters[chosenIdx - 1]);
+                                    nextZone = sorted[0].zoneRef;
+                                }
                             } 
                             else
                             {
@@ -1048,8 +1056,6 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                                     if (ulx < sorted[idx].ulx){
                                         prevZone = sorted[idx - 1].zoneRef;
                                         nextZone = sorted[idx].zoneRef;
-                                        var indentIndex = Array.prototype.indexOf.call(prevZone.parentElement.childNodes, prevZone);
-                                        indentNode = prevZone.parentElement.childNodes[indentIndex + 1].cloneNode(false);
                                         break;
                                     }
                                 }
@@ -1062,11 +1068,25 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                         toInsert.setAttribute('uly', uly);
                         toInsert.setAttribute('lrx', lrx);
                         toInsert.setAttribute('lry', lry);
-                        nextZone.parentElement.insertBefore(toInsert, nextZone);
-                        nextZone.parentElement.insertBefore(indentNode, nextZone);
+
+                        if(nextZone)
+                        {
+                            indentIndex = Array.prototype.indexOf.call(nextZone.parentElement.childNodes, nextZone);
+                            indentNode = nextZone.parentElement.childNodes[indentIndex - 1].cloneNode(false);
+                            
+                            nextZone.parentElement.insertBefore(toInsert, nextZone);
+                            nextZone.parentElement.insertBefore(indentNode, nextZone);
+                        }
+                        else 
+                        {
+                            indentIndex = Array.prototype.indexOf.call(prevZone.parentElement.childNodes, prevZone);
+                            indentNode = prevZone.parentElement.childNodes[indentIndex - 1].cloneNode(false);
+
+                            inserted = prevZone.insertAdjacentElement("afterEnd", toInsert);
+                            inserted.parentElement.insertBefore(indentNode, inserted);
+                        }             
 
                         rewriteAce(meiEditor.getPageData(pageTitle));
-
                     }
                 };
 
@@ -1103,6 +1123,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     { 
                         e.stopPropagation();
                         ($(resizableSelector).length > 0) ? meiEditor.deselectResizable(resizableSelector) : meiEditor.deselectAllHighlights();
+                        destroyOverlay();
                     } 
                     //arrow keys to nudge resizable
                     else if ((e.keyCode < 41) && (e.keyCode > 36) && resizableActive)
