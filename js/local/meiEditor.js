@@ -738,12 +738,12 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
             {
                 if (settings.tabTitlesByIndex[idx] == pageTitle)
                 {
-                    $($("#pagesList > li > a")[idx]).trigger('click');
+                    $("#openPages").tabs("option", "active", idx);
                     return true;
                 }
             }
             return false;
-        }
+        };
 
         /*
             Function ran on initialization.

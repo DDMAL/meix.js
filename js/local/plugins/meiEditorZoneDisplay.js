@@ -18,25 +18,6 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     return false;
                 }
 
-                /*var globals =
-                {
-                    divaPageList: [],           //list of active pages in Diva
-                    divaImagesToMeiFiles: {},   //keeps track of linked files
-                    neumeObjects: {},           //keeps track of neume objects
-                    initDragTop: "",            //when a drag-div is being created, this stores the mouse's initial Y coordinate
-                    initDragLeft: "",           //when a drag-div is being created, this stores the mouse's initial X coordinate
-                    dragActive: false,          //prevents .overlay-box objects from appearing on mouseover while a drag is occuring
-                    editModeActive: false,      //determines if the shift key is being held down
-                    createModeActive: false,    //determines if the meta key is being held down
-                    boxSingleTimeout: "",       //stores the timeout object for determining if a box was double-clicked or single-clicked
-                    boxClickHandler: "",        //stores the current function to be called when a box is single-clicked; this changes depending on whether or not shift is down
-                    lastClicked: "",            //determines which delete listener to use by storing which side was last clicked on
-                    highlightHandle: "",        //handler for the highlight event, needs to be committed to memory
-                    activeNeumeChoices: [],      //list of neumes present on the active page to choose from when creating new zones
-                    foreignPageNames: [],
-                    pageLoadedByScrolling: false,
-                };*/
-
                 var globals =
                 {
                     zoneDict: {},              //dict of zones to highlight represented as {'UUID'(surface): [['ulx': ulx, 'uly': uly, 'lrx': lrx, 'lry': lry, 'divID': uuid(zone)}, {'ulx'...}]}
@@ -869,13 +850,8 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     meiEditor.localLog("Got a new neume at " + ulx + " " + uly + " " + lrx + " " + lry);
                     if (meiEditorSettings.oneToOneMEI)
                     {
-                        var divaFilename = meiEditorSettings.divaInstance.getFilenames()[divaIndex];
+                        var divaFilename = meiEditorSettings.divaPages[divaIndex];
                         var pageTitle = pageTitleForDivaFilename(divaFilename);
-                        if (pageTitle === false)
-                        {
-                            meiEditor.localWarn("This neume was not on a linked page; it was made on the image " + divaFilename + ". Can't add to MEI.");
-                            return false;
-                        }
 
                         var parsed = meiEditor.getPageData(pageTitle).parsed;
                         var zones = parsed.getElementsByTagName('zone');
@@ -1003,69 +979,6 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                         console.log(clusters);
 
                     }
-
-                    /*//generate some UUIDs
-                    var zoneID = genUUID();
-                    var neumeID = genUUID();
-
-                    //generate the element strings
-                    var zoneStringToAdd = '<zone xml:id="' + zoneID + '" ulx="' + ulx + '" uly="' + uly + '" lrx="' + lrx + '" lry="' + lry + '"/>';
-                    var neumeStringToAdd = '<neume xml:id="' + neumeID + '" facs="' + zoneID + '"'; //not closed so name can be added
-                    
-                    //if the "estimate line numbers" dropdown box is checked, it will make its best guess and automatically insert them
-                    neumeStringToAdd += ' name=""/>';
-                    var chosenDoc = meiEditor.getActivePanel().text();
-                    var editorRef = meiEditorSettings.pageData[chosenDoc];
-
-                    //finds the first instance of "surface"
-                    var surfaceSearch = editorRef.find(/surface/g, 
-                    {
-                        wrap: true,
-                        range: null
-                    });
-
-                    if(surfaceSearch === undefined)
-                    {
-                        meiEditor.localError("Could not find MEI 'surface' element to insert 'zone' element. Aborted neume creation.");
-                        return false;
-                    }
-
-                    var surfaceLine = surfaceSearch.start.row + 2; //converting from 0-index to 1-index, adding 1 to get the line after
-
-                    //finds the first instance of "layer"
-                    var layerSearch = editorRef.find(/layer/g, 
-                    {
-                        wrap: true,
-                        range: null
-                    });
-                    if(layerSearch === undefined)
-                    {
-                        meiEditor.localError("Could not find MEI 'layer' element to insert 'neume' element. Aborted neume creation.");
-                        return false;
-                    }
-                    
-                    var layerLine = layerSearch.start.row + 2; //converting from 0-index to 1-index, adding 1 to get the line after
-                
-                    //finds out how much white space was at these lines before
-                    var zoneWhiteSpace = meiEditorSettings.pageData[chosenDoc].session.doc.getLine(surfaceLine).split("<")[0];
-                    var neumeWhiteSpace = meiEditorSettings.pageData[chosenDoc].session.doc.getLine(layerLine).split("<")[0];
-                    
-                    //inserts the new zone and neume lines
-                    meiEditorSettings.pageData[chosenDoc].session.doc.insertLines(surfaceLine, [zoneWhiteSpace + zoneStringToAdd]);
-                    meiEditorSettings.pageData[chosenDoc].session.doc.insertLines(layerLine, [neumeWhiteSpace + neumeStringToAdd]);
-
-                    meiEditor.createHighlights();
-
-                    //moves the editor to the newly entered neume line
-                    var searchNeedle = new RegExp("<neume.*" + neumeID, "g");
-
-                    var testSearch = editorRef.find(searchNeedle, 
-                    {
-                        wrap: true,
-                        range: null
-                    });
-
-                    return true;*/
                 };
 
                 $(document).on('keydown', function(e)
@@ -1086,8 +999,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     var selectedActive = ($(selectedSelector).length > 0);
                     
                     //if the editor was the last thing clicked, we don't want to listen
-                    //console.log(editorLastFocus);
-                    //if (editorLastFocus) return;
+                    if (editorLastFocus) return;
 
                     if (!e.shiftKey && shiftKeyDown) 
                     {
@@ -1199,7 +1111,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     var divaIndex = meiEditorSettings.divaPages.length;
                     while(divaIndex--)
                     {
-                        splitImage = meiEditorSettings.divaPages[divaIndex].split(".")[0];
+                        splitImage = meiEditorSettings.divaPages[divaIndex];
                         if (splitName == splitImage)
                         {
                             return divaIndex;
@@ -1311,15 +1223,15 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                 for(var curIdx in meiEditorSettings.divaInstance.getSettings().pages)
                 {
                     //add all diva image filenames (without extension)
-                    meiEditorSettings.divaPages.push(meiEditorSettings.divaInstance.getSettings().pages[curIdx].f);
+                    meiEditorSettings.divaPages.push(meiEditorSettings.divaInstance.getSettings().pages[curIdx].f.split(".")[0]);
                 }
 
                 $(document).on('click', function(e)
                 {
-                    if ($(e.target).closest('#mei-editor').length) {
+                    if ($(e.target).closest('#mei-editor').length > 0) {
                         editorLastFocus = true;
                     }
-                    else if ($(e.target).closest('#diva-wrapper').length) {
+                    else if ($(e.target).closest('#diva-wrapper').length > 0) {
                         editorLastFocus = false;
                         document.activeElement.blur();
                     }
