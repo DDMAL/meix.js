@@ -337,8 +337,6 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
 
                     //clear any existing highlights
                     meiEditorSettings.divaInstance.resetHighlights();
-                    //publish an event that sends out the zone dict
-                    meiEditor.events.publish('ZonesWereUpdated', [zoneDict]);
 
                     // iterate through the pages (by index) and feed them into diva
                     meiEditorSettings.divaInstance.highlightOnPages(zoneKeys, zoneVals, undefined, HIGHLIGHT_CLASS);
@@ -357,6 +355,9 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                             curZone.uly += paddingTop + pageOffset.top;
                         }
                     }
+
+                    //publish an event that sends out the zone dict
+                    meiEditor.events.publish('ZonesWereUpdated', [zoneDict]);
 
                     return true;
                 };
@@ -862,7 +863,8 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                         var divaFilename = meiEditorSettings.divaPages[divaIndex];
                         var pageTitle = pageTitleForDivaFilename(divaFilename);
 
-                        var parsed = meiEditor.getPageData(pageTitle).parsed;
+                        var pageRef = meiEditor.getPageData(pageTitle);
+                        var parsed = pageRef.parsed;
                         var zones = parsed.getElementsByTagName('zone');
                         var idx = zones.length;
 
@@ -1062,8 +1064,9 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                             }
                         }
 
+                        var newZoneUUID = genUUID();
                         var toInsert = parsed.createElement('zone');
-                        toInsert.setAttribute('xml:id', 'h'+genUUID());
+                        toInsert.setAttribute('xml:id', newZoneUUID);
                         toInsert.setAttribute('ulx', ulx);
                         toInsert.setAttribute('uly', uly);
                         toInsert.setAttribute('lrx', lrx);
@@ -1086,7 +1089,10 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                             inserted.parentElement.insertBefore(indentNode, inserted);
                         }             
 
-                        rewriteAce(meiEditor.getPageData(pageTitle));
+                        rewriteAce(pageRef);
+
+                        //publishes an event with four parameters: reference to pageData, id of prevZone, id of nextZone, id of newly added zone
+                        meiEditor.events.publish('NewZone', [pageRef, (prevZone ? prevZone.getAttribute('xml:id') : undefined), (nextZone ? nextZone.getAttribute('xml:id') : undefined), newZoneUUID])
                     }
                 };
 
@@ -1107,22 +1113,22 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                 {
                     var resizableActive = ($(resizableSelector).length > 0);
                     var selectedActive = ($(selectedSelector).length > 0);
-                    
-                    console.log("down with focus", editorLastFocus);
+
+                    //no matter what, if this was toggling the shift key and it wasn't down before, listen to remove the overlay
+                    if (!e.shiftKey && shiftKeyDown) 
+                    {
+                        shiftKeyDown = false;
+                        if (!editorLastFocus) e.stopPropagation();
+                        $(overlaySelector).unbind('mousedown', prepNewHighlight);
+                        destroyOverlay();
+                        return;
+                    }
+
                     //if the editor was the last thing clicked, we don't want to listen
                     if (editorLastFocus) return;
 
-                    console.log("down but", e.shiftKey, shiftKeyDown);
-                    if (!e.shiftKey && shiftKeyDown) 
-                    {
-                        console.log("destroying");
-                        shiftKeyDown = false;
-                        e.stopPropagation();
-                        $(overlaySelector).unbind('mousedown', prepNewHighlight);
-                        destroyOverlay();
-                    }
                     //escape to quit whatever the current selection is
-                    else if (e.keyCode == 27 && (resizableActive || selectedActive)) 
+                    if (e.keyCode == 27 && (resizableActive || selectedActive)) 
                     { 
                         e.stopPropagation();
                         ($(resizableSelector).length > 0) ? meiEditor.deselectResizable(resizableSelector) : meiEditor.deselectAllHighlights();
