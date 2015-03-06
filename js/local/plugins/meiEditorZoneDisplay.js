@@ -1322,6 +1322,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     {
                         skipDivaJump = true;
                         meiEditor.switchToPage(activeFileName);
+                        skipDivaJump = false;
                     }
                 });
                 
