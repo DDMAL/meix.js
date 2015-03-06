@@ -50,6 +50,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                 var dragSelector = "#" + dragID;
                 var editorLastFocus = true; //true if something on the editor side was the last thing clicked, false otherwise
                 var shiftKeyDown = false;
+                var skipDivaJump = false;
 
                 var initDragTop, initDragLeft;
 
@@ -220,7 +221,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                         var curTitle = pageTitles[idx];
                         var divaIdx = getDivaIndexForPage(curTitle);
                         
-                        if (divaIdx !== false)
+                        if (divaIdx > -1)
                         {
                             zoneDict[divaIdx] = [];
                             var linesArr = meiEditor.getPageData(curTitle).parsed.getElementsByTagName('zone');
@@ -1222,8 +1223,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                 };
 
                 /*
-                    Gets the diva page index for a specific page title by stripping extensions.
-                    MAKE SURE to === compare to false the result of this - 0 is a valid page index!
+                    Gets the diva page index for a specific page title by stripping extensions, -1 if non-existant
                 */
                 var getDivaIndexForPage = function(pageTitle)
                 {
@@ -1237,7 +1237,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                             return divaIndex;
                         }
                     }
-                    return false;
+                    return -1;
                 };
 
                 var pageTitleForDivaFilename = function(filename)
@@ -1258,15 +1258,34 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     return false;
                 };
 
+                meiEditor.addFileWithoutJumping = function(data, filename)
+                {
+                    skipDivaJump = true;
+                    meiEditor.addFileToProject(data, filename);
+                };
+
+                diva.Events.subscribe("VisiblePageDidChange", function(pageNumber, fileName)
+                {
+                    //only if it's linked
+                    var activeFileName = pageTitleForDivaFilename(fileName);
+                    if (activeFileName)
+                    {
+                        meiEditor.switchToPage(activeFileName);
+                    }
+                });
+
                 //Various editor listeners for filename changes
                 meiEditor.events.subscribe("NewFile", function(a, fileName)
                 {
                     //if the page is in Diva...
                     var divaIdx = getDivaIndexForPage(fileName);
-                    if (divaIdx === false) return;
+                    console.log(fileName, divaIdx);
+                    if (divaIdx < 0) return;
+                    console.log("so continuing?");
 
                     //scroll to it
-                    meiEditorSettings.divaInstance.gotoPageByIndex(divaIdx);
+                    if (skipDivaJump) skipDivaJump = false;
+                    else meiEditorSettings.divaInstance.gotoPageByIndex(divaIdx);
                     meiEditor.getPageData(fileName).selection.on('changeCursor', cursorUpdate);
                     meiEditor.events.publish('UpdateZones');
                 });
@@ -1275,7 +1294,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                 {
                     //if the page is in Diva...
                     var divaIdx = getDivaIndexForPage(fileName);
-                    if (divaIdx === false) return;
+                    if (divaIdx < 0) return;
 
                     //scroll to it
                     meiEditorSettings.divaInstance.gotoPageByIndex(divaIdx);
@@ -1294,7 +1313,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                 {
                     //if the page is in Diva...
                     var divaIdx = getDivaIndexForPage(newName);
-                    if (divaIdx === false) return;
+                    if (divaIdx < 0) return;
                     if (newName !== meiEditor.getActivePageTitle()) return;
 
                     //scroll to it
