@@ -1264,24 +1264,12 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     meiEditor.addFileToProject(data, filename);
                 };
 
-                diva.Events.subscribe("VisiblePageDidChange", function(pageNumber, fileName)
-                {
-                    //only if it's linked
-                    var activeFileName = pageTitleForDivaFilename(fileName);
-                    if (activeFileName)
-                    {
-                        meiEditor.switchToPage(activeFileName);
-                    }
-                });
-
                 //Various editor listeners for filename changes
                 meiEditor.events.subscribe("NewFile", function(a, fileName)
                 {
                     //if the page is in Diva...
                     var divaIdx = getDivaIndexForPage(fileName);
-                    console.log(fileName, divaIdx);
                     if (divaIdx < 0) return;
-                    console.log("so continuing?");
 
                     //scroll to it
                     if (skipDivaJump) skipDivaJump = false;
@@ -1297,7 +1285,8 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     if (divaIdx < 0) return;
 
                     //scroll to it
-                    meiEditorSettings.divaInstance.gotoPageByIndex(divaIdx);
+                    if (skipDivaJump) skipDivaJump = false;
+                    else meiEditorSettings.divaInstance.gotoPageByIndex(divaIdx);
                     meiEditor.getPageData(fileName).selection.on('changeCursor', cursorUpdate);
                     meiEditor.events.publish('UpdateZones');
                 });
@@ -1327,28 +1316,13 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                 diva.Events.subscribe("ZoomLevelDidChange", updateCaches);
                 diva.Events.subscribe("VisiblePageDidChange", function(pageNumber, fileName)
                 {
-                    var splitImage = fileName.split(".")[0];
-                    var pageTitles = meiEditor.getPageTitles();
-                    var idx = pageTitles.length;
-                    var splitPage;
-
-                    while(idx--)
+                    //only if it's linked
+                    var activeFileName = pageTitleForDivaFilename(fileName);
+                    if (activeFileName)
                     {
-                        pageTitle = pageTitles[idx];
-                        splitPage = pageTitle.split(".")[0];
-                        if(splitImage == splitPage)
-                        {
-                            for(var curIdx in meiEditorSettings.tabTitlesByIndex)
-                            {
-                                if (pageTitle == meiEditorSettings.tabTitlesByIndex[curIdx])
-                                {
-                                    $("#openPages").tabs("option", "active", curIdx);
-                                    return true;
-                                }
-                            }
-                        }
+                        skipDivaJump = true;
+                        meiEditor.switchToPage(activeFileName);
                     }
-                    return false;
                 });
                 
                 var pageTitles = meiEditor.getPageTitles();
