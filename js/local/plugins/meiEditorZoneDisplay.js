@@ -80,7 +80,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     meiEditor.localLog(outString);
                 });
 
-                createModal(meiEditorSettings.element, "zoneHelpModal", false,
+                /*createModal(meiEditorSettings.element, "zoneHelpModal", false,
                     "<h4>Help for 'Zone Display' menu:</h4>" +
                     "<li>To get highlights from a file to show up in the Diva pane, click 'Link files to Diva images...' from the dropdown menu and select the files you want to link.</li>" +
                     "<br><li>'Auto-link files by filename' will automatically strip file extensions and try to match files so that '001.mei' and '001.tiff' become linked.</li>" +
@@ -99,7 +99,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     "<li style='margin-left:0.25in'>Click and drag on the centre of the highlight or with the shift key down to move it.</li>" +
                     "<li style='margin-left:0.25in'>Pressing an arrow key will move a box slightly in the direction of the arrow.</li>" +
                     "<li style='margin-left:0.25in'>Press the 'Escape' key to leave resize/move mode.</li>" +
-                    "<br><li>Press the 'delete' key on your keyboard to delete all selected highlights and the MEI lines associated with them.</li>");
+                    "<br><li>Press the 'delete' key on your keyboard to delete all selected highlights and the MEI lines associated with them.</li>");*/
 
                 createModal(meiEditorSettings.element, "zoneHelpModal", false,
                     "<h4>Help for 'Zone Display' menu:</h4>" +
@@ -1132,6 +1132,10 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                         rewriteAce(pageRef);
                         meiEditor.localLog("Deleted highlights."); 
                     }
+                    else if((e.keyCode == 32))
+                    {
+                        console.log("Space?");
+                    }
                 });   
 
                 /*
@@ -1273,12 +1277,14 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     meiEditor.getPageData(pageTitles[idx]).selection.on('changeCursor', cursorUpdate);
                 }
 
+                //keep track of the last thing clicked on to avoid keypress on highlights being registered by Ace
                 $(document).on('click', function(e)
                 {
                     if ($(e.target).closest('#mei-editor').length > 0) {
                         editorLastFocus = true;
                     }
-                    else if ($(e.target).closest('#diva-wrapper').length > 0) {
+                    //if this is diva-wrapper, the toolbar won't register key inputs
+                    else if ($(e.target).closest('.diva-outer').length > 0) {
                         editorLastFocus = false;
                         document.activeElement.blur();
                     }

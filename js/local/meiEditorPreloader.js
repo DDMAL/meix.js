@@ -71,8 +71,13 @@ var MeiEditor = function(element, settingsIn, pluginsIn){
             //once completed is the same length as plugins
             if(completed.length == plugins.length){
                 //initialize the editor
-                $(element).AceMeiEditor(settings);
+                this.loadEditor();
             }
+        };
+
+        this.loadEditor = function()
+        {
+            $(element).AceMeiEditor(settings);
         };
     };
 
@@ -106,40 +111,44 @@ var MeiEditor = function(element, settingsIn, pluginsIn){
     });
 
     //initialize the dependency chain
-    require(['meiEditor'], function()
+    require([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 'js/local/utils.js'], function()
     { 
-        //if the user forces the order
-        if(settings.forceLoadOrder)
-        {
-            function recursePlugins(current)
-            {
-                //require the current number, when it's finished require the next number
-                require([plugins[current]], function()
-                    {
-                        if(current < plugins.length)
-                        {
-                            recursePlugins(current + 1);
-                        }
-                        //until we're at the last one
-                        else
-                        {
-                            return;
-                        }
-                    });
-            }
-            //initialize it
-            recursePlugins(0);
-        }
-        else
-        {
-            //once meiEditor.js exists, initialize each plugin by navigating through the plugins array.
-            var pluginLength = plugins.length;
+        require(['meiEditor'], function(){
+            if(plugins.length === 0) window.pluginLoader.loadEditor();
 
-            while (pluginLength--)
+            //if the user forces the order
+            else if(settings.forceLoadOrder)
             {
-                require([plugins[pluginLength]]);
+                function recursePlugins(current)
+                {
+                    //require the current number, when it's finished require the next number
+                    require([plugins[current]], function()
+                        {
+                            if(current < plugins.length)
+                            {
+                                recursePlugins(current + 1);
+                            }
+                            //until we're at the last one
+                            else
+                            {
+                                return;
+                            }
+                        });
+                }
+                //initialize it
+                recursePlugins(0);
             }
+            else
+            {
+                //once meiEditor.js exists, initialize each plugin by navigating through the plugins array.
+                var pluginLength = plugins.length;
 
-        }
+                while (pluginLength--)
+                {
+                    require([plugins[pluginLength]]);
+                }
+
+            }
+        });
     });
 };

@@ -21,8 +21,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 'js/local/utils.js'], function(){
-(function ($)
+define([], function ($)
 {
     var AceMeiEditor = function(element, options){
         var self = this;
@@ -191,6 +190,7 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
 
         this.reparseAce = function(pageTitle)
         {
+            console.log(pageTitle);
             var xmlString = pageData[pageTitle].session.doc.getAllLines().join("\n");
             pageData[pageTitle].parsed = meiParser.parseFromString(xmlString, 'text/xml');
         };
@@ -347,7 +347,7 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
             editor.highlightedLines = {};
 
             //Hankinson wants his keyboard shortcuts, so we'll give them to him...
-            editor.commands.removeCommand('gotoline');
+            /*editor.commands.removeCommand('gotoline');
             editor.commands.addCommand({
                 name: "gotoline",
                 bindKey: {win: "Ctrl-G", mac: "Ctrl-G"},
@@ -358,7 +358,7 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
                     }
                 },
                 readOnly: true
-            });
+            });*/
 
             self.reparseAce(fileName);
 
@@ -1009,5 +1009,4 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
         });
     };
 
-})(jQuery);
-});
+}(jQuery));
