@@ -180,6 +180,15 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
             return Object.keys(pageData);
         };
 
+        updateTabTitles = function()
+        {
+            var tabArr = $("#pagesList > li > a");
+            for (var curTabIndex = 0; curTabIndex < tabArr.length; curTabIndex++)
+            {
+                settings.tabTitlesByIndex[curTabIndex] = $(tabArr[curTabIndex]).text();
+            }
+        };
+
         this.reparseAce = function(pageTitle)
         {
             var xmlString = pageData[pageTitle].session.doc.getAllLines().join("\n");
@@ -457,7 +466,7 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
 
                 //reloads the tab list with this one deleted to make sure tab indices are correct
                 $("#openPages").tabs("refresh");
-
+                updateTabTitles();
             };
 
             if(override)
@@ -559,6 +568,8 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
 
                     self.reparseAce(newName);
                     if(originalName === settings.activePageTitle) settings.activePageTitle = newName;
+
+                    updateTabTitles();
 
                     self.localLog("Renamed " + originalName + " to " + newName + ".");
                     self.events.publish('PageWasRenamed', [originalName, newName]);
@@ -910,11 +921,7 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
                     settings.activePageTitle = activePage;
                     settings.activeTabIndex = ui.newTab.index();
 
-                    var tabArr = $("#pagesList > li > a");
-                    for (var curTabIndex = 0; curTabIndex < tabArr.length; curTabIndex++)
-                    {
-                        settings.tabTitlesByIndex[curTabIndex] = $(tabArr[curTabIndex]).text();
-                    }
+                    updateTabTitles();
                     
                     //resize components to make sure the newly activated tab is the right size
                     pageData[activePage].resize();

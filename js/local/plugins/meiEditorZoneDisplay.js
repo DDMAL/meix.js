@@ -26,8 +26,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     selectedCache: {},         //where selectedCache[divaItem] = [UUID, UUID...]
                     resizableCache: {},        
                     selectedClass: "editorSelected", //class to identify selected highlights. NOT a selector.
-                    resizableClass: "editorResizable", //class to identify resizable highlights. NOT a selector.
-                    divaPages: []
+                    resizableClass: "editorResizable" //class to identify resizable highlights. NOT a selector.
                 };
 
                 $.extend(meiEditorSettings, globals);
@@ -51,18 +50,12 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                 var editorLastFocus = true; //true if something on the editor side was the last thing clicked, false otherwise
                 var shiftKeyDown = false;
                 var skipDivaJump = false;
+                var divaFilenames = meiEditorSettings.divaInstance.getFilenames();
 
                 var initDragTop, initDragLeft;
 
 
                 meiEditor.addToNavbar("Zone Display", "zone-display");
-                /*$("#dropdown-zone-display").append("<li><a id='file-link-dropdown'>Link files to Diva images...</a></li>" +
-                    "<li><a id='file-unlink-dropdown'>Unlink files from Diva images...</a></li>" +
-                    "<li><a id='update-diva-dropdown'>Update Diva</a></li>" +
-                    "<li><a id='clear-selection-dropdown'>Clear selection</a></li>");
-                $("#dropdown-file-upload").append("<li><a id='default-mei-dropdown'>Create default MEI file</a></li>" +
-                    "<li><a id='server-load-dropdown'>Load file from server...</a></li>" +
-                    "<li><a id='manuscript-dropdown'>Close project</a></li>");*/
                 
                 //the div that pops up when highlights are hovered over
                 meiEditorSettings.element.append('<span id="hover-div"></span>'); 
@@ -72,72 +65,18 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     $("#zoneHelpModal").modal();
                 });
 
-                $("#dropdown-zone-display").append("<li><a>One-to-one: <input type='checkbox' style='float:right' id='one-to-one-checkbox'></a></li>");
+                $("#dropdown-zone-display").append("<li><a id='get-diva-filenames'>Get Diva filenames</a></li>"+
+                    "<li><a>One-to-one: <input type='checkbox' style='float:right' id='one-to-one-checkbox'></a></li>");
 
-                /*$("#file-link-dropdown").on('click', function()
+                $("#get-diva-filenames").on('click', function(e)
                 {
-                    $('#fileLinkModal').modal();
+                    var outString = "Diva filenames:";
+                    for (var idx = 0; idx < divaFilenames.length; idx++)
+                    {
+                        outString += "<br>&nbsp;&nbsp;&nbsp;&nbsp;" + divaFilenames[idx];
+                    }
+                    meiEditor.localLog(outString);
                 });
-
-                $("#file-unlink-dropdown").on('click', function()
-                {
-                    $('#fileUnlinkModal').modal();
-                });
-
-                $("#update-diva-dropdown").on('click', function()
-                {
-                    meiEditor.createHighlights();
-                });
-
-                $("#clear-selection-dropdown").on('click', function()
-                {
-                    meiEditor.deselectAllHighlights();
-                    meiEditor.deselectResizable(resizableSelector);
-                });
-
-                $("#estimateBox").on('click', function(e){
-                    e.stopPropagation();
-                });
-
-                $("#server-load-dropdown").on('click', function(e){
-                    $("#serverLoadModal").modal();
-                });
-
-                $("#zone-display-help").on('click', function()
-                {
-                    $("#zoneHelpModal").modal();
-                });
-
-                $("#manuscript-dropdown").on('click', function()
-                {
-                    window.location = document.URL.split("?")[0];
-                });
-
-                $("#default-mei-dropdown").on('click', function()
-                {
-                    meiEditor.addDefaultPage(createDefaultMEIString());
-                });*/
-
-                /*createModal(meiEditorSettings.element, "fileLinkModal", false,
-                    "<span class='modalSubLeft'>" +
-                    "Select an MEI file:<br>" +
-                    createSelect("file-link", meiEditor.getPageTitles()) +
-                    "</span>" +
-                    "<span class='modalSubRight'>" +
-                    "Select a Diva image:<br>" +
-                    createSelect("diva-link", meiEditorSettings.divaPageList, true) +
-                    "</span>" +
-                    "<div class='clear'></div>" +
-                    "<div class='centeredAccept'>" +
-                    "<button id='link-files'>Link selected files</button>" +
-                    "</div>");
-
-                createModal(meiEditorSettings.element, "fileUnlinkModal", false,
-                    "<div id='unlink-wrapper'>" +
-                    "Unlink an MEI file from a Diva file:<br>" +
-                    "<select id='selectUnlink'></select><br>" +
-                    "<button id='unlink-files'>Unlink selected files</button>" +
-                    "</div>");
 
                 createModal(meiEditorSettings.element, "zoneHelpModal", false,
                     "<h4>Help for 'Zone Display' menu:</h4>" +
@@ -159,7 +98,6 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     "<li style='margin-left:0.25in'>Pressing an arrow key will move a box slightly in the direction of the arrow.</li>" +
                     "<li style='margin-left:0.25in'>Press the 'Escape' key to leave resize/move mode.</li>" +
                     "<br><li>Press the 'delete' key on your keyboard to delete all selected highlights and the MEI lines associated with them.</li>");
-                */
 
                 createModal(meiEditorSettings.element, "zoneHelpModal", false,
                     "<h4>Help for 'Zone Display' menu:</h4>" +
@@ -547,7 +485,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
 
                         //index of the page clicked on
                         var clickedIdx = $(e.target).parent().attr('data-index');
-                        var clickedTitle = pageTitleForDivaFilename(meiEditorSettings.divaPages[clickedIdx]);
+                        var clickedTitle = pageTitleForDivaFilename(divaFilenames[clickedIdx]);
 
                         //if the clicked page is not linked, return and do nothing
                         if (clickedTitle === false)
@@ -558,7 +496,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
 
                         //diva index of the page currently clicked on
                         var currentTitle = meiEditorSettings.activePageTitle;
-                        var currentIdx = meiEditorSettings.divaPages.indexOf(currentTitle.split(".")[0]);
+                        var currentIdx = divaFilenames.indexOf(currentTitle.split(".")[0]);
 
                         //if the two indices are not the same
                         if (clickedIdx != currentIdx)
@@ -801,8 +739,8 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     
                     //if the clicked page is not linked, warn and do nothing
                     var clickedIdx = meiEditorSettings.divaInstance.getPageIndexForPageXYValues(initDragLeft, initDragTop);
-                    if(meiEditorSettings.divaPages[clickedIdx] === undefined) return false;
-                    var clickedTitle = pageTitleForDivaFilename(meiEditorSettings.divaPages[clickedIdx]);
+                    if (divaFilenames[clickedIdx] === undefined) return false; //this line should not be necessary?
+                    var clickedTitle = pageTitleForDivaFilename(divaFilenames[clickedIdx]);
                     if (clickedTitle === false)
                     {
                         meiEditor.localError("Current Diva image is not linked.");
@@ -861,7 +799,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     meiEditor.localLog("Got a new neume at " + ulx + " " + uly + " " + lrx + " " + lry);
                     if (meiEditorSettings.oneToOneMEI)
                     {
-                        var divaFilename = meiEditorSettings.divaPages[divaIndex];
+                        var divaFilename = divaFilenames[divaIndex];
                         var pageTitle = pageTitleForDivaFilename(divaFilename);
 
                         var pageRef = meiEditor.getPageData(pageTitle);
@@ -1228,15 +1166,14 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                 var getDivaIndexForPage = function(pageTitle)
                 {
                     var splitName = pageTitle.split(".")[0];
-                    var divaIndex = meiEditorSettings.divaPages.length;
-                    while(divaIndex--)
+                    var splitDiva;
+
+                    for(var idx = 0; idx < divaFilenames.length; idx++)
                     {
-                        splitImage = meiEditorSettings.divaPages[divaIndex];
-                        if (splitName == splitImage)
-                        {
-                            return divaIndex;
-                        }
+                        splitDiva = divaFilenames[idx].split(".")[0];
+                        if (splitName == splitDiva) return idx;
                     }
+
                     return -1;
                 };
 
@@ -1332,12 +1269,6 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                 while(idx--)
                 {
                     meiEditor.getPageData(pageTitles[idx]).selection.on('changeCursor', cursorUpdate);
-                }
-
-                for(var curIdx in meiEditorSettings.divaInstance.getSettings().pages)
-                {
-                    //add all diva image filenames (without extension)
-                    meiEditorSettings.divaPages.push(meiEditorSettings.divaInstance.getSettings().pages[curIdx].f.split(".")[0]);
                 }
 
                 $(document).on('click', function(e)
