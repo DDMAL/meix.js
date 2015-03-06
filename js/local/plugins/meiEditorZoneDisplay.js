@@ -65,15 +65,17 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     $("#zoneHelpModal").modal();
                 });
 
-                $("#dropdown-zone-display").append("<li><a id='get-diva-filenames'>Get Diva filenames</a></li>"+
+                $("#dropdown-zone-display").append("<li><a id='get-diva-filenames'>Get current Diva filenames</a></li>"+
                     "<li><a>One-to-one: <input type='checkbox' style='float:right' id='one-to-one-checkbox'></a></li>");
 
                 $("#get-diva-filenames").on('click', function(e)
                 {
-                    var outString = "Diva filenames:";
-                    for (var idx = 0; idx < divaFilenames.length; idx++)
+                    var outString = "Currently visible Diva pages:";
+                    var arr = $(".diva-document-page");
+                    for (var idx = 0; idx < arr.length; idx++)
                     {
-                        outString += "<br>&nbsp;&nbsp;&nbsp;&nbsp;" + divaFilenames[idx];
+                        var curFilename = divaFilenames[arr[idx].getAttribute('data-index')];
+                        outString += "<br>&nbsp;&nbsp;&nbsp;&nbsp;" + curFilename;
                     }
                     meiEditor.localLog(outString);
                 });
