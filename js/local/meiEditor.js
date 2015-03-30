@@ -190,7 +190,6 @@ define([], function ($)
 
         this.reparseAce = function(pageTitle)
         {
-            console.log(pageTitle);
             var xmlString = pageData[pageTitle].session.doc.getAllLines().join("\n");
             pageData[pageTitle].parsed = meiParser.parseFromString(xmlString, 'text/xml');
         };
@@ -660,7 +659,7 @@ define([], function ($)
             var timeStr = curHours + ":" +
                 (curMinutes > 9 ? curMinutes : "0" + curMinutes) + ":" +
                 (curSeconds > 9 ? curSeconds : "0" + curSeconds);
-            $("#consoleText").append("<br><span id='console" + curDate.getTime() + "' style='font-weight:bold'>" + timeStr + "> " + text + "</div>");
+            $("#consoleText").append("<br/><span id='console" + curDate.getTime() + "' style='font-weight:bold'>" + timeStr + "> " + text + "</span>");
 
             //highlight the div quickly then switch back
             $("#editorConsole").switchClass("regularBorder", newClass,
@@ -804,7 +803,7 @@ define([], function ($)
                     '<div class="container-fluid" id="topbarContainer">' +
                         '<ul class="nav navbar-header pull-left">' +
                             '<li class="dropdown" id="brandLI">' +
-                                '<div id="site-logo" class="dropdown-toggle navbar-brand" data-toggle="dropdown" style="cursor:pointer">' + settings.pageTitle + '&nbsp;&nbsp;<b class="caret"></b></div>' +
+                                '<div id="site-logo" class="dropdown-toggle navbar-brand" data-toggle="dropdown" style="cursor:pointer">' + settings.pageTitle + '<b class="caret"></b></div>' +
                                 '<ul class="dropdown-menu" id="compact-dropdown" style="top:50px">' +
                                 '</ul>' +
                             '</li>' +

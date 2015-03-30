@@ -145,7 +145,7 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/FileSaver.js'], functio
                             "<button>Select a file...</button>" +
                             "<span id='fileName" + initialLength + "'>No file chosen.</span>" +
                         "</div>" +
-                        "<input type='file' class='fileInput' id='fileInput" + initialLength + "'>");
+                        "<input type='file' class='fileInput' id='fileInput" + initialLength + "'/>");
                     $("#fakeWrapper" + initialLength).offset({'top': $("#fileInput" + initialLength).offset().top});
 
                     //make this happen again when the new one changes
