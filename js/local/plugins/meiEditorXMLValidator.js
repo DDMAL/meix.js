@@ -237,8 +237,8 @@ require(['meiEditor', window.meiEditorLocation + 'js/local/meilint.js'], functio
                 var validatorSelectString = createSelect("Validators", meiEditorSettings.validators);
                 var validatorListString = createList("Validators", meiEditorSettings.validators);
 
-                createModal(meiEditorSettings.element, 'fileValidateModal', true, "Select a file: " + fileSelectString + "<br>Select a validator: " + validatorSelectString, "Validate file");
-                createModal(meiEditorSettings.element, 'validatorLoadModal', true, "Validators currently uploaded: " + validatorListString + "<br>Upload a new validator: <br><input type='file' id='validatorInput'>", "Load validator");
+                createModal(meiEditorSettings.element, 'fileValidateModal', true, "Select a file: " + fileSelectString + "<br/>Select a validator: " + validatorSelectString, "Validate file");
+                createModal(meiEditorSettings.element, 'validatorLoadModal', true, "Validators currently uploaded: " + validatorListString + "<br/>Upload a new validator: <br/><input type='file' id='validatorInput'/>", "Load validator");
 
                 $("#fileValidateModal-primary").on('click', function()
                     {

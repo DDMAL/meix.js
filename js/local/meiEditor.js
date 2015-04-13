@@ -21,8 +21,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 'js/local/utils.js'], function(){
-(function ($)
+define([], function ($)
 {
     var AceMeiEditor = function(element, options){
         var self = this;
@@ -178,6 +177,15 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
         this.getPageTitles = function()
         {
             return Object.keys(pageData);
+        };
+
+        updateTabTitles = function()
+        {
+            var tabArr = $("#pagesList > li > a");
+            for (var curTabIndex = 0; curTabIndex < tabArr.length; curTabIndex++)
+            {
+                settings.tabTitlesByIndex[curTabIndex] = $(tabArr[curTabIndex]).text();
+            }
         };
 
         this.reparseAce = function(pageTitle)
@@ -338,7 +346,7 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
             editor.highlightedLines = {};
 
             //Hankinson wants his keyboard shortcuts, so we'll give them to him...
-            editor.commands.removeCommand('gotoline');
+            /*editor.commands.removeCommand('gotoline');
             editor.commands.addCommand({
                 name: "gotoline",
                 bindKey: {win: "Ctrl-G", mac: "Ctrl-G"},
@@ -349,7 +357,7 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
                     }
                 },
                 readOnly: true
-            });
+            });*/
 
             self.reparseAce(fileName);
 
@@ -457,7 +465,7 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
 
                 //reloads the tab list with this one deleted to make sure tab indices are correct
                 $("#openPages").tabs("refresh");
-
+                updateTabTitles();
             };
 
             if(override)
@@ -560,6 +568,8 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
                     self.reparseAce(newName);
                     if(originalName === settings.activePageTitle) settings.activePageTitle = newName;
 
+                    updateTabTitles();
+
                     self.localLog("Renamed " + originalName + " to " + newName + ".");
                     self.events.publish('PageWasRenamed', [originalName, newName]);
                 }
@@ -649,7 +659,7 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
             var timeStr = curHours + ":" +
                 (curMinutes > 9 ? curMinutes : "0" + curMinutes) + ":" +
                 (curSeconds > 9 ? curSeconds : "0" + curSeconds);
-            $("#consoleText").append("<br><span id='console" + curDate.getTime() + "' style='font-weight:bold'>" + timeStr + "> " + text + "</div>");
+            $("#consoleText").append("<br/><span id='console" + curDate.getTime() + "' style='font-weight:bold'>" + timeStr + "> " + text + "</span>");
 
             //highlight the div quickly then switch back
             $("#editorConsole").switchClass("regularBorder", newClass,
@@ -793,7 +803,7 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
                     '<div class="container-fluid" id="topbarContainer">' +
                         '<ul class="nav navbar-header pull-left">' +
                             '<li class="dropdown" id="brandLI">' +
-                                '<div id="site-logo" class="dropdown-toggle navbar-brand" data-toggle="dropdown" style="cursor:pointer">' + settings.pageTitle + '&nbsp;&nbsp;<b class="caret"></b></div>' +
+                                '<div id="site-logo" class="dropdown-toggle navbar-brand" data-toggle="dropdown" style="cursor:pointer">' + settings.pageTitle + '<b class="caret"></b></div>' +
                                 '<ul class="dropdown-menu" id="compact-dropdown" style="top:50px">' +
                                 '</ul>' +
                             '</li>' +
@@ -910,11 +920,7 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
                     settings.activePageTitle = activePage;
                     settings.activeTabIndex = ui.newTab.index();
 
-                    var tabArr = $("#pagesList > li > a");
-                    for (var curTabIndex = 0; curTabIndex < tabArr.length; curTabIndex++)
-                    {
-                        settings.tabTitlesByIndex[curTabIndex] = $(tabArr[curTabIndex]).text();
-                    }
+                    updateTabTitles();
                     
                     //resize components to make sure the newly activated tab is the right size
                     pageData[activePage].resize();
@@ -1002,5 +1008,4 @@ define([window.meiEditorLocation + 'ace/src/ace.js', window.meiEditorLocation + 
         });
     };
 
-})(jQuery);
-});
+}(jQuery));

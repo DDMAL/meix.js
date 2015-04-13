@@ -5,7 +5,7 @@ $.fn.toEm = function(settings)
     }, settings);
 
     var that = parseInt(this[0], 10),
-        scopeTest = jQuery('<div style="display: none; font-size: 1em; margin: 0; padding:0; height: auto; line-height: 1; border:0;">&nbsp;</div>').appendTo(settings.scope),
+        scopeTest = jQuery('<div style="display: none; font-size: 1em; margin: 0; padding:0; height: auto; line-height: 1; border:0;"></div>').appendTo(settings.scope),
         scopeVal = scopeTest.height();
 
     scopeTest.remove();
@@ -21,7 +21,7 @@ $.fn.toPx = function(settings)
     }, settings);
 
     var that = parseFloat(this[0]),
-        scopeTest = jQuery('<div style="display: none; font-size: 1em; margin: 0; padding:0; height: auto; line-height: 1; border:0;">&nbsp;</div>').appendTo(settings.scope),
+        scopeTest = jQuery('<div style="display: none; font-size: 1em; margin: 0; padding:0; height: auto; line-height: 1; border:0;"></div>').appendTo(settings.scope),
         scopeVal = scopeTest.height();
 
     scopeTest.remove();
@@ -91,7 +91,8 @@ createModal = function(toAppendTo, modalID, small, modalBody, primaryTitle)
 {
     var modalSize = small ? "modal-sm" : "modal-md";
     var primaryTitleString = primaryTitle ? '<button type="button" class="btn btn-primary" id="' + modalID + '-primary">' + primaryTitle + '</button>' : "";
-    $(toAppendTo).append("<div id='" + modalID + "' class='modal fade' tabindex='-1'>" +
+    
+    appendString = "<div id='" + modalID + "' class='modal fade' tabindex='-1'>" +
         '<div class="modal-dialog ' + modalSize + '">' +
             '<div class="modal-content">' +
                 '<div class="modal-body">' +
@@ -102,7 +103,10 @@ createModal = function(toAppendTo, modalID, small, modalBody, primaryTitle)
                      primaryTitleString +
                 '</div>' +
             '</div>' +
-        '</div>');
+        '</div>' +
+    '</div>';
+
+    $(toAppendTo).append(appendString);
 };
 
 function Timeout(fn, interval) {
