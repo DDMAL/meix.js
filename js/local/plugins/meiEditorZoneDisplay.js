@@ -1190,6 +1190,48 @@ require(['meiEditor'], function(){
                     }
                 };
 
+                /**
+                * Various public functions
+                */
+
+                meiEditor.addFileWithoutJumping = function(data, filename)
+                {
+                    skipDivaJump = true;
+                    meiEditor.addFileToProject(data, filename);
+                };
+
+                //returns true if added
+                meiEditor.addMEIIgnore = function(ignore)
+                {
+                    if(meiEditorSettings.meiToIgnore.indexOf(ignore) == -1)
+                    {
+                        meiEditorSettings.meiToIgnore.push(ignore);
+                        meiEditor.reloadZones();
+                        return true;
+                    }
+
+                    return false;
+                };
+
+                //returns true if removed
+                meiEditor.removeMEIIgnore = function(ignore)
+                {
+                    idx = meiEditorSettings.meiToIgnore.indexOf(ignore);
+                    if(idx > -1)
+                    {
+                        meiEditorSettings.meiToIgnore.splice(idx, 1);
+                        meiEditor.reloadZones();
+                        return true;
+                    }
+
+                    return false;
+                };
+
+
+                /**
+                * Local utils functions
+                */
+
                 /*
                     Gets the diva page index for a specific page title by stripping extensions, -1 if non-existant
                 */
@@ -1225,13 +1267,10 @@ require(['meiEditor'], function(){
                     return false;
                 };
 
-                meiEditor.addFileWithoutJumping = function(data, filename)
-                {
-                    skipDivaJump = true;
-                    meiEditor.addFileToProject(data, filename);
-                };
+                /**
+                * Non-jQuery event listeners
+                */
 
-                //Various editor listeners for filename changes
                 meiEditor.events.subscribe("NewFile", function(a, fileName)
                 {
                     //if the page is in Diva...
