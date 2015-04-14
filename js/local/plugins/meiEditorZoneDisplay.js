@@ -20,6 +20,7 @@ require(['meiEditor'], function(){
 
                 var defaults = 
                 {
+                    meiToIgnore: [], //an array of MEI tags to ignore the zones for
                     disableShiftNew: false //if true, pressing the shift key down does not automatically start creating a new highlight
                 };
 
@@ -171,8 +172,9 @@ require(['meiEditor'], function(){
                         
                         if (divaIdx > -1)
                         {
+                            var parsed = meiEditor.getPageData(curTitle).parsed;
                             zoneDict[divaIdx] = [];
-                            var linesArr = meiEditor.getPageData(curTitle).parsed.getElementsByTagName('zone');
+                            var linesArr = parsed.getElementsByTagName('zone');
                             var lineIdx = linesArr.length;
                             while(lineIdx--)
                             {
@@ -182,6 +184,10 @@ require(['meiEditor'], function(){
                                 var lrx = line.getAttribute('lrx');
                                 var lry = line.getAttribute('lry');
                                 var xmlID = line.getAttribute('xml:id');
+
+                                var object = parsed.querySelectorAll('[*|facs="' + xmlID + '"]')[0];
+
+                                if(object && meiEditorSettings.meiToIgnore.indexOf(object.tagName) != -1) continue;
 
                                 //assemble that dict in Diva highlight format
                                 var highlightInfo = {'width': lrx - ulx, 'height': lry - uly, 'ulx': ulx, 'uly': uly, 'divID': xmlID};
