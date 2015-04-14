@@ -162,38 +162,35 @@ require(['meiEditor'], function(){
                     zoneDict = {}; //reset this
                     zoneIDs = []; //and this
                     var curPage;
-                    var pageTitles = meiEditor.getPageTitles();
-                    var idx = pageTitles.length;
+                    var pageTitles = meiEditor.getLinkedPageTitles();
+                    var divaIndexes = Object.keys(pageTitles);
+                    var idx = divaIndexes.length;
 
                     while(idx--)
                     {
-                        var curTitle = pageTitles[idx];
-                        var divaIdx = getDivaIndexForPage(curTitle);
-                        
-                        if (divaIdx > -1)
+                        var divaIdx = divaIndexes[idx];
+                        var curTitle = pageTitles[divaIdx];
+                        var parsed = meiEditor.getPageData(curTitle).parsed;
+                        zoneDict[divaIdx] = [];
+                        var linesArr = parsed.getElementsByTagName('zone');
+                        var lineIdx = linesArr.length;
+                        while(lineIdx--)
                         {
-                            var parsed = meiEditor.getPageData(curTitle).parsed;
-                            zoneDict[divaIdx] = [];
-                            var linesArr = parsed.getElementsByTagName('zone');
-                            var lineIdx = linesArr.length;
-                            while(lineIdx--)
-                            {
-                                var line = linesArr[lineIdx];
-                                var ulx = line.getAttribute('ulx');
-                                var uly = line.getAttribute('uly');
-                                var lrx = line.getAttribute('lrx');
-                                var lry = line.getAttribute('lry');
-                                var xmlID = line.getAttribute('xml:id');
+                            var line = linesArr[lineIdx];
+                            var ulx = line.getAttribute('ulx');
+                            var uly = line.getAttribute('uly');
+                            var lrx = line.getAttribute('lrx');
+                            var lry = line.getAttribute('lry');
+                            var xmlID = line.getAttribute('xml:id');
 
-                                var object = parsed.querySelectorAll('[*|facs="' + xmlID + '"]')[0];
+                            var object = parsed.querySelectorAll('[*|facs="' + xmlID + '"]')[0];
 
-                                if(object && meiEditorSettings.meiToIgnore.indexOf(object.tagName) != -1) continue;
+                            if(object && meiEditorSettings.meiToIgnore.indexOf(object.tagName) != -1) continue;
 
-                                //assemble that dict in Diva highlight format
-                                var highlightInfo = {'width': lrx - ulx, 'height': lry - uly, 'ulx': ulx, 'uly': uly, 'divID': xmlID};
-                                zoneDict[divaIdx].push(highlightInfo);
-                                zoneIDs.push(xmlID);
-                            }
+                            //assemble that dict in Diva highlight format
+                            var highlightInfo = {'width': lrx - ulx, 'height': lry - uly, 'ulx': ulx, 'uly': uly, 'divID': xmlID};
+                            zoneDict[divaIdx].push(highlightInfo);
+                            zoneIDs.push(xmlID);
                         }
                     }
 
@@ -1225,6 +1222,23 @@ require(['meiEditor'], function(){
                     }
 
                     return false;
+                };
+
+                //returns a dict of {diva index: linked page titles}
+                meiEditor.getLinkedPageTitles = function()
+                {
+                    var linkedPages = {};
+                    var pageTitles = meiEditor.getPageTitles();
+                    var idx = pageTitles.length;
+
+                    while(idx--)
+                    {                        
+                        var curTitle = pageTitles[idx];
+                        var divaIdx = getDivaIndexForPage(curTitle)
+                        if (divaIdx > -1) linkedPages[divaIdx] = curTitle;
+                    }
+
+                    return linkedPages;
                 };
 
 
