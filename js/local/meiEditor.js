@@ -210,7 +210,7 @@ define([], function ($)
             }
 
             $(element).offset({'top': '0'});
-            $(element).height($(window).height());
+            $(element).height($(window).height() - ($(element).outerHeight() - $(element).height()));
 
             var editorConsoleHeight = $("#editorConsole").outerHeight();
             var topbarHeight = (settings.expandedTopbar ? $("#expandedTopbar").outerHeight() : $("#compactTopbar").outerHeight());
@@ -344,6 +344,7 @@ define([], function ($)
             editor.setSession(new ace.EditSession(fileData));
             editor.getSession().setMode("ace/mode/xml");
             editor.highlightedLines = {};
+            editor.setShowPrintMargin(false);
 
             //Hankinson wants his keyboard shortcuts, so we'll give them to him...
             /*editor.commands.removeCommand('gotoline');
