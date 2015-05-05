@@ -1,4 +1,4 @@
-require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
+require(['meiEditor'], function(){
 (function ($)
 {
     window.meiEditorPlugins.push((function()
@@ -18,6 +18,14 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     return false;
                 }
 
+                var defaults = 
+                {
+                    meiToIgnore: [], //an array of MEI tags to ignore the zones for
+                    disableShiftNew: false //if true, pressing the shift key down does not automatically start creating a new highlight
+                };
+
+                meiEditorSettings = $.extend(defaults, meiEditorSettings);
+
                 var globals =
                 {
                     zoneDict: {},              //dict of zones to highlight represented as {'UUID'(surface): [['ulx': ulx, 'uly': uly, 'lrx': lrx, 'lry': lry, 'divID': uuid(zone)}, {'ulx'...}]}
@@ -26,7 +34,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     selectedCache: {},         //where selectedCache[divaItem] = [UUID, UUID...]
                     resizableCache: {},        
                     selectedClass: "editorSelected", //class to identify selected highlights. NOT a selector.
-                    resizableClass: "editorResizable" //class to identify resizable highlights. NOT a selector.
+                    resizableClass: "editorResizable", //class to identify resizable highlights. NOT a selector.
                 };
 
                 $.extend(meiEditorSettings, globals);
@@ -48,9 +56,10 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                 var dragID = "drag-div";
                 var dragSelector = "#" + dragID;
                 var editorLastFocus = true; //true if something on the editor side was the last thing clicked, false otherwise
-                var shiftKeyDown = false;
+                var newHighlightActive = false;
                 var skipDivaJump = false;
                 var divaFilenames = meiEditorSettings.divaInstance.getFilenames();
+                var divaObject = meiEditorSettings.divaInstance.getSettings().parentObject;
 
                 var initDragTop, initDragLeft;
 
@@ -153,33 +162,35 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     zoneDict = {}; //reset this
                     zoneIDs = []; //and this
                     var curPage;
-                    var pageTitles = meiEditor.getPageTitles();
-                    var idx = pageTitles.length;
+                    var pageTitles = meiEditor.getLinkedPageTitles();
+                    var divaIndexes = Object.keys(pageTitles);
+                    var idx = divaIndexes.length;
 
                     while(idx--)
                     {
-                        var curTitle = pageTitles[idx];
-                        var divaIdx = getDivaIndexForPage(curTitle);
-                        
-                        if (divaIdx > -1)
+                        var divaIdx = divaIndexes[idx];
+                        var curTitle = pageTitles[divaIdx];
+                        var parsed = meiEditor.getPageData(curTitle).parsed;
+                        zoneDict[divaIdx] = [];
+                        var linesArr = parsed.getElementsByTagName('zone');
+                        var lineIdx = linesArr.length;
+                        while(lineIdx--)
                         {
-                            zoneDict[divaIdx] = [];
-                            var linesArr = meiEditor.getPageData(curTitle).parsed.getElementsByTagName('zone');
-                            var lineIdx = linesArr.length;
-                            while(lineIdx--)
-                            {
-                                var line = linesArr[lineIdx];
-                                var ulx = line.getAttribute('ulx');
-                                var uly = line.getAttribute('uly');
-                                var lrx = line.getAttribute('lrx');
-                                var lry = line.getAttribute('lry');
-                                var xmlID = line.getAttribute('xml:id');
+                            var line = linesArr[lineIdx];
+                            var ulx = line.getAttribute('ulx');
+                            var uly = line.getAttribute('uly');
+                            var lrx = line.getAttribute('lrx');
+                            var lry = line.getAttribute('lry');
+                            var xmlID = line.getAttribute('xml:id');
 
-                                //assemble that dict in Diva highlight format
-                                var highlightInfo = {'width': lrx - ulx, 'height': lry - uly, 'ulx': ulx, 'uly': uly, 'divID': xmlID};
-                                zoneDict[divaIdx].push(highlightInfo);
-                                zoneIDs.push(xmlID);
-                            }
+                            var object = parsed.querySelectorAll('[*|facs="' + xmlID + '"]')[0];
+
+                            if(object && meiEditorSettings.meiToIgnore.indexOf(object.tagName) != -1) continue;
+
+                            //assemble that dict in Diva highlight format
+                            var highlightInfo = {'width': lrx - ulx, 'height': lry - uly, 'ulx': ulx, 'uly': uly, 'divID': xmlID};
+                            zoneDict[divaIdx].push(highlightInfo);
+                            zoneIDs.push(xmlID);
                         }
                     }
 
@@ -430,17 +441,17 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                 var createOverlay = function()
                 {
                     meiEditorSettings.divaInstance.disableScrollable();
-                    $("#diva-wrapper").append("<div id='" + overlayID + "'></div>");
-                    $(overlaySelector).offset({'top': $("#diva-wrapper").offset().top, 'left': $("#diva-wrapper").offset().left});
-                    $(overlaySelector).width($("#diva-wrapper").width());
-                    $(overlaySelector).height($("#diva-wrapper").height());    
+                    divaObject.append("<div id='" + overlayID + "'></div>");
+                    $(overlaySelector).offset({'top': divaObject.offset().top, 'left': divaObject.offset().left});
+                    $(overlaySelector).width(divaObject.width());
+                    $(overlaySelector).height(divaObject.height());    
                     $(overlaySelector).css('background-color', 'rgba(0, 0, 0, 0.5)');
                     $("#hover-div").css('display', 'none'); //hides the div
                     $("#hover-div").html("");
 
 
                     //this prevents a graphical glitch with Diva
-                    $("#diva-wrapper").on('resize', function(e){
+                    divaObject.on('resize', function(e){
                         e.stopPropagation();
                         e.preventDefault();
                     });
@@ -451,7 +462,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     //remove overlay and restore key bindings to Diva
                     $(overlaySelector).remove();
                     meiEditorSettings.divaInstance.enableScrollable();
-                    $("#diva-wrapper").unbind('resize');
+                    divaObject.unbind('resize');
                 };
                 
                 var highlightDoubleClickHandler = function(e)
@@ -759,7 +770,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     lrx = parseInt(lrx, 10);
                     lry = parseInt(lry, 10);
                     
-                    meiEditor.localLog("Got a new neume at " + ulx + " " + uly + " " + lrx + " " + lry);
+                    meiEditor.localLog("Got a new highlight at (" + ulx + ", " + uly + ") to (" + lrx + ", " + lry + ").");
                     if (meiEditorSettings.oneToOneMEI)
                     {
                         var divaFilename = divaFilenames[divaIndex];
@@ -996,18 +1007,28 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                         //publishes an event with four parameters: reference to pageData, id of prevZone, id of nextZone, id of newly added zone
                         meiEditor.events.publish('NewZone', [pageRef, (prevZone ? prevZone.getAttribute('xml:id') : undefined), (nextZone ? nextZone.getAttribute('xml:id') : undefined), newZoneUUID])
                     }
+
+                    newHighlightActive = false;
+                    if (!editorLastFocus) e.stopPropagation();
+                    $(overlaySelector).unbind('mousedown', prepNewHighlight);
+                    destroyOverlay();
+                };
+
+                meiEditor.startNewHighlight = function()
+                {
+                    newHighlightActive = true;
+                    createOverlay();
+                    $(overlaySelector).on('mousedown', prepNewHighlight);
                 };
 
                 /******** Various event listeners ********/
 
                 $(document).on('keydown', function(e)
                 {
-                    if (e.shiftKey && !shiftKeyDown)
+                    if (e.shiftKey && !newHighlightActive && !meiEditorSettings.disableShiftNew)
                     {
-                        shiftKeyDown = true;
                         e.stopPropagation();
-                        createOverlay();
-                        $(overlaySelector).on('mousedown', prepNewHighlight);
+                        meiEditor.startNewHighlight();
                     } 
                 });
 
@@ -1017,9 +1038,9 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     var selectedActive = ($(selectedSelector).length > 0);
 
                     //no matter what, if this was toggling the shift key and it wasn't down before, listen to remove the overlay
-                    if (!e.shiftKey && shiftKeyDown) 
+                    if (!e.shiftKey && newHighlightActive) 
                     {
-                        shiftKeyDown = false;
+                        newHighlightActive = false;
                         if (!editorLastFocus) e.stopPropagation();
                         $(overlaySelector).unbind('mousedown', prepNewHighlight);
                         destroyOverlay();
@@ -1127,6 +1148,65 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     }
                 };
 
+                /**
+                * Various public functions
+                */
+
+                meiEditor.addFileWithoutJumping = function(data, filename)
+                {
+                    skipDivaJump = true;
+                    meiEditor.addFileToProject(data, filename);
+                };
+
+                //returns true if added
+                meiEditor.addMEIIgnore = function(ignore)
+                {
+                    if(meiEditorSettings.meiToIgnore.indexOf(ignore) == -1)
+                    {
+                        meiEditorSettings.meiToIgnore.push(ignore);
+                        meiEditor.reloadZones();
+                        return true;
+                    }
+
+                    return false;
+                };
+
+                //returns true if removed
+                meiEditor.removeMEIIgnore = function(ignore)
+                {
+                    idx = meiEditorSettings.meiToIgnore.indexOf(ignore);
+                    if(idx > -1)
+                    {
+                        meiEditorSettings.meiToIgnore.splice(idx, 1);
+                        meiEditor.reloadZones();
+                        return true;
+                    }
+
+                    return false;
+                };
+
+                //returns a dict of {diva index: linked page titles}
+                meiEditor.getLinkedPageTitles = function()
+                {
+                    var linkedPages = {};
+                    var pageTitles = meiEditor.getPageTitles();
+                    var idx = pageTitles.length;
+
+                    while(idx--)
+                    {                        
+                        var curTitle = pageTitles[idx];
+                        var divaIdx = getDivaIndexForPage(curTitle)
+                        if (divaIdx > -1) linkedPages[divaIdx] = curTitle;
+                    }
+
+                    return linkedPages;
+                };
+
+
+                /**
+                * Local utils functions
+                */
+
                 /*
                     Gets the diva page index for a specific page title by stripping extensions, -1 if non-existant
                 */
@@ -1162,13 +1242,10 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     return false;
                 };
 
-                meiEditor.addFileWithoutJumping = function(data, filename)
-                {
-                    skipDivaJump = true;
-                    meiEditor.addFileToProject(data, filename);
-                };
+                /**
+                * Non-jQuery event listeners
+                */
 
-                //Various editor listeners for filename changes
                 meiEditor.events.subscribe("NewFile", function(a, fileName)
                 {
                     //if the page is in Diva...
@@ -1244,7 +1321,7 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     if ($(e.target).closest('#mei-editor').length > 0) {
                         editorLastFocus = true;
                     }
-                    //if this is diva-wrapper, the toolbar won't register key inputs
+                    //if this is divaObject, the toolbar won't register key inputs
                     else if ($(e.target).closest('.diva-outer').length > 0) {
                         editorLastFocus = false;
                         document.activeElement.blur();
