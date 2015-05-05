@@ -736,6 +736,51 @@ define([], function ($)
             return false;
         };
 
+        this.gotoLineWithID = function(id)
+        {
+            var searchNeedle = new RegExp(id, "g");
+
+            //searches for the facs ID that is also the ID of the highlighted panel
+            var pageTitle = meiEditor.getActivePageTitle();
+            
+            var initSelection = meiEditor.getPageData(pageTitle).selection.getCursor();
+            var initRow = initSelection.row;
+            var initCol = initSelection.column;
+
+            //this is needed to prevent a glitch where if the editor is not clicked first, find sometimes does not work
+            //I will permanently fix this later, but as of now this will suffice
+            if(initRow === 0 && initCol === 0)
+            {
+                meiEditor.getPageData(pageTitle).selection.selectTo(1, 1);
+            }
+
+            var pageRef = meiEditor.getPageData(pageTitle);
+            var facsSearch = pageRef.find(searchNeedle,
+            {
+                wrap: true,
+                range: null
+            });
+
+            var newRow = facsSearch.start.row;
+            var nextRow = newRow, lineText;
+
+            do {
+                //gets the full text from the search result row
+                lineText = pageRef.session.doc.getLine(nextRow);
+
+                //if it doesn't include "zone" it's what we want
+                if (!lineText.match(/zone/g))
+                {
+                    break;
+                }
+
+                //if we didn't break, find the next one
+                pageRef.findNext();
+                nextRow = pageRef.getSelectionRange().start.row;
+
+            } while (newRow != nextRow); 
+        };
+
 
         /*
             Switches to the jQueryUI tab that has a specific title.

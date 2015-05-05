@@ -512,55 +512,6 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     }, SINGLE_CLICK_TIMEOUT);
                 };
 
-                var gotoLineWithID = function(id)
-                {
-                    var searchNeedle = new RegExp(id, "g");
-
-                    //searches for the facs ID that is also the ID of the highlighted panel
-                    var pageTitle = meiEditor.getActivePageTitle();
-                    meiEditor.getPageData(pageTitle).selection.removeListener('changeCursor', cursorUpdate);
-                    
-                    var initSelection = meiEditor.getPageData(pageTitle).selection.getCursor();
-                    var initRow = initSelection.row;
-                    var initCol = initSelection.column;
-
-                    //this is needed to prevent a glitch where if the editor is not clicked first, find sometimes does not work
-                    //I will permanently fix this later, but as of now this will suffice
-                    if(initRow === 0 && initCol === 0)
-                    {
-                        meiEditor.getPageData(pageTitle).selection.selectTo(1, 1);
-                    }
-
-                    var pageRef = meiEditor.getPageData(pageTitle);
-                    var facsSearch = pageRef.find(searchNeedle,
-                    {
-                        wrap: true,
-                        range: null
-                    });
-
-                    var newRow = facsSearch.start.row;
-                    var nextRow = newRow, lineText;
-
-                    do {
-                        //gets the full text from the search result row
-                        lineText = pageRef.session.doc.getLine(nextRow);
-
-                        //if it doesn't include "zone" it's what we want
-                        if (!lineText.match(/zone/g))
-                        {
-                            break;
-                        }
-
-                        //if we didn't break, find the next one
-                        pageRef.findNext();
-                        nextRow = pageRef.getSelectionRange().start.row;
-
-                    } while (newRow != nextRow); 
-
-                    meiEditor.getPageData(pageTitle).selection.on('changeCursor', cursorUpdate);
-
-                };
-
                 /*
                     Selects a highlight.
                     @param divToSelect The highlight to select.
@@ -571,7 +522,12 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                     //don't select resizables
                     if($(divToSelect).hasClass("ui-resizable")) return;
 
-                    if(!findOverride) gotoLineWithID(divToSelect.id);
+                    if(!findOverride) 
+                    {
+                        meiEditor.getPageData(pageTitle).selection.removeListener('changeCursor', cursorUpdate);
+                        meiEditor.gotoLineWithID(divToSelect.id);
+                        meiEditor.getPageData(pageTitle).selection.on('changeCursor', cursorUpdate);
+                    }
 
                     $(divToSelect).addClass(selectedClass);
                     $(divToSelect).css('background-color', 'rgba(0, 255, 0, 0.1)');
@@ -639,7 +595,12 @@ require(['meiEditor', 'https://x2js.googlecode.com/hg/xml2json.js'], function(){
                         });
                     }
 
-                    if(!findOverride) gotoLineWithID(object.id);
+                    if(!findOverride) 
+                    {
+                        meiEditor.getPageData(pageTitle).selection.removeListener('changeCursor', cursorUpdate);
+                        meiEditor.gotoLineWithID(divToSelect.id);
+                        meiEditor.getPageData(pageTitle).selection.on('changeCursor', cursorUpdate);
+                    }
 
                     updateCaches();
                 };
