@@ -497,7 +497,7 @@ require(['meiEditor'], function(){
                         e.stopPropagation();
 
                         //index of the page clicked on
-                        var clickedIdx = $(e.target).parent().attr('data-index');
+                        var clickedIdx = $(e.target).closest('.diva-document-page').attr('data-index');
                         var clickedTitle = pageTitleForDivaFilename(divaFilenames[clickedIdx]);
 
                         //if the clicked page is not linked, return and do nothing
@@ -508,7 +508,7 @@ require(['meiEditor'], function(){
                         }
 
                         //diva index of the page currently clicked on
-                        var currentTitle = meiEditorSettings.activePageTitle;
+                        var currentTitle = meiEditor.getActivePageTitle();
                         var currentIdx = divaFilenames.indexOf(currentTitle.split(".")[0]);
 
                         //if the two indices are not the same
@@ -535,6 +535,7 @@ require(['meiEditor'], function(){
 
                     if(!findOverride) 
                     {
+                        var pageTitle = meiEditor.getActivePageTitle();
                         meiEditor.getPageData(pageTitle).selection.removeListener('changeCursor', cursorUpdate);
                         meiEditor.gotoLineWithID(divToSelect.id);
                         meiEditor.getPageData(pageTitle).selection.on('changeCursor', cursorUpdate);
@@ -608,8 +609,9 @@ require(['meiEditor'], function(){
 
                     if(!findOverride) 
                     {
+                        var pageTitle = meiEditor.getActivePageTitle();
                         meiEditor.getPageData(pageTitle).selection.removeListener('changeCursor', cursorUpdate);
-                        meiEditor.gotoLineWithID(divToSelect.id);
+                        meiEditor.gotoLineWithID($(object).attr('id'));
                         meiEditor.getPageData(pageTitle).selection.on('changeCursor', cursorUpdate);
                     }
 
@@ -1113,10 +1115,6 @@ require(['meiEditor'], function(){
 
                         rewriteAce(pageRef);
                         meiEditor.localLog("Deleted highlights."); 
-                    }
-                    else if((e.keyCode == 32))
-                    {
-                        console.log("Space?");
                     }
                 });   
 
