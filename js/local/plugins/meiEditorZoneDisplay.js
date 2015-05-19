@@ -564,6 +564,12 @@ require(['meiEditor'], function(){
                 //function to make a div resizable
                 meiEditor.selectResizable = function(object, findOverride)
                 {
+                    $(HIGHLIGHT_SELECTOR).unbind('click', highlightClickHandler);
+                    $(HIGHLIGHT_SELECTOR).unbind('dblclick', highlightDoubleClickHandler);
+                    $(HIGHLIGHT_SELECTOR).unbind('mouseenter', highlightMouseEnterHandler).on('mouseleave', highlightMouseLeaveHandler);
+                    $(HIGHLIGHT_SELECTOR).css('cursor', 'default');
+                    $(object).css('cursor', 'pointer');
+
                     //change color to yellow, pop on top of everything
                     $(object).css({'z-index': 150,
                         'background-color': 'rgba(255, 255, 0, 0.5)'});
@@ -1325,6 +1331,8 @@ require(['meiEditor'], function(){
                         document.activeElement.blur();
                     }
                 });
+
+                $(divaObject).on('mouseenter', function(e){e.preventDefault();});
 
                 return true;
             }
