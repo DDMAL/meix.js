@@ -50,7 +50,9 @@ define([], function ($)
 
         //various globals that don't need to be in settings
         var addingPage = false;     //if a page is being added, don't throw the "activate" event
+        var renamingEditedPage = false; //retains asterisk
         var pageData = {};           //stores the editors and all associated data for all pages.
+
 
         this.events = (function ()
         {
@@ -296,7 +298,19 @@ define([], function ($)
             }
 
             $(".tabIcon").css('cursor', 'pointer'); //can't do this in CSS file for some reason, likely because it's dynamic
+        };
 
+        checkDuplicatePageTitles = function(newTitle)
+        {
+            var titles = Object.keys(pageData);
+            for (var idx = 0; idx < titles.length; idx++)
+            {
+                var stripped = titles[idx].replace(/\*/g, "");
+                if (stripped == newTitle) return true;
+            }
+
+            if ($("#"+jQueryStrip(newTitle)).length) return true;
+            return false;
         };
 
         /*
@@ -323,6 +337,13 @@ define([], function ($)
         */
         this.addFileToProject = function(fileData, fileName)
         {
+            if (checkDuplicatePageTitles(fileName))
+            {
+                self.localError("Error in adding " + fileName + ": this filename is too similar to one that already exists in this project. Please close the other or choose a different name.");
+                return false;
+            }
+
+
             addingPage = true;
             var pageDataKeys = Object.keys(pageData);
 
@@ -512,12 +533,12 @@ define([], function ($)
                 var newName = newInput.val();
 
                 //if this name already exists (including if it's unchanged)
-                if (newInput.val() in pageData)
+                if (checkDuplicatePageTitles(newInput.val()))
                 {
                     //if it's not the same as it was
                     if (newName !== parentListItem.children("a").css('display', 'block').text())
                     {
-                        self.localError("Error in renaming " + originalName + ": this page name already exists in this project. Please choose another.");
+                        self.localError("Error in renaming " + newInput.val() + ": this filename is too similar to one that already exists in this project. Please close the other or choose a different name.");
                     }
                     //remove the input item and make the original link visible again
                     newInput.remove();
@@ -529,18 +550,13 @@ define([], function ($)
                     newInput.remove();
                     parentListItem.children("a").css('display', 'block');
                 }
-                else if ($("#"+jQueryStrip(newName)).length)
-                {
-                    self.localError("Error in renaming " + originalName + ": this filename is too similar to one that already exists in this project. Please close the other or choose a different name.");
-                    newInput.remove();
-                    parentListItem.children("a").css('display', 'block');   
-                }
                 else 
                 {
                     var activeHold = $("#openPages").tabs("option", "active");
                     //change the link's text and href
                     parentListItem.children("a").text(newName);
                     parentListItem.children("a").attr('href', '#' + jQueryStrip(newName));
+                    parentListItem.children("a").attr('id', jQueryStrip(newName) + "-tab");
                     
                     //remove the input and make the original link visible again
                     newInput.remove();
@@ -574,15 +590,19 @@ define([], function ($)
                     self.localLog("Renamed " + originalName + " to " + newName + ".");
                     self.events.publish('PageWasRenamed', [originalName, newName]);
                 }
+                if (renamingEditedPage) parentListItem.children("a").append("<span>*</span>");
+                renamingEditedPage = false;
                 //lastly, remove the old bindings for the icons and put the original ones back on
                 self.resetIconListeners();
                 self.reloadUndoListeners();
             };
 
             //get a pointer to the <li> and the rename object, get the original name to feed into the input item
+            if (pageName.indexOf("*") > -1) renamingEditedPage = true;
             var parentListItem = $("#" + jQueryStrip(pageName) + "-listitem");
             var clicked = parentListItem.children("span.rename");
             var containedLink = parentListItem.children("a");
+            containedLink.children('span').remove();
             var originalName = containedLink.text();
 
             //create the input field on top of where the name was before
