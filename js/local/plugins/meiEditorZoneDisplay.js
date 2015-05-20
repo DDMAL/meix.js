@@ -75,7 +75,7 @@ require(['meiEditor'], function(){
                 });
 
                 $("#dropdown-zone-display").append("<li><a id='get-diva-filenames'>Get current Diva filenames</a></li>"+
-                    "<li><a>One-to-one: <input type='checkbox' style='float:right' id='one-to-one-checkbox'></a></li>");
+                    "<li><a><label class='checkbox'>One-to-one: <input type='checkbox' style='float:right;' id='one-to-one-checkbox' /></label></a></li>");
 
                 $("#get-diva-filenames").on('click', function(e)
                 {

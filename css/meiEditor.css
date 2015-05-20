@@ -200,3 +200,8 @@ input.input-ui-emulator{
     z-index: 150;
     background-color:rgba(255, 255, 0, 0.5);
 }
+
+label.checkbox {
+    padding: 0px;
+    margin: 0px;
+}
