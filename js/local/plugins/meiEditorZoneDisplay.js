@@ -886,7 +886,7 @@ require(['meiEditor'], function(){
 
                         clusters = condense(clusters).reverse();
 
-                        var chosenIdx = undefined, lastIdx = undefined;
+                        var chosenIdx, lastIdx;
 
                         for (idx = 0; idx < clusters.length; idx++)
                         {
@@ -1013,7 +1013,10 @@ require(['meiEditor'], function(){
                         rewriteAce(pageRef);
 
                         //publishes an event with four parameters: reference to pageData, id of prevZone, id of nextZone, id of newly added zone
-                        meiEditor.events.publish('NewZone', [pageRef, (prevZone ? prevZone.getAttribute('xml:id') : undefined), (nextZone ? nextZone.getAttribute('xml:id') : undefined), newZoneUUID])
+                        meiEditor.events.publish('NewZone', [pageRef, 
+                            (prevZone ? prevZone.getAttribute('xml:id') : undefined), 
+                            (nextZone ? nextZone.getAttribute('xml:id') : undefined), 
+                            newZoneUUID]);
                     }
 
                     newHighlightActive = false;
@@ -1115,12 +1118,14 @@ require(['meiEditor'], function(){
 
                             zoneArr = pageRef.parsed.querySelectorAll('[facs=' + itemID + ']');
                             safelyRemove(zoneArr[0]);
+                            
+                            $(curItem).remove();
                         }
 
                         (selector === resizableSelector) ? meiEditor.deselectResizable(resizableSelector) : meiEditor.deselectAllHighlights();
 
                         rewriteAce(pageRef);
-                        meiEditor.localLog("Deleted highlights."); 
+                        meiEditor.localLog("Deleted highlight."); 
                     }
                 });   
 
@@ -1199,7 +1204,7 @@ require(['meiEditor'], function(){
                     while(idx--)
                     {                        
                         var curTitle = pageTitles[idx];
-                        var divaIdx = getDivaIndexForPage(curTitle)
+                        var divaIdx = getDivaIndexForPage(curTitle);
                         if (divaIdx > -1) linkedPages[divaIdx] = curTitle;
                     }
 
