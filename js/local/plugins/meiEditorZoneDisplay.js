@@ -1104,6 +1104,8 @@ require(['meiEditor'], function(){
                         
                         var pageTitle = meiEditor.getActivePageTitle();
                         var pageRef = meiEditor.getPageData(pageTitle);
+                        pageRef.selection.removeListener('changeCursor', cursorUpdate);
+                        var curSelection = pageRef.selection.getCursor();
 
                         var curItemIndex = $(selector).length;
                         var zoneArr = [];
@@ -1125,6 +1127,9 @@ require(['meiEditor'], function(){
                         (selector === resizableSelector) ? meiEditor.deselectResizable(resizableSelector) : meiEditor.deselectAllHighlights();
 
                         rewriteAce(pageRef);
+
+                        pageRef.gotoLine(curSelection.row, curSelection.column, false);
+                        pageRef.selection.on('changeCursor', cursorUpdate);
                         meiEditor.localLog("Deleted highlight."); 
                     }
                 });   
