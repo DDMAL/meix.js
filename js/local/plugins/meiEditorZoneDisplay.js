@@ -21,7 +21,8 @@ require(['meiEditor'], function(){
                 var defaults = 
                 {
                     meiToIgnore: [], //an array of MEI tags to ignore the zones for
-                    disableShiftNew: false //if true, pressing the shift key down does not automatically start creating a new highlight
+                    disableShiftNew: false, //if true, pressing the shift key down does not automatically start creating a new highlight
+                    disableMultiPage: false
                 };
 
                 meiEditorSettings = $.extend(defaults, meiEditorSettings);
@@ -74,8 +75,10 @@ require(['meiEditor'], function(){
                     $("#zoneHelpModal").modal();
                 });
 
-                $("#dropdown-zone-display").append("<li><a id='get-diva-filenames'>Get current Diva filenames</a></li>"+
-                    "<li><a><label class='checkbox'>One-to-one: <input type='checkbox' style='float:right;' id='one-to-one-checkbox' /></label></a></li>");
+                $("#dropdown-zone-display").append("<li><a id='get-diva-filenames'>Get current Diva filenames</a></li>");
+
+                if (!(meiEditorSettings.disableMultiPage))
+                    $("#dropdown-zone-display").append("<li><a><label class='checkbox'>One-to-one: <input type='checkbox' style='float:right;' id='one-to-one-checkbox' /></label></a></li>");
 
                 $("#get-diva-filenames").on('click', function(e)
                 {
