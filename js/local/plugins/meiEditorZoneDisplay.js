@@ -36,6 +36,8 @@ require(['meiEditor'], function(){
                     resizableCache: {},        
                     selectedClass: "editorSelected", //class to identify selected highlights. NOT a selector.
                     resizableClass: "editorResizable", //class to identify resizable highlights. NOT a selector.
+
+                    oneToOneMEI: true
                 };
 
                 $.extend(meiEditorSettings, globals);
@@ -322,7 +324,8 @@ require(['meiEditor'], function(){
 
                 meiEditor.toggleOneToOne = function()
                 {
-                    if ($("#one-to-one-checkbox").prop('checked'))
+                    //if ($("#one-to-one-checkbox").prop('checked'))
+                    if (meiEditorSettings.oneToOneMEI)
                     {
                         meiEditorSettings.oneToOneMEI = true;
                         meiEditor.reloadZones = reloadOneToOneZones;
@@ -458,6 +461,10 @@ require(['meiEditor'], function(){
                         e.stopPropagation();
                         e.preventDefault();
                     });
+
+                    $(HIGHLIGHT_SELECTOR).unbind('click', highlightClickHandler);
+                    $(HIGHLIGHT_SELECTOR).unbind('dblclick', highlightDoubleClickHandler);
+                    $(HIGHLIGHT_SELECTOR).unbind('mouseenter', highlightMouseEnterHandler).on('mouseleave', highlightMouseLeaveHandler);
                 };
 
                 var destroyOverlay = function()
@@ -466,6 +473,10 @@ require(['meiEditor'], function(){
                     $(overlaySelector).remove();
                     meiEditorSettings.divaInstance.enableScrollable();
                     divaObject.unbind('resize');
+
+                    $(HIGHLIGHT_SELECTOR).on('click', highlightClickHandler);
+                    $(HIGHLIGHT_SELECTOR).on('dblclick', highlightDoubleClickHandler);
+                    $(HIGHLIGHT_SELECTOR).on('mouseenter', highlightMouseEnterHandler).on('mouseleave', highlightMouseLeaveHandler);
                 };
                 
                 var highlightDoubleClickHandler = function(e)
@@ -567,9 +578,6 @@ require(['meiEditor'], function(){
                 //function to make a div resizable
                 meiEditor.selectResizable = function(object, findOverride)
                 {
-                    $(HIGHLIGHT_SELECTOR).unbind('click', highlightClickHandler);
-                    $(HIGHLIGHT_SELECTOR).unbind('dblclick', highlightDoubleClickHandler);
-                    $(HIGHLIGHT_SELECTOR).unbind('mouseenter', highlightMouseEnterHandler).on('mouseleave', highlightMouseLeaveHandler);
                     $(HIGHLIGHT_SELECTOR).css('cursor', 'default');
                     $(object).css('cursor', 'pointer');
 
