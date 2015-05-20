@@ -1033,7 +1033,7 @@ require(['meiEditor'], function(){
 
                 $(document).on('keydown', function(e)
                 {
-                    if (e.shiftKey && !newHighlightActive && !meiEditorSettings.disableShiftNew)
+                    if (e.shiftKey && !newHighlightActive && !meiEditorSettings.disableShiftNew && $("#diva-wrapper").is(":hover"))
                     {
                         e.stopPropagation();
                         meiEditor.startNewHighlight();
