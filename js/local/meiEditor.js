@@ -132,7 +132,7 @@ define([], function ($)
                     subscribe: subscribe,
                     unsubscribe: unsubscribe
             };
-        }());   
+        }());
 
         /*
             Makes a string formatted for the tab header out of the iconPane object.
@@ -155,7 +155,7 @@ define([], function ($)
         {
             var tabIndex = $("#openPages").tabs("option", "active");
             if (tabIndex === 0)
-            { 
+            {
                 $("#openPages").tabs("option", "active", 1);
                 tabIndex = 1;
             }
@@ -353,7 +353,7 @@ define([], function ($)
             $("#openPages").append("<div id='" + fileNameStripped + "-wrapper'>" + //necessary for CSS to work
                 "<div id='" + fileNameStripped + "' originalName='" + fileName + "' class='aceEditorPane'>" +
                 "</div></div>");
-            
+
             self.resetIconListeners();
 
             //add the data to the pageData object and initialize the editor
@@ -388,7 +388,7 @@ define([], function ($)
             $("#openPages").tabs("refresh");
             $("#openPages").tabs({active: numTabs}); //load straight to the new one
             pageData[fileName].resize();
-        
+
             //when the document is clicked
             $("#" + fileNameStripped).on('click', function(e) //parent of editorPane
             {
@@ -403,14 +403,14 @@ define([], function ($)
                 if (docRow in pageData[pageName].getSession().$decorations)
                 {
                     pageData[pageName].getSession().removeGutterDecoration(parseInt(docRow, 10), pageData[pageName].getSession().$decorations[docRow].substring(1));
-                } 
+                }
             });
 
             //pageDataKeys was called before page was added - if only an untitled page existed before, delete it
             if(pageDataKeys.length == 1 && pageDataKeys[0] == "untitled")
             {
                 if(pageData["untitled"].getSession().doc.getLength() == 1 && pageData["untitled"].getSession().doc.getLine(0) === "")
-                { 
+                {
                     self.removePageFromProject("untitled", true);
                 }
             }
@@ -450,7 +450,7 @@ define([], function ($)
                 if (pageName == self.getActivePageTitle())
                 {
                     var numTabs = $("#pagesList li").length - 1;
-                    
+
                     //if there's 2 or less tabs open, it's only one and the "new-tab" tab, which we don't want open
                     if (numTabs <= 2)
                     {
@@ -462,7 +462,7 @@ define([], function ($)
                         $("#openPages").tabs("option", "active", activeIndex - 1);
                     }
                     //else switch to one left of the open one
-                    else 
+                    else
                     {
                         $("#openPages").tabs("option", "active", activeIndex + 1);
 
@@ -476,14 +476,14 @@ define([], function ($)
                 //delete the pageData item
                 delete pageData[pageName];
 
-                self.events.publish("PageWasDeleted", [pageName]); //let whoever is interested know 
+                self.events.publish("PageWasDeleted", [pageName]); //let whoever is interested know
                 self.localLog("Removed " + pageName + " from the project.")
 
                 //if nothing else exists except the new tab button, create a new default page
                 if ($("#pagesList li").length == 1)
                 {
                     self.addDefaultPage();
-                }  
+                }
 
                 //reloads the tab list with this one deleted to make sure tab indices are correct
                 $("#openPages").tabs("refresh");
@@ -550,14 +550,14 @@ define([], function ($)
                     newInput.remove();
                     parentListItem.children("a").css('display', 'block');
                 }
-                else 
+                else
                 {
                     var activeHold = $("#openPages").tabs("option", "active");
                     //change the link's text and href
                     parentListItem.children("a").text(newName);
                     parentListItem.children("a").attr('href', '#' + jQueryStrip(newName));
                     parentListItem.children("a").attr('id', jQueryStrip(newName) + "-tab");
-                    
+
                     //remove the input and make the original link visible again
                     newInput.remove();
                     parentListItem.children("a").css('display', 'block');
@@ -577,7 +577,7 @@ define([], function ($)
                     //refresh to make sure all these IDs are set
                     $("#openPages").tabs("refresh");
                     $("#openPages").tabs("option", "active", activeHold);
-                    
+
                     //change it in the pageData variable
                     pageData[newName] = pageData[originalName];
                     delete pageData[originalName];
@@ -696,13 +696,13 @@ define([], function ($)
                     });
                 }
             });
-        
+
             //inner div serves to float on bottom; when its height is bigger, snap it to the same height as the parent div
             var editorPadding = ($("#editorConsole").outerHeight() - $("#editorConsole").height());
 
             if ($("#consoleText").outerHeight() + editorPadding > $("#editorConsole").height())
             {
-                $("#consoleText").height($("#editorConsole").height() - parseInt($("#consoleText").css('padding-top'), 10) - parseInt($("#consoleText").css('padding-bottom'), 10)); 
+                $("#consoleText").height($("#editorConsole").height() - parseInt($("#consoleText").css('padding-top'), 10) - parseInt($("#consoleText").css('padding-bottom'), 10));
             }
             else
             {
@@ -759,11 +759,12 @@ define([], function ($)
 
         this.gotoLineWithID = function(id)
         {
+            var meiEditor = this;
             var searchNeedle = new RegExp(id, "g");
 
             //searches for the facs ID that is also the ID of the highlighted panel
             var pageTitle = meiEditor.getActivePageTitle();
-            
+
             var initSelection = meiEditor.getPageData(pageTitle).selection.getCursor();
             var initRow = initSelection.row;
             var initCol = initSelection.column;
@@ -799,7 +800,7 @@ define([], function ($)
                 pageRef.findNext();
                 nextRow = pageRef.getSelectionRange().start.row;
 
-            } while (newRow != nextRow); 
+            } while (newRow != nextRow);
         };
 
 
@@ -831,7 +832,7 @@ define([], function ($)
                     'src': options.meiEditorLocation + 'img/glyphicons_030_pencil.png',
                     'click': function(e){
                         var pageName = $($(e.target).siblings("a")[0]).text();
-                        self.renamePage(pageName); 
+                        self.renamePage(pageName);
                     }
                 },
                 "remove": {
@@ -853,10 +854,10 @@ define([], function ($)
                             '<div id="site-logo" class="navbar-brand">' + settings.pageTitle + '</div>' +
                         '</div>' +
                         '<div class="collapse navbar-collapse pull-left" id="topbarContentWrapper">' +
-                            '<ul class="nav navbar-nav pull-left" id="topbarContent">' + 
+                            '<ul class="nav navbar-nav pull-left" id="topbarContent">' +
                             '</ul>' +
                         '</div>' +
-                        '<div class="nav navbar-nav pull-right" id="topbarRightContent">' + 
+                        '<div class="nav navbar-nav pull-right" id="topbarRightContent">' +
                             '<li class="dropdown" id="help-dropdown-wrapper">' +
                                 '<a href="#" class="dropdown-toggle" data-toggle="dropdown"> Help <b class="caret"></b></a>' +
                                 '<ul class="dropdown-menu dropdown-menu-right pull-right" id="help-dropdown" style="z-index:1000">' +
@@ -898,9 +899,9 @@ define([], function ($)
             //Has to be called after divs exist
             $('ul.dropdown-menu [data-toggle=dropdown]').on('click', function(event) {
                 // Avoid following the href location when clicking
-                event.preventDefault(); 
+                event.preventDefault();
                 // Avoid having the menu to close when clicking
-                event.stopPropagation(); 
+                event.stopPropagation();
                 // Re-add .open to parent sub-menu item
                 $(this).parent().addClass('open');
                 $(this).parent().find("ul").parent().find("li.dropdown").addClass('open');
@@ -925,7 +926,7 @@ define([], function ($)
                     //set up the tab container to the right e.pageY height first
                     var editorConsoleHeight = $("#editorConsole").outerHeight();
                     var topbarHeight = (settings.expandedTopbar ? $("#expandedTopbar").outerHeight() : $("#compactTopbar").outerHeight());
-                    var heightDiff = $("#openPages").outerHeight() - $("#openPages").height(); 
+                    var heightDiff = $("#openPages").outerHeight() - $("#openPages").height();
                     var newHeight = e.pageY - topbarHeight - heightDiff;
 
                     $("#openPages").height(newHeight);
@@ -952,7 +953,7 @@ define([], function ($)
                     consoleDiff = $("#editorConsole").outerHeight() - $("#editorConsole").height();
                     $("#consoleText").css('bottom', $(consoleDiff/2).toEm().toString() + 'em');
 
-                    $("#consoleText").height(Math.min(document.getElementById("consoleText").scrollHeight, $("#editorConsole").height()));                    
+                    $("#consoleText").height(Math.min(document.getElementById("consoleText").scrollHeight, $("#editorConsole").height()));
 
                     //this prevents horizontal movement from triggering this event with the if statement at the top
                     settings.oldPageY = e.pageY;
@@ -987,10 +988,10 @@ define([], function ($)
                     settings.activeTabIndex = ui.newTab.index();
 
                     updateTabTitles();
-                    
+
                     //resize components to make sure the newly activated tab is the right size
                     pageData[activePage].resize();
-                    self.resizeComponents(); 
+                    self.resizeComponents();
 
                     //usually, the URL bar will change to the last tab visited because jQueryUI tabs use <a> href attributes; this prevents that by repalcing every URL change with "index.html" and no ID information
                     var urlArr = document.URL.split("/");
