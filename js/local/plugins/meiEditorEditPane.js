@@ -184,6 +184,7 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/UndoStack.js'], functio
 
                     meiEditor.getPageData(title).gotoLine(newCursor.row + 1, newCursor.column, true); //because 1-indexing is always the right choice
                     meiEditor.getPageData(title).resize();
+                    meiEditor.getPageData(title).getSession().setMode("ace/mode/xml");
                 });
 
                 return true;
