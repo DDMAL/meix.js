@@ -12,9 +12,9 @@ require(['meiEditor'], function(){
                     divaInstance: A reference to the Diva object created from initializing Diva.
                     oneToOneMEI: A boolean flag, true if one MEI file refers to one Diva page, false if one MEI file contains multiple surfaces where each surface refers to a Diva page.
                 */
-                if (!("divaInstance" in meiEditorSettings) || !("oneToOneMEI" in meiEditorSettings))
+                if (!("divaInstance" in meiEditorSettings))
                 {
-                    console.error("MEI Editor error: The 'Zone Display' plugin requires the 'divaInstance' and 'oneToOneMEI' settings present on intialization.");
+                    console.error("MEI Editor error: The 'Zone Display' plugin requires the 'divaInstance' setting present on intialization.");
                     return false;
                 }
 
@@ -35,9 +35,7 @@ require(['meiEditor'], function(){
                     selectedCache: {},         //where selectedCache[divaItem] = [UUID, UUID...]
                     resizableCache: {},        
                     selectedClass: "editorSelected", //class to identify selected highlights. NOT a selector.
-                    resizableClass: "editorResizable", //class to identify resizable highlights. NOT a selector.
-
-                    oneToOneMEI: true
+                    resizableClass: "editorResizable" //class to identify resizable highlights. NOT a selector.
                 };
 
                 $.extend(meiEditorSettings, globals);
@@ -60,7 +58,6 @@ require(['meiEditor'], function(){
                 var dragSelector = "#" + dragID;
                 var editorLastFocus = true; //true if something on the editor side was the last thing clicked, false otherwise
                 var newHighlightActive = false;
-                var skipDivaJump = false;
                 var divaFilenames = meiEditorSettings.divaInstance.getFilenames();
                 var divaObject = meiEditorSettings.divaInstance.getSettings().parentObject;
 
@@ -167,6 +164,8 @@ require(['meiEditor'], function(){
                     zoneDict = {}; //reset this
                     zoneIDs = []; //and this
                     var curPage;
+                                    
+                    //returns a dict of {diva index: linked page titles}
                     var pageTitles = meiEditor.getLinkedPageTitles();
                     var divaIndexes = Object.keys(pageTitles);
                     var idx = divaIndexes.length;
@@ -320,11 +319,19 @@ require(['meiEditor'], function(){
                 };
 
                 //worry about one to one stuff here - if default is on, set the checkbox
-                if(meiEditorSettings.oneToOneMEI) $("#one-to-one-checkbox").attr('checked', 'checked');
 
-                meiEditor.toggleOneToOne = function()
+                // Determines whether or not any pages have multiple facsimile pages
+                var testOneToOne = function()
                 {
-                    //if ($("#one-to-one-checkbox").prop('checked'))
+                    var titles = meiEditor.getPageTitles();
+                    for (var idx = 0; idx < titles.length; idx++)
+                        if (meiEditor.getPageData(titles[idx]).parsed.querySelectorAll('surface').length > 1) return false;
+                    return true;
+                };
+
+                meiEditor.initOneToOne = function()
+                {
+                    meiEditorSettings.oneToOneMEI = testOneToOne();
                     if (meiEditorSettings.oneToOneMEI)
                     {
                         meiEditorSettings.oneToOneMEI = true;
@@ -335,11 +342,13 @@ require(['meiEditor'], function(){
                         meiEditorSettings.oneToOneMEI = false;
                         meiEditor.reloadZones = reloadMultiPageZones;
                     }
+
+                    if(meiEditorSettings.oneToOneMEI) $("#one-to-one-checkbox").attr('checked', 'checked');
                 };
 
                 //no matter what, trigger this once to make sure it's the right listener
-                meiEditor.toggleOneToOne();
-                $("#one-to-one-checkbox").on('change', meiEditor.toggleOneToOne);
+                meiEditor.initOneToOne();
+                $("#one-to-one-checkbox").on('change', meiEditor.initOneToOne);
 
                 //listener for this
                 meiEditor.events.subscribe('UpdateZones', meiEditor.reloadZones);
@@ -1031,7 +1040,7 @@ require(['meiEditor'], function(){
                     }
 
                     newHighlightActive = false;
-                    if (!editorLastFocus) e.stopPropagation();
+                    // if (!editorLastFocus) e.stopPropagation();
                     $(overlaySelector).unbind('mousedown', prepNewHighlight);
                     destroyOverlay();
                 };
@@ -1177,11 +1186,7 @@ require(['meiEditor'], function(){
                 * Various public functions
                 */
 
-                meiEditor.addFileWithoutJumping = function(data, filename)
-                {
-                    skipDivaJump = true;
-                    meiEditor.addFileToProject(data, filename);
-                };
+                meiEditor.addFileWithoutJumping = meiEditor.addFileToProject;
 
                 //returns true if added
                 meiEditor.addMEIIgnore = function(ignore)
@@ -1210,24 +1215,24 @@ require(['meiEditor'], function(){
                     return false;
                 };
 
-                //returns a dict of {diva index: linked page titles}
                 meiEditor.getLinkedPageTitles = function()
                 {
                     var linkedPages = {};
-                    var pageTitles = meiEditor.getPageTitles();
-                    var idx = pageTitles.length;
+                    if (meiEditorSettings.oneToOneMEI)
+                    {
+                        var pageTitles = meiEditor.getPageTitles();
+                        var idx = pageTitles.length;
 
-                    while(idx--)
-                    {                        
-                        var curTitle = pageTitles[idx];
-                        var divaIdx = getDivaIndexForPage(curTitle);
-                        if (divaIdx > -1) linkedPages[divaIdx] = curTitle;
+                        while(idx--)
+                        {                    
+                            var curTitle = pageTitles[idx];    
+                            var curImage = meiEditor.getPageData(curTitle).parsed.querySelector("graphic").getAttribute('target');
+                            var divaIdx = getDivaIndexForImage(curImage);
+                            if (divaIdx > -1) linkedPages[divaIdx] = curTitle;
+                        }
                     }
-
                     return linkedPages;
                 };
-
-
                 /**
                 * Local utils functions
                 */
@@ -1235,16 +1240,10 @@ require(['meiEditor'], function(){
                 /*
                     Gets the diva page index for a specific page title by stripping extensions, -1 if non-existant
                 */
-                var getDivaIndexForPage = function(pageTitle)
+                var getDivaIndexForImage = function(filename)
                 {
-                    var splitName = pageTitle.split(".")[0];
-                    var splitDiva;
-
                     for(var idx = 0; idx < divaFilenames.length; idx++)
-                    {
-                        splitDiva = divaFilenames[idx].split(".")[0];
-                        if (splitName == splitDiva) return idx;
-                    }
+                        if (filename == divaFilenames[idx]) return idx;
 
                     return -1;
                 };
@@ -1273,32 +1272,23 @@ require(['meiEditor'], function(){
 
                 meiEditor.events.subscribe("NewFile", function(a, fileName)
                 {
-                    //if the page is in Diva...
-                    var divaIdx = getDivaIndexForPage(fileName);
-                    if (divaIdx < 0) return;
-
                     //scroll to it
-                    if (skipDivaJump) skipDivaJump = false;
-                    else meiEditorSettings.divaInstance.gotoPageByIndex(divaIdx);
+                    meiEditor.initOneToOne();
                     meiEditor.getPageData(fileName).selection.on('changeCursor', cursorUpdate);
                     meiEditor.events.publish('UpdateZones');
                 });
 
                 meiEditor.events.subscribe("ActivePageChanged", function(fileName)
                 {
-                    //if the page is in Diva...
-                    var divaIdx = getDivaIndexForPage(fileName);
-                    if (divaIdx < 0) return;
-
                     //scroll to it
-                    if (skipDivaJump) skipDivaJump = false;
-                    else meiEditorSettings.divaInstance.gotoPageByIndex(divaIdx);
+                    meiEditor.initOneToOne();
                     meiEditor.getPageData(fileName).selection.on('changeCursor', cursorUpdate);
                     meiEditor.events.publish('UpdateZones');
                 });
 
                 meiEditor.events.subscribe("PageWasDeleted", function(pageName)
                 {
+                    meiEditor.initOneToOne();
                     meiEditor.events.publish('UpdateZones');
                 });
 
@@ -1325,11 +1315,7 @@ require(['meiEditor'], function(){
                     //only if it's linked
                     var activeFileName = pageTitleForDivaFilename(fileName);
                     if (activeFileName)
-                    {
-                        skipDivaJump = true;
                         meiEditor.switchToPage(activeFileName);
-                        skipDivaJump = false;
-                    }
                 });
                 
                 var pageTitles = meiEditor.getPageTitles();

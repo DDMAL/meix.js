@@ -474,6 +474,7 @@ define([], function ($)
                 //remove the editor div
                 $("#" + pageNameStripped + "-wrapper").remove();
                 //delete the pageData item
+                pageData[pageName].selection.off('changeCursor', cursorUpdate);
                 delete pageData[pageName];
 
                 self.events.publish("PageWasDeleted", [pageName]); //let whoever is interested know
