@@ -90,9 +90,8 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/UndoStack.js'], functio
                     {
                         //clear the previous doc and get the current cursor/document settings
                         window.clearTimeout(meiEditorSettings.editTimeout);
-                        var newText = delta.data.text;
 
-                        if (!(/\s/.test(newText)))
+                        if(delta.lines.length > 0)
                         {
                             if (!meiEditorSettings.initCursor)
                             {

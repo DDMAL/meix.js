@@ -21,16 +21,13 @@ require(['meiEditor'], function(){
                 var defaults = 
                 {
                     meiToIgnore: [], //an array of MEI tags to ignore the zones for
-                    disableShiftNew: false, //if true, pressing the shift key down does not automatically start creating a new highlight
-                    disableMultiPage: false
+                    disableShiftNew: false //if true, pressing the shift key down does not automatically start creating a new highlight
                 };
 
                 meiEditorSettings = $.extend(defaults, meiEditorSettings);
 
                 var globals =
                 {
-                    zoneDict: {},              //dict of zones to highlight represented as {'UUID'(surface): [['ulx': ulx, 'uly': uly, 'lrx': lrx, 'lry': lry, 'divID': uuid(zone)}, {'ulx'...}]}
-                    zoneIDs: [],               //an array of IDs for faster lookup
                     //these two are caches of selected/resizable highlights organized by diva pages
                     selectedCache: {},         //where selectedCache[divaItem] = [UUID, UUID...]
                     resizableCache: {},        
@@ -60,6 +57,7 @@ require(['meiEditor'], function(){
                 var newHighlightActive = false;
                 var divaFilenames = meiEditorSettings.divaInstance.getFilenames();
                 var divaObject = meiEditorSettings.divaInstance.getSettings().parentObject;
+                var linkedPages = [];
 
                 var initDragTop, initDragLeft;
 
@@ -75,9 +73,6 @@ require(['meiEditor'], function(){
                 });
 
                 $("#dropdown-zone-display").append("<li><a id='get-diva-filenames'>Get current Diva filenames</a></li>");
-
-                if (!(meiEditorSettings.disableMultiPage))
-                    $("#dropdown-zone-display").append("<li><a><label class='checkbox'>One-to-one: <input type='checkbox' style='float:right;' id='one-to-one-checkbox' /></label></a></li>");
 
                 $("#get-diva-filenames").on('click', function(e)
                 {
@@ -150,131 +145,36 @@ require(['meiEditor'], function(){
                     }
                 };
 
-                /*
-                    Highlight reloading code:
-                */
-                var reloadOneToOneZones = function()
+                meiEditor.reloadZones = function()
                 {
-                    if(!meiEditorSettings.oneToOneMEI)
-                    {
-                        meiEditor.localError("Multiple surfaces found. Can not reload zones.");
-                        return false;
-                    }
+                    //dict of zones to highlight represented as {'UUID'(surface): [['ulx': ulx, 'uly': uly, 'lrx': lrx, 'lry': lry, 'divID': uuid(zone)}, {'ulx'...}]}
+                    var zoneDict = {}; 
+                    var linkedPages = [];
 
-                    zoneDict = {}; //reset this
-                    zoneIDs = []; //and this
-                    var curPage;
-                                    
-                    //returns a dict of {diva index: linked page titles}
-                    var pageTitles = meiEditor.getLinkedPageTitles();
-                    var divaIndexes = Object.keys(pageTitles);
-                    var idx = divaIndexes.length;
-
-                    while(idx--)
+                    var titles = meiEditor.getPageTitles();
+                    for (var tIdx = 0; tIdx < titles.length; tIdx++)
                     {
-                        var divaIdx = divaIndexes[idx];
-                        var curTitle = pageTitles[divaIdx];
-                        var parsed = meiEditor.getPageData(curTitle).parsed;
-                        zoneDict[divaIdx] = [];
-                        var linesArr = parsed.getElementsByTagName('zone');
-                        var lineIdx = linesArr.length;
-                        while(lineIdx--)
+                        var curDoc = meiEditor.getPageData(titles[tIdx]).parsed;
+                        var surfaces = curDoc.querySelectorAll('surface');
+                        for (var sIdx = 0; sIdx < surfaces.length; sIdx++)
                         {
-                            var line = linesArr[lineIdx];
-                            var ulx = line.getAttribute('ulx');
-                            var uly = line.getAttribute('uly');
-                            var lrx = line.getAttribute('lrx');
-                            var lry = line.getAttribute('lry');
-                            var xmlID = line.getAttribute('xml:id');
+                            var graphic = surfaces[sIdx].querySelector('graphic').getAttribute('target'); //only one graphic per surface
+                            var divaIndex = getDivaIndexForImage(graphic);
+                            if (divaIndex === -1) continue;
+                            linkedPages.push(titles[tIdx]);
+                            zoneDict[divaIndex] = [];
 
-                            var object = parsed.querySelectorAll('[*|facs="' + xmlID + '"]')[0];
-
-                            if(object && meiEditorSettings.meiToIgnore.indexOf(object.tagName) != -1) continue;
-
-                            //assemble that dict in Diva highlight format
-                            var highlightInfo = {'width': lrx - ulx, 'height': lry - uly, 'ulx': ulx, 'uly': uly, 'divID': xmlID};
-                            zoneDict[divaIdx].push(highlightInfo);
-                            zoneIDs.push(xmlID);
+                            zones = surfaces[sIdx].querySelectorAll('zone');
+                            for (var zIdx = 0; zIdx < zones.length; zIdx++)
+                            {
+                                var zone = zones[zIdx];
+                                var highlightInfo = {'width': zone.getAttribute('lrx') - zone.getAttribute('ulx'), 'height': zone.getAttribute('lry') - zone.getAttribute('uly'), 'ulx': zone.getAttribute('ulx'), 'uly': zone.getAttribute('uly'), 'divID': zone.getAttribute('xml:id')};
+                                zoneDict[divaIndex].push(highlightInfo);
+                            }
                         }
                     }
 
-                    return publishZones(zoneDict);
-                };
-
-                var reloadMultiPageZones = function()
-                {
-                    if(meiEditorSettings.oneToOneMEI)
-                    {
-                        meiEditor.localError("Multiple surfaces not found. Can not reload zones.");
-                        return false;
-                    }
-
-                    //parsing is now done on page editing in the main code body
-
-                    /*var activePage = meiEditor.getActivePageTitle();
-                    var editorRef = meiEditor.getPageData(activePage);
-                    var xmlString = editorRef.session.doc.getAllLines().join("\n");
-                    editorRef.parsed = meiParser.parseFromString(xmlString, 'text/xml');
-                    zoneDict = {}; //reset this
-                    zoneIDs = []; //and this
-                    var curPage;
-
-                    var surfaceArr = editorRef.parsed.getElementsByTagName('surface');
-                    var surfaceIdx = surfaceArr.length;
-
-                    while(surfaceIdx--)
-                    {
-                            //set current page
-                            curPage = lineDict.surface.n;
-
-                            //initialize that key of the dictionary
-                            zoneDict[curPage] = [];
-                        
-                    }
-
-                    var zoneArr = editorRef.parsed.getElementsByTagName('zone');
-                    var zoneIdx = zoneArr.length;*/
-
-                    var activePage = meiEditor.getActivePageTitle();
-                    var linesArr = meiEditor.getPageData(activePage).session.doc.getAllLines();
-                    zoneDict = {}; //reset this
-                    zoneIDs = []; //and this
-                    var curPage;
-
-                    // iterate through each line
-                    for(var line in linesArr)
-                    {
-                        var lineDict = parseXMLLine(linesArr[line]);
-
-                        //if there's no XML in the current line, we don't care
-                        if (!lineDict) continue;
-                        //if it's a surface, treat that as the "current page" as all zones are inside that
-                        else if (lineDict.hasOwnProperty('surface'))
-                        {
-                            //set current page
-                            curPage = lineDict.surface.n;
-
-                            //initialize that key of the dictionary
-                            zoneDict[curPage] = [];
-                        }
-                        else if (lineDict.hasOwnProperty('zone'))
-                        {
-                            //assemble that dict in Diva highlight format
-                            var highlightInfo = {'width': lineDict.zone.lrx - lineDict.zone.ulx, 'height': lineDict.zone.lry - lineDict.zone.uly, 'ulx': parseInt(lineDict.zone.ulx, 10), 'uly': parseInt(lineDict.zone.uly, 10), 'divID': lineDict.zone['xml:id']};
-                            zoneDict[curPage].push(highlightInfo);
-                            zoneIDs.push(lineDict.zone['xml:id']);
-                        }
-                    }
-                    return publishZones(zoneDict);
-                };
-
-                /*
-                    This code is the same between the above two functions.
-                    Because anything that manipulates the zones will be manipulating them based off
-                        their position in the DOM (as opposed to on each image), add padding/offsets
-                */
-                var publishZones = function(zoneDict)
-                {
+                    // Old publishZones
                     for (var curPage in zoneDict)
                     {
                         if (zoneDict[curPage].length === 0) delete zoneDict[curPage];
@@ -317,41 +217,6 @@ require(['meiEditor'], function(){
 
                     return true;
                 };
-
-                //worry about one to one stuff here - if default is on, set the checkbox
-
-                // Determines whether or not any pages have multiple facsimile pages
-                var testOneToOne = function()
-                {
-                    var titles = meiEditor.getPageTitles();
-                    for (var idx = 0; idx < titles.length; idx++)
-                        if (meiEditor.getPageData(titles[idx]).parsed.querySelectorAll('surface').length > 1) return false;
-                    return true;
-                };
-
-                meiEditor.initOneToOne = function()
-                {
-                    meiEditorSettings.oneToOneMEI = testOneToOne();
-                    if (meiEditorSettings.oneToOneMEI)
-                    {
-                        meiEditorSettings.oneToOneMEI = true;
-                        meiEditor.reloadZones = reloadOneToOneZones;
-                    }
-                    else
-                    {
-                        meiEditorSettings.oneToOneMEI = false;
-                        meiEditor.reloadZones = reloadMultiPageZones;
-                    }
-
-                    if(meiEditorSettings.oneToOneMEI) $("#one-to-one-checkbox").attr('checked', 'checked');
-                };
-
-                //no matter what, trigger this once to make sure it's the right listener
-                meiEditor.initOneToOne();
-                $("#one-to-one-checkbox").on('change', meiEditor.initOneToOne);
-
-                //listener for this
-                meiEditor.events.subscribe('UpdateZones', meiEditor.reloadZones);
 
                 /*
                     Highlight selection code:
@@ -665,7 +530,7 @@ require(['meiEditor'], function(){
                 meiEditor.updateBox = function(box)
                 {
                     var boxPosition = $(box).position();
-                    var itemID = $(box).attr('id');
+                    var itemID = $(box).attr('data-highlight-id');
                     var ulx = meiEditorSettings.divaInstance.translateToMaxZoomLevel(boxPosition.left);
                     var uly = meiEditorSettings.divaInstance.translateToMaxZoomLevel(boxPosition.top);
                     var lrx = meiEditorSettings.divaInstance.translateToMaxZoomLevel(boxPosition.left + $(box).outerWidth());
@@ -687,6 +552,7 @@ require(['meiEditor'], function(){
                     meiEditor.getPageData(pageTitle).selection.removeListener('changeCursor', cursorUpdate);
                     rewriteAce(pageRef);
                     meiEditor.getPageData(pageTitle).selection.on('changeCursor', cursorUpdate);
+                    destroyOverlay();
                 };
 
                 var prepNewHighlight = function(e)
@@ -1144,7 +1010,7 @@ require(['meiEditor'], function(){
                             $(curItem).remove();
                         }
 
-                        (selector === resizableSelector) ? meiEditor.deselectResizable(resizableSelector) : meiEditor.deselectAllHighlights();
+                        var blank = (selector === resizableSelector) ? meiEditor.deselectResizable(resizableSelector) : meiEditor.deselectAllHighlights();
 
                         rewriteAce(pageRef);
 
@@ -1217,22 +1083,9 @@ require(['meiEditor'], function(){
 
                 meiEditor.getLinkedPageTitles = function()
                 {
-                    var linkedPages = {};
-                    if (meiEditorSettings.oneToOneMEI)
-                    {
-                        var pageTitles = meiEditor.getPageTitles();
-                        var idx = pageTitles.length;
-
-                        while(idx--)
-                        {                    
-                            var curTitle = pageTitles[idx];    
-                            var curImage = meiEditor.getPageData(curTitle).parsed.querySelector("graphic").getAttribute('target');
-                            var divaIdx = getDivaIndexForImage(curImage);
-                            if (divaIdx > -1) linkedPages[divaIdx] = curTitle;
-                        }
-                    }
                     return linkedPages;
                 };
+                
                 /**
                 * Local utils functions
                 */
@@ -1270,10 +1123,11 @@ require(['meiEditor'], function(){
                 * Non-jQuery event listeners
                 */
 
+                meiEditor.events.subscribe("UpdateZones", meiEditor.reloadZones);
+
                 meiEditor.events.subscribe("NewFile", function(a, fileName)
                 {
                     //scroll to it
-                    meiEditor.initOneToOne();
                     meiEditor.getPageData(fileName).selection.on('changeCursor', cursorUpdate);
                     meiEditor.events.publish('UpdateZones');
                 });
@@ -1281,18 +1135,19 @@ require(['meiEditor'], function(){
                 meiEditor.events.subscribe("ActivePageChanged", function(fileName)
                 {
                     //scroll to it
-                    meiEditor.initOneToOne();
                     meiEditor.getPageData(fileName).selection.on('changeCursor', cursorUpdate);
                     meiEditor.events.publish('UpdateZones');
                 });
 
                 meiEditor.events.subscribe("PageWasDeleted", function(pageName)
                 {
-                    meiEditor.initOneToOne();
                     meiEditor.events.publish('UpdateZones');
                 });
 
-                meiEditor.events.subscribe("PageEdited", meiEditor.reloadZones);
+                meiEditor.events.subscribe("PageEdited", function() 
+                {
+                    meiEditor.events.publish('UpdateZones');
+                });
 
                 meiEditor.events.subscribe("PageWasRenamed", function(originalName, newName)
                 {
