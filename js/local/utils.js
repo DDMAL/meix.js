@@ -332,7 +332,7 @@ var checkResizable = function(selector)
 //safely removes an element from a DOMParser along with the textnode before it representing its indentation
 var safelyRemove = function(element)
 {
-    var parent = element.parentElement;
+    var parent = element.parentNode;
     var prev = element.previousSibling;
     parent.removeChild(element);
     if (prev !== null && 

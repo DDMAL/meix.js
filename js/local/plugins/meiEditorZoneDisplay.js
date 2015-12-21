@@ -10,7 +10,6 @@ require(['meiEditor'], function(){
                 /*
                 Required settings:
                     divaInstance: A reference to the Diva object created from initializing Diva.
-                    oneToOneMEI: A boolean flag, true if one MEI file refers to one Diva page, false if one MEI file contains multiple surfaces where each surface refers to a Diva page.
                 */
                 if (!("divaInstance" in meiEditorSettings))
                 {
@@ -57,7 +56,7 @@ require(['meiEditor'], function(){
                 var newHighlightActive = false;
                 var divaFilenames = meiEditorSettings.divaInstance.getFilenames();
                 var divaObject = meiEditorSettings.divaInstance.getSettings().parentObject;
-                var linkedPages = [];
+                var linkedPages = {};
 
                 var initDragTop, initDragLeft;
 
@@ -149,7 +148,7 @@ require(['meiEditor'], function(){
                 {
                     //dict of zones to highlight represented as {'UUID'(surface): [['ulx': ulx, 'uly': uly, 'lrx': lrx, 'lry': lry, 'divID': uuid(zone)}, {'ulx'...}]}
                     var zoneDict = {}; 
-                    var linkedPages = [];
+                    linkedPages = {};
 
                     var titles = meiEditor.getPageTitles();
                     for (var tIdx = 0; tIdx < titles.length; tIdx++)
@@ -161,7 +160,7 @@ require(['meiEditor'], function(){
                             var graphic = surfaces[sIdx].querySelector('graphic').getAttribute('target'); //only one graphic per surface
                             var divaIndex = getDivaIndexForImage(graphic);
                             if (divaIndex === -1) continue;
-                            linkedPages.push(titles[tIdx]);
+                            linkedPages[graphic] = titles[tIdx];
                             zoneDict[divaIndex] = [];
 
                             zones = surfaces[sIdx].querySelectorAll('zone');
@@ -502,7 +501,7 @@ require(['meiEditor'], function(){
                     {
                         var pageTitle = meiEditor.getActivePageTitle();
                         meiEditor.getPageData(pageTitle).selection.removeListener('changeCursor', cursorUpdate);
-                        meiEditor.gotoLineWithID($(object).attr('id'));
+                        meiEditor.gotoLineWithID($(object).attr('data-highlight-id'));
                         meiEditor.getPageData(pageTitle).selection.on('changeCursor', cursorUpdate);
                     }
 
@@ -547,7 +546,7 @@ require(['meiEditor'], function(){
                     curZone.setAttribute('lry', lry);
 
                     //rewriting will trigger an edit, which in turn will trigger reloading the zones
-                    //because this acts like an edit, it can be run multiple times in quick succession and will only upload zones when it's done
+                    //because this acts like an edit, it can be run multiple times in quick succession and will only update zones when it's done
                     
                     meiEditor.getPageData(pageTitle).selection.removeListener('changeCursor', cursorUpdate);
                     rewriteAce(pageRef);
@@ -922,7 +921,7 @@ require(['meiEditor'], function(){
 
                 $(document).on('keydown', function(e)
                 {
-                    if (e.shiftKey && !newHighlightActive && !meiEditorSettings.disableShiftNew && $("#diva-wrapper").is(":hover"))
+                    if (e.shiftKey && !newHighlightActive && !meiEditorSettings.disableShiftNew && meiEditorSettings.divaInstance.getSettings().isActiveDiva)
                     {
                         e.stopPropagation();
                         meiEditor.startNewHighlight();
@@ -998,7 +997,7 @@ require(['meiEditor'], function(){
                         while (curItemIndex--) //in case there's multiple
                         {
                             var curItem = $(selector)[curItemIndex];    
-                            var itemID = $(curItem).attr('id');
+                            var itemID = $(curItem).attr('data-highlight-id');
 
                             //regenerate these every time
                             zoneArr = pageRef.parsed.querySelectorAll('zone[*|id=' + itemID + ']');
@@ -1034,7 +1033,7 @@ require(['meiEditor'], function(){
                         pageIdx = curHighlightObject.parent().attr('data-index');
                         if (!meiEditorSettings.selectedCache.hasOwnProperty(pageIdx))
                             meiEditorSettings.selectedCache[pageIdx] = [];
-                        meiEditorSettings.selectedCache[pageIdx].push(curHighlightObject.attr('id'));
+                        meiEditorSettings.selectedCache[pageIdx].push(curHighlightObject.attr('data-highlight-id'));
                     }
 
                     idx = $(resizableSelector).length;
@@ -1044,7 +1043,7 @@ require(['meiEditor'], function(){
                         pageIdx = curHighlightObject.parent().attr('data-index');
                         if (!meiEditorSettings.resizableCache.hasOwnProperty(pageIdx))
                             meiEditorSettings.resizableCache[pageIdx] = [];
-                        meiEditorSettings.resizableCache[pageIdx].push(curHighlightObject.attr('id'));
+                        meiEditorSettings.resizableCache[pageIdx].push(curHighlightObject.attr('data-highlight-id'));
                     }
                 };
 
@@ -1085,7 +1084,15 @@ require(['meiEditor'], function(){
                 {
                     return linkedPages;
                 };
-                
+
+                meiEditor.isActivePageLinked = function()
+                {
+                    var activeTitle = meiEditor.getActivePageTitle();
+                    for (var activeDiva in linkedPages)
+                        if (linkedPages[activeDiva] === activeTitle) return true;
+                    return false;
+                };
+
                 /**
                 * Local utils functions
                 */
@@ -1103,20 +1110,7 @@ require(['meiEditor'], function(){
 
                 var pageTitleForDivaFilename = function(filename)
                 {
-                    var splitName = filename.split(".")[0];
-                    var pageTitles = meiEditor.getPageTitles();
-                    var idx = pageTitles.length;
-                    var splitPage;
-
-                    while(idx--)
-                    {
-                        splitPage = pageTitles[idx].split(".")[0];
-                        if (splitName == splitPage)
-                        {
-                            return pageTitles[idx];
-                        }
-                    }
-                    return false;
+                    return linkedPages[filename];
                 };
 
                 /**
