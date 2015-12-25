@@ -1,9 +1,6 @@
 /*needed for xml document parsing*/
 @namespace xml http://www.w3.org/XML/1998/namespace;
 
-html, body{
-    overflow:hidden;
-}
 #topbarContent > li > a{
     cursor: pointer;
 }
