@@ -918,106 +918,109 @@ require(['meiEditor'], function(){
                 };
 
                 /******** Various event listeners ********/
-
-                $(document).on('keydown', function(e)
+                var applyEventListeners = function()
                 {
-                    if (e.shiftKey && !newHighlightActive && !meiEditorSettings.disableShiftNew && meiEditorSettings.divaInstance.getSettings().isActiveDiva)
+                    $(document).on('keydown.mezd', function(e)
                     {
-                        e.stopPropagation();
-                        meiEditor.startNewHighlight();
-                    } 
-                });
-
-                $(document).on('keyup', function(e)
-                {
-                    var resizableActive = ($(resizableSelector).length > 0);
-                    var selectedActive = ($(selectedSelector).length > 0);
-
-                    //no matter what, if this was toggling the shift key and it wasn't down before, listen to remove the overlay
-                    if (!e.shiftKey && newHighlightActive) 
-                    {
-                        newHighlightActive = false;
-                        if (!editorLastFocus) e.stopPropagation();
-                        $(overlaySelector).unbind('mousedown', prepNewHighlight);
-                        destroyOverlay();
-                        return;
-                    }
-
-                    //if the editor was the last thing clicked, we don't want to listen
-                    if (editorLastFocus) return;
-
-                    //escape to quit whatever the current selection is
-                    if (e.keyCode == 27 && (resizableActive || selectedActive)) 
-                    { 
-                        e.stopPropagation();
-                        ($(resizableSelector).length > 0) ? meiEditor.deselectResizable(resizableSelector) : meiEditor.deselectAllHighlights();
-                        destroyOverlay();
-                    } 
-                    //arrow keys to nudge resizable
-                    else if ((e.keyCode < 41) && (e.keyCode > 36) && resizableActive)
-                    {
-                        e.stopPropagation();
-                        e.preventDefault();
-
-                        switch (e.keyCode) 
+                        if (e.shiftKey && !newHighlightActive && !meiEditorSettings.disableShiftNew && meiEditorSettings.divaInstance.getSettings().isActiveDiva)
                         {
-                            case 37:
-                                $(resizableSelector).offset({'left': $(resizableSelector).offset().left - 1});
-                                break;
-                            case 38:
-                                $(resizableSelector).offset({'top': $(resizableSelector).offset().top - 1});
-                                break;
-                            case 39:
-                                $(resizableSelector).offset({'left': $(resizableSelector).offset().left + 1});
-                                break;
-                            case 40:
-                                $(resizableSelector).offset({'top': $(resizableSelector).offset().top + 1});
-                                break;
-                            default:
-                                break;
+                            e.stopPropagation();
+                            meiEditor.startNewHighlight();
+                        } 
+                    });
+
+                    $(document).on('keyup.mezd', function(e)
+                    {
+                        var resizableActive = ($(resizableSelector).length > 0);
+                        var selectedActive = ($(selectedSelector).length > 0);
+
+                        //no matter what, if this was toggling the shift key and it wasn't down before, listen to remove the overlay
+                        if (!e.shiftKey && newHighlightActive) 
+                        {
+                            newHighlightActive = false;
+                            if (!editorLastFocus) e.stopPropagation();
+                            $(overlaySelector).unbind('mousedown', prepNewHighlight);
+                            destroyOverlay();
+                            return;
                         }
-                        meiEditor.updateBox(resizableSelector);
-                    }
-                    //delete when one is either resizable or selected
-                    else if((e.keyCode == 46 || e.keyCode == 8) && (selectedActive || resizableActive))
-                    {
-                        e.stopPropagation();
-                        e.preventDefault();
 
-                        //if double-click active, we want to remove only the resizable, otherwise we want to remove the selected
-                        var selector = ($(resizableSelector).length > 0) ? resizableSelector : selectedSelector;
-                        
-                        var pageTitle = meiEditor.getActivePageTitle();
-                        var pageRef = meiEditor.getPageData(pageTitle);
-                        pageRef.selection.removeListener('changeCursor', cursorUpdate);
-                        var curSelection = pageRef.selection.getCursor();
+                        //if the editor was the last thing clicked, we don't want to listen
+                        if (editorLastFocus) return;
 
-                        var curItemIndex = $(selector).length;
-                        var zoneArr = [];
-                        while (curItemIndex--) //in case there's multiple
+                        //escape to quit whatever the current selection is
+                        if (e.keyCode == 27 && (resizableActive || selectedActive)) 
+                        { 
+                            e.stopPropagation();
+                            ($(resizableSelector).length > 0) ? meiEditor.deselectResizable(resizableSelector) : meiEditor.deselectAllHighlights();
+                            destroyOverlay();
+                        } 
+                        //arrow keys to nudge resizable
+                        else if ((e.keyCode < 41) && (e.keyCode > 36) && resizableActive)
                         {
-                            var curItem = $(selector)[curItemIndex];    
-                            var itemID = $(curItem).attr('data-highlight-id');
+                            e.stopPropagation();
+                            e.preventDefault();
 
-                            //regenerate these every time
-                            zoneArr = pageRef.parsed.querySelectorAll('zone[*|id=' + itemID + ']');
-                            safelyRemove(zoneArr[0]);
+                            switch (e.keyCode) 
+                            {
+                                case 37:
+                                    $(resizableSelector).offset({'left': $(resizableSelector).offset().left - 1});
+                                    break;
+                                case 38:
+                                    $(resizableSelector).offset({'top': $(resizableSelector).offset().top - 1});
+                                    break;
+                                case 39:
+                                    $(resizableSelector).offset({'left': $(resizableSelector).offset().left + 1});
+                                    break;
+                                case 40:
+                                    $(resizableSelector).offset({'top': $(resizableSelector).offset().top + 1});
+                                    break;
+                                default:
+                                    break;
+                            }
+                            meiEditor.updateBox(resizableSelector);
+                        }
+                        //delete when one is either resizable or selected
+                        else if((e.keyCode == 46 || e.keyCode == 8) && (selectedActive || resizableActive))
+                        {
+                            e.stopPropagation();
+                            e.preventDefault();
 
-                            zoneArr = pageRef.parsed.querySelectorAll('[facs=' + itemID + ']');
-                            safelyRemove(zoneArr[0]);
+                            //if double-click active, we want to remove only the resizable, otherwise we want to remove the selected
+                            var selector = ($(resizableSelector).length > 0) ? resizableSelector : selectedSelector;
                             
-                            $(curItem).remove();
+                            var pageTitle = meiEditor.getActivePageTitle();
+                            var pageRef = meiEditor.getPageData(pageTitle);
+                            pageRef.selection.removeListener('changeCursor', cursorUpdate);
+                            var curSelection = pageRef.selection.getCursor();
+
+                            var curItemIndex = $(selector).length;
+                            var zoneArr = [];
+                            while (curItemIndex--) //in case there's multiple
+                            {
+                                var curItem = $(selector)[curItemIndex];    
+                                var itemID = $(curItem).attr('data-highlight-id');
+
+                                //regenerate these every time
+                                zoneArr = pageRef.parsed.querySelectorAll('zone[*|id=' + itemID + ']');
+                                safelyRemove(zoneArr[0]);
+
+                                zoneArr = pageRef.parsed.querySelectorAll('[facs=' + itemID + ']');
+                                safelyRemove(zoneArr[0]);
+                                
+                                $(curItem).remove();
+                            }
+
+                            var blank = (selector === resizableSelector) ? meiEditor.deselectResizable(resizableSelector) : meiEditor.deselectAllHighlights();
+
+                            rewriteAce(pageRef);
+
+                            pageRef.gotoLine(curSelection.row, curSelection.column, false);
+                            pageRef.selection.on('changeCursor', cursorUpdate);
+                            meiEditor.localLog("Deleted highlight."); 
                         }
-
-                        var blank = (selector === resizableSelector) ? meiEditor.deselectResizable(resizableSelector) : meiEditor.deselectAllHighlights();
-
-                        rewriteAce(pageRef);
-
-                        pageRef.gotoLine(curSelection.row, curSelection.column, false);
-                        pageRef.selection.on('changeCursor', cursorUpdate);
-                        meiEditor.localLog("Deleted highlight."); 
-                    }
-                });   
+                    });   
+                };
+                applyEventListeners();
 
                 /*
                     Saves highlights/resizable IDs while highlights are being reloaded.
@@ -1165,6 +1168,10 @@ require(['meiEditor'], function(){
                     var activeFileName = pageTitleForDivaFilename(fileName);
                     if (activeFileName)
                         meiEditor.switchToPage(activeFileName);
+                });
+                diva.Events.subscribe('ViewerDidTerminate', function() 
+                {
+                    $(document).off('.mezd');
                 });
                 
                 var pageTitles = meiEditor.getPageTitles();
