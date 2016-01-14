@@ -12,10 +12,7 @@ require(['meiEditor'], function(){
                     divaInstance: A reference to the Diva object created from initializing Diva.
                 */
                 if (!("divaInstance" in meiEditorSettings))
-                {
-                    console.error("MEI Editor error: The 'Zone Display' plugin requires the 'divaInstance' setting present on intialization.");
-                    return false;
-                }
+                    console.warn("MEI Editor error: The 'Zone Display' plugin should have the 'divaInstance' setting present on intialization.");
 
                 var defaults = 
                 {
@@ -54,8 +51,17 @@ require(['meiEditor'], function(){
                 var dragSelector = "#" + dragID;
                 var editorLastFocus = true; //true if something on the editor side was the last thing clicked, false otherwise
                 var newHighlightActive = false;
-                var divaFilenames = meiEditorSettings.divaInstance.getFilenames();
-                var divaObject = meiEditorSettings.divaInstance.getSettings().parentObject;
+
+                var divaFilenames, divaObject;
+                if (meiEditorSettings.divaInstance) setDivaVars();
+
+                var setDivaVars = function()
+                {
+                    var divaFilenames = meiEditorSettings.divaInstance.getFilenames();
+                    var divaObject = meiEditorSettings.divaInstance.getSettings().parentObject;
+                    $(divaObject).on('mouseenter', function(e){e.preventDefault();});
+                };
+
                 var linkedPages = {};
 
                 var initDragTop, initDragLeft;
@@ -146,6 +152,7 @@ require(['meiEditor'], function(){
 
                 meiEditor.reloadZones = function()
                 {
+                    if (!meiEditorSettings.divaInstance) return;
                     //dict of zones to highlight represented as {'UUID'(surface): [['ulx': ulx, 'uly': uly, 'lrx': lrx, 'lry': lry, 'divID': uuid(zone)}, {'ulx'...}]}
                     var zoneDict = {}; 
                     linkedPages = {};
@@ -319,6 +326,7 @@ require(['meiEditor'], function(){
 
                 var createOverlay = function()
                 {
+                    if (!meiEditorSettings.divaInstance) return;
                     meiEditorSettings.divaInstance.disableScrollable();
                     divaObject.append("<div id='" + overlayID + "'></div>");
                     $(overlaySelector).offset({'top': divaObject.offset().top, 'left': divaObject.offset().left});
@@ -342,6 +350,8 @@ require(['meiEditor'], function(){
 
                 var destroyOverlay = function()
                 {
+                    if (!meiEditorSettings.divaInstance) return;
+
                     //remove overlay and restore key bindings to Diva
                     $(overlaySelector).remove();
                     meiEditorSettings.divaInstance.enableScrollable();
@@ -528,6 +538,11 @@ require(['meiEditor'], function(){
                 //writes changes to an object into the document
                 meiEditor.updateBox = function(box)
                 {
+                    if (!meiEditorSettings.divaInstance) 
+                    {
+                        console.log("this shouldn't be happening - updateBox without diva");
+                        return;
+                    }
                     var boxPosition = $(box).position();
                     var itemID = $(box).attr('data-highlight-id');
                     var ulx = meiEditorSettings.divaInstance.translateToMaxZoomLevel(boxPosition.left);
@@ -600,6 +615,11 @@ require(['meiEditor'], function(){
 
                 var createHighlight = function(e)
                 {
+                    if (!meiEditorSettings.divaInstance) 
+                    {
+                        console.log("this shouldn't be happening - createHighlight without diva");
+                        return;
+                    }
                     //unbind everything that could have caused this
                     $(document).unbind('mousemove', changeDragSize);
                     $(document).unbind('mouseup', createHighlight);
@@ -922,7 +942,7 @@ require(['meiEditor'], function(){
                 {
                     $(document).on('keydown.mezd', function(e)
                     {
-                        if (e.shiftKey && !newHighlightActive && !meiEditorSettings.disableShiftNew && meiEditorSettings.divaInstance.getSettings().isActiveDiva)
+                        if (e.shiftKey && !newHighlightActive && !meiEditorSettings.disableShiftNew && meiEditorSettings.divaInstance && meiEditorSettings.divaInstance.getSettings().isActiveDiva)
                         {
                             e.stopPropagation();
                             meiEditor.startNewHighlight();
@@ -1152,7 +1172,7 @@ require(['meiEditor'], function(){
                     var divaIdx = getDivaIndexForPage(newName);
                     if (divaIdx < 0) return;
                     if (newName !== meiEditor.getActivePageTitle()) return;
-
+                    if (!meiEditorSettings.divaInstance) return;
                     //scroll to it
                     meiEditorSettings.divaInstance.gotoPageByIndex(divaIdx);
                     meiEditor.getPageData(newName).selection.on('changeCursor', cursorUpdate);
@@ -1194,8 +1214,6 @@ require(['meiEditor'], function(){
                         document.activeElement.blur();
                     }
                 });
-
-                $(divaObject).on('mouseenter', function(e){e.preventDefault();});
 
                 return true;
             }
