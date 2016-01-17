@@ -947,7 +947,7 @@ define([], function ($)
                     var consoleDiff = $("#editorConsole").outerHeight() - $("#editorConsole").height();
                     $("#editorConsole").offset({'top': $("#openPages").outerHeight() + (settings.expandedTopbar ? $("#expandedTopbar").outerHeight() : $("#compactTopbar").outerHeight())});
 
-                    newHeight = parseInt(window.innerHeight - $("#openPages").outerHeight() - topbarHeight - consoleDiff + 1, 10);
+                    newHeight = parseInt(settings.parentSelector.outerHeight() - $("#openPages").outerHeight() - topbarHeight - consoleDiff + 1, 10);
                     $("#editorConsole").height(newHeight);
 
                     //make sure that the child of the console that holds the text is at the right size
