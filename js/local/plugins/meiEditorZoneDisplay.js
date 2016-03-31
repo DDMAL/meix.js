@@ -1145,14 +1145,14 @@ require(['meiEditor'], function(){
                 meiEditor.events.subscribe("NewFile", function(a, fileName)
                 {
                     //scroll to it
-                    meiEditor.getPageData(fileName).selection.on('changeCursor', cursorUpdate);
+                    if (!meiEditorSettings.headless) meiEditor.getPageData(fileName).selection.on('changeCursor', cursorUpdate);
                     meiEditor.events.publish('UpdateZones');
                 });
 
                 meiEditor.events.subscribe("ActivePageChanged", function(fileName)
                 {
                     //scroll to it
-                    meiEditor.getPageData(fileName).selection.on('changeCursor', cursorUpdate);
+                    if (!meiEditorSettings.headless) meiEditor.getPageData(fileName).selection.on('changeCursor', cursorUpdate);
                     meiEditor.events.publish('UpdateZones');
                 });
 

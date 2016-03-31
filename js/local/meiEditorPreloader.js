@@ -22,10 +22,11 @@ var MeiEditor = function(element, settingsIn, pluginsIn){
         'meiEditorLocation': 'meix.js/',    //root folder for the meix.js code
         'skipXMLValidator': false,          //If set to true, will skip loading the XML Validator plugin.
         'skipFileUpload': false,            //If set to true, will skip loading the File manager plugin.
-        'skipEditPane': false               //If set to true, will skip loading the Edit pane plugin.
+        'skipEditPane': false,              //If set to true, will skip loading the Edit pane plugin.
+        'headless': false                   //If headless is true, doesn't initialize the default GUI aside from the file upload plugin
     };
 
-    $.extend(settings, settingsIn)
+    $.extend(settings, settingsIn);
 
     window.meiEditorLocation = settings.meiEditorLocation;
 
@@ -89,10 +90,10 @@ var MeiEditor = function(element, settingsIn, pluginsIn){
     if (!settings.skipFileUpload)
         plugins.push(window.meiEditorLocation + "js/local/plugins/meiEditorFileUpload.js");
 
-    if (!settings.skipEditPane)
+    if (!settings.skipEditPane && !settings.headless)
         plugins.push(window.meiEditorLocation + "js/local/plugins/meiEditorEditPane.js");
 
-    if (!settings.skipXMLValidator)
+    if (!settings.skipXMLValidator && !settings.headless)
         plugins.push(window.meiEditorLocation + "js/local/plugins/meiEditorXMLValidator.js");
 
     //merges default with incoming

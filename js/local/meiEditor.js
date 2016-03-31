@@ -29,7 +29,8 @@ define([], function ($)
             pageTitle: "Ace MEI Editor", //title for the navbar-brand object
             aceTheme: "",           //which ace theme to use, passed in as a string. Check setTheme() on http://ace.c9.io/#nav=api&api=editor
             navbarClass: "navbar navbar-inverse", //allows the user to set the class string for the navigation bar and change its theme
-            initializeWithFile: null //If this is not null, it will attempt to automatically open this parameter as a file
+            initializeWithFile: null, //If this is not null, it will attempt to automatically open this parameter as a file
+            initializeWithFiles: [] //will try to automatically open all these files
         };
 
         $.extend(settings, options);
@@ -192,7 +193,7 @@ define([], function ($)
 
         this.reparseAce = function(pageTitle)
         {
-            var xmlString = pageData[pageTitle].session.doc.getAllLines().join("\n");
+            var xmlString = (options.headless ? pageData[pageTitle].raw : pageData[pageTitle].session.doc.getAllLines().join("\n"));
             pageData[pageTitle].parsed = meiParser.parseFromString(xmlString, 'text/xml');
         };
 
@@ -350,22 +351,35 @@ define([], function ($)
             var fileNameStripped = jQueryStrip(fileName);
             //add a new tab to the editor
             $("#pagesList").append("<li id='" + fileNameStripped + "-listitem'><a href='#" + fileNameStripped + "-wrapper' id='" + fileNameStripped +"-tab' class='linkWrapper'>" + fileName + "</a>" + self.makeIconString() + "</li>");
-            $("#openPages").append("<div id='" + fileNameStripped + "-wrapper'>" + //necessary for CSS to work
-                "<div id='" + fileNameStripped + "' originalName='" + fileName + "' class='aceEditorPane'>" +
-                "</div></div>");
+            if (options.headless)
+                $("#openPages").append("<div id='" + fileNameStripped + "-wrapper'>" + //necessary for CSS to work
+                    "<div id='" + fileNameStripped + "' originalName='" + fileName + "'>" +
+                        "Placeholder text." +
+                    "</div></div>");
+            else
+                $("#openPages").append("<div id='" + fileNameStripped + "-wrapper'>" + //necessary for CSS to work
+                    "<div id='" + fileNameStripped + "' originalName='" + fileName + "' class='aceEditorPane'>" +
+                    "</div></div>");
 
             self.resetIconListeners();
 
             //add the data to the pageData object and initialize the editor
-            pageData[fileName] = ace.edit(fileNameStripped); //add the file's data into a "pageData" array that will eventually feed into the ACE editor
-            editor = pageData[fileName];
-            editor.$blockScrolling = Infinity;
-            editor.resize();
-            editor.setTheme(settings.aceTheme);
-            editor.setSession(new ace.EditSession(fileData));
-            editor.getSession().setMode("ace/mode/xml");
-            editor.highlightedLines = {};
-            editor.setShowPrintMargin(false);
+            if (options.headless)
+                pageData[fileName] = {
+                    'raw': fileData,
+                    'el': document.getElementById(fileNameStripped)
+                };
+            else
+            {
+                pageData[fileName] = ace.edit(fileNameStripped); //add the file's data into a "pageData" array that will eventually feed into the ACE editor
+                editor = pageData[fileName];
+                editor.$blockScrolling = Infinity;
+                editor.setTheme(settings.aceTheme);
+                editor.setSession(new ace.EditSession(fileData));
+                editor.getSession().setMode("ace/mode/xml");
+                editor.highlightedLines = {};
+                editor.setShowPrintMargin(false);
+            }
 
             //Hankinson wants his keyboard shortcuts, so we'll give them to him...
             /*editor.commands.removeCommand('gotoline');
@@ -387,12 +401,12 @@ define([], function ($)
             var numTabs = $("#pagesList li").length - 1;
             $("#openPages").tabs("refresh");
             $("#openPages").tabs({active: numTabs}); //load straight to the new one
-            pageData[fileName].resize();
+            if (!options.headless) pageData[fileName].resize();
 
             //when the document is clicked
             $("#" + fileNameStripped).on('click', function(e) //parent of editorPane
             {
-                if ($(e.target).hasClass('ace_scroller')){
+                if ($(e.target).hasClass('ace_scroller') || options.headless){
                     return;
                 }
 
@@ -664,6 +678,8 @@ define([], function ($)
         */
         var localPost = function(text, style)
         {
+            // If we're running in headless mode, console's hidden so don't log anything.
+            if (options.headless) return;
             var newClass = style + "Border";
 
             //this takes care of some random lines xmllint spits out that aren't useful
@@ -884,12 +900,12 @@ define([], function ($)
                             '<a href="#new-tab">+</a>' +
                         '</li>' +
                     '</ul>' +
-                    '<div id="new-tab"></div>' + //this will never be seen, but is needed to prevent a bug or two
+                    (options.headless ? '' : '<div id="new-tab"></div>') + //this will never be seen, but is needed to prevent a bug or two
                 '</div>' +
-                '<div id="editorConsole" class="regularBorder">' +
+                (options.headless ? '' : '<div id="editorConsole" class="regularBorder">' +
                     '<div id="consoleResizeDiv"></div>' +
                     '<div id="consoleText">Console loaded!</div>' +
-                '</div>');
+                '</div>'));
 
             $("#newTabButton > a").on('click', function()
             {
@@ -991,7 +1007,7 @@ define([], function ($)
                     updateTabTitles();
 
                     //resize components to make sure the newly activated tab is the right size
-                    pageData[activePage].resize();
+                    if (!options.headless) pageData[activePage].resize();
                     self.resizeComponents();
 
                     //usually, the URL bar will change to the last tab visited because jQueryUI tabs use <a> href attributes; this prevents that by repalcing every URL change with "index.html" and no ID information
@@ -1019,22 +1035,12 @@ define([], function ($)
 
             //create the initial ACE editor
             if (settings.initializeWithFile !== null)
+                settings.initializeWithFiles.push(settings.initializeWithFile);
+            if (settings.initializeWithFiles.length > 0)
             {
-                $.ajax(settings.initializeWithFile, {
-                    dataType: 'text',
-                    success: function(data, status, jsxhr) {
-                        var fileSplit = settings.initializeWithFile.split("/");
-                        var fileName = fileSplit[fileSplit.length - 1];
-                        self.addFileToProject(data, fileName);
-
-                        //if we make this ajax call, we need to let all listeners know it's fully loaded.
-                        $(window).trigger('meiEditorLoaded');
-                    },
-                    error: function(a, b, desc) {
-                        self.localError("Could not load default file at URL " + settings.initializeWithFile + " with the error '" + desc + ".' Loading default untitled page instead.");
-                        self.addDefaultPage();
-                    }
-                });
+                settings.loadedFiles = 0;
+                for (var fIdx = 0; fIdx < settings.initializeWithFiles.length; fIdx++)
+                    loadFile(settings.initializeWithFiles[fIdx]);
             }
             else
             {
@@ -1046,6 +1052,33 @@ define([], function ($)
             settings.thresholdTopbarWidth = $("#site-logo").outerWidth() + $("#topbarContentWrapper").outerWidth() + $("#topbarRightContent").outerWidth() + parseInt($("#topbarContainer").css('padding-left'), 10);
             self.resizeComponents();
             $(window).on('resize', self.resizeComponents);
+        };
+
+        var loadFile = function(file)
+        {
+            $.ajax(file, {
+                dataType: 'text',
+                success: function(data, status, jsxhr) {
+                    var fileSplit = file.split("/");
+                    var fileName = fileSplit[fileSplit.length - 1];
+                    self.addFileToProject(data, fileName);
+
+                    fileLoaded();
+                },
+                error: function(a, b, desc) {
+                    self.localError("Could not load default file at URL " + file + " with the error '" + desc + ".' Loading default untitled page instead.");
+                    self.addDefaultPage();
+                    fileLoaded();
+                }
+            });
+        };
+
+        //if we load any files via ajax, we need to let all listeners know it's fully loaded.
+        var fileLoaded = function()
+        {
+            settings.loadedFiles += 1;
+            if (settings.loadedFiles === settings.initializeWithFiles.length)
+                $(window).trigger('meiEditorLoaded');
         };
 
         _init();
@@ -1069,7 +1102,7 @@ define([], function ($)
             element.data('AceMeiEditor', meiEditor);
 
             //if we didn't trigger the AJAX call, let everyone know this is loaded; otherwise it's done a bit above.
-            if (options.initializeWithFile === undefined)
+            if (options.initializeWithFile === undefined && options.initializeWithFiles === undefined)
             {
                 $(window).trigger('meiEditorLoaded');
             }
