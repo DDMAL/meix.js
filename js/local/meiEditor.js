@@ -353,12 +353,12 @@ define([], function ($)
             $("#pagesList").append("<li id='" + fileNameStripped + "-listitem'><a href='#" + fileNameStripped + "-wrapper' id='" + fileNameStripped +"-tab' class='linkWrapper'>" + fileName + "</a>" + self.makeIconString() + "</li>");
             if (options.headless)
                 $("#openPages").append("<div id='" + fileNameStripped + "-wrapper'>" + //necessary for CSS to work
-                    "<div id='" + fileNameStripped + "' originalName='" + fileName + "'>" +
+                    "<div id='" + fileNameStripped + "' class='mei-editor-pane' data-originalname='" + fileName + "'>" +
                         "Placeholder text." +
                     "</div></div>");
             else
                 $("#openPages").append("<div id='" + fileNameStripped + "-wrapper'>" + //necessary for CSS to work
-                    "<div id='" + fileNameStripped + "' originalName='" + fileName + "' class='aceEditorPane'>" +
+                    "<div id='" + fileNameStripped + "' class='mei-editor-pane' data-originalname='" + fileName + "' class='aceEditorPane'>" +
                     "</div></div>");
 
             self.resetIconListeners();
