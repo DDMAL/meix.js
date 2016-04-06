@@ -55,13 +55,6 @@ require(['meiEditor'], function(){
                 var divaFilenames, divaObject;
                 if (meiEditorSettings.divaInstance) setDivaVars();
 
-                var setDivaVars = function()
-                {
-                    var divaFilenames = meiEditorSettings.divaInstance.getFilenames();
-                    var divaObject = meiEditorSettings.divaInstance.getSettings().parentObject;
-                    $(divaObject).on('mouseenter', function(e){e.preventDefault();});
-                };
-
                 var linkedPages = {};
 
                 var initDragTop, initDragLeft;
@@ -150,6 +143,12 @@ require(['meiEditor'], function(){
                     }
                 };
 
+                meiEditor.setDivaInstance = function(divaInstance)
+                {
+                    meiEditorSettings.divaInstance = divaInstance;
+                    if (divaInstance) setDivaVars();
+                }
+
                 meiEditor.reloadZones = function()
                 {
                     if (!meiEditorSettings.divaInstance) return;
@@ -222,6 +221,13 @@ require(['meiEditor'], function(){
                     meiEditor.events.publish('ZonesWereUpdated', [zoneDict]);
 
                     return true;
+                };
+
+                var setDivaVars = function()
+                {
+                    divaFilenames = meiEditorSettings.divaInstance.getFilenames();
+                    divaObject = meiEditorSettings.divaInstance.getSettings().parentObject;
+                    $(divaObject).on('mouseenter', function(e){e.preventDefault();});
                 };
 
                 /*
@@ -1125,6 +1131,7 @@ require(['meiEditor'], function(){
                 */
                 var getDivaIndexForImage = function(filename)
                 {
+                    var divaFilenames = meiEditorSettings.divaInstance.getFilenames();
                     for(var idx = 0; idx < divaFilenames.length; idx++)
                         if (filename == divaFilenames[idx]) return idx;
 
