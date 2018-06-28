@@ -214,8 +214,8 @@ require(['meiEditor', window.meiEditorLocation + 'js/lib/FileSaver.js'], functio
                 meiEditor.events.subscribe("PageEdited", function(pageTitle)
                 {
                     actionSinceSaved = true;
-                    if ($("#" + jQueryStrip(pageTitle) + "-tab").children().length === 0)
-                        $("#" + jQueryStrip(pageTitle) + "-tab").append("<span>*</span>");
+                    // if ($("#" + jQueryStrip(pageTitle) + "-tab").children().length === 0)
+                    //     $("#" + jQueryStrip(pageTitle) + "-tab").append("<span>*</span>");
                 });
 
                 $("#fileLoadModal-close").on('click', function()

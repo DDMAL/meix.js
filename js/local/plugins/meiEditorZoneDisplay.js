@@ -94,7 +94,7 @@ require(['meiEditor'], function(){
                     meiEditor.localLog(outString);
                 });
 
-                /*createModal(meiEditorSettings.element, "zoneHelpModal", false,
+                createModal(meiEditorSettings.element, "zoneHelpModal", false,
                     "<h4>Help for 'Zone Display' menu:</h4>" +
                     "<li>To get highlights from a file to show up in the Diva pane, click 'Link files to Diva images...' from the dropdown menu and select the files you want to link.</li>" +
                     "<br><li>'Auto-link files by filename' will automatically strip file extensions and try to match files so that '001.mei' and '001.tiff' become linked.</li>" +
@@ -113,11 +113,11 @@ require(['meiEditor'], function(){
                     "<li style='margin-left:0.25in'>Click and drag on the centre of the highlight or with the shift key down to move it.</li>" +
                     "<li style='margin-left:0.25in'>Pressing an arrow key will move a box slightly in the direction of the arrow.</li>" +
                     "<li style='margin-left:0.25in'>Press the 'Escape' key to leave resize/move mode.</li>" +
-                    "<br><li>Press the 'delete' key on your keyboard to delete all selected highlights and the MEI lines associated with them.</li>");*/
+                    "<br><li>Press the 'delete' key on your keyboard to delete all selected highlights and the MEI lines associated with them.</li>");
 
-                createModal(meiEditorSettings.element, "zoneHelpModal", false,
-                    "<h4>Help for 'Zone Display' menu:</h4>" +
-                    "<li>Just email Horwitz.</li>");
+                // createModal(meiEditorSettings.element, "zoneHelpModal", false,
+                //     "<h4>Help for 'Zone Display' menu:</h4>" +
+                //     "<li>Just email Horwitz.</li>");
 
                 //changes the position of the on-hover box
                 var changeHoverPosition = function(e)
@@ -158,6 +158,7 @@ require(['meiEditor'], function(){
                 */
                 var reloadOneToOneZones = function()
                 {
+                    console.log("here");
                     if(!meiEditorSettings.oneToOneMEI)
                     {
                         meiEditor.localError("Multiple surfaces found. Can not reload zones.");
@@ -171,6 +172,8 @@ require(['meiEditor'], function(){
                     var divaIndexes = Object.keys(pageTitles);
                     var idx = divaIndexes.length;
 
+                    console.log(pageTitles);
+
                     while(idx--)
                     {
                         var divaIdx = divaIndexes[idx];
@@ -179,6 +182,8 @@ require(['meiEditor'], function(){
                         zoneDict[divaIdx] = [];
                         var linesArr = parsed.getElementsByTagName('zone');
                         var lineIdx = linesArr.length;
+
+                        console.log(lineIdx);
                         while(lineIdx--)
                         {
                             var line = linesArr[lineIdx];
@@ -198,12 +203,13 @@ require(['meiEditor'], function(){
                             zoneIDs.push(xmlID);
                         }
                     }
-
+                    console.log("here two");
                     return publishZones(zoneDict);
                 };
 
                 var reloadMultiPageZones = function()
                 {
+                    console.log("here three");
                     if(meiEditorSettings.oneToOneMEI)
                     {
                         meiEditor.localError("Multiple surfaces not found. Can not reload zones.");
@@ -276,6 +282,7 @@ require(['meiEditor'], function(){
                 */
                 var publishZones = function(zoneDict)
                 {
+                    console.log(zoneDict);
                     for (var curPage in zoneDict)
                     {
                         if (zoneDict[curPage].length === 0) delete zoneDict[curPage];
@@ -324,9 +331,11 @@ require(['meiEditor'], function(){
 
                 meiEditor.toggleOneToOne = function()
                 {
+                    console.log('setting');
                     //if ($("#one-to-one-checkbox").prop('checked'))
                     if (meiEditorSettings.oneToOneMEI)
                     {
+                        console.log("in true");
                         meiEditorSettings.oneToOneMEI = true;
                         meiEditor.reloadZones = reloadOneToOneZones;
                     }
@@ -338,6 +347,7 @@ require(['meiEditor'], function(){
                 };
 
                 //no matter what, trigger this once to make sure it's the right listener
+                console.log("setting for the fiorst time");
                 meiEditor.toggleOneToOne();
                 $("#one-to-one-checkbox").on('change', meiEditor.toggleOneToOne);
 
@@ -1217,10 +1227,13 @@ require(['meiEditor'], function(){
                     var pageTitles = meiEditor.getPageTitles();
                     var idx = pageTitles.length;
 
+                    console.log(pageTitles);
+
                     while(idx--)
                     {                        
                         var curTitle = pageTitles[idx];
                         var divaIdx = getDivaIndexForPage(curTitle);
+                        console.log(curTitle, divaIdx);
                         if (divaIdx > -1) linkedPages[divaIdx] = curTitle;
                     }
 
@@ -1240,9 +1253,15 @@ require(['meiEditor'], function(){
                     var splitName = pageTitle.split(".")[0];
                     var splitDiva;
 
+                    if (divaFilenames.length === 0) divaFilenames = meiEditorSettings.divaInstance.getFilenames();
+
+                    console.log(divaFilenames);
+
                     for(var idx = 0; idx < divaFilenames.length; idx++)
                     {
-                        splitDiva = divaFilenames[idx].split(".")[0];
+                        splitDiva = divaFilenames[idx].split("/");
+                        splitDiva = splitDiva[splitDiva.length - 1];
+                        splitDiva = splitDiva.split(".")[0];
                         if (splitName == splitDiva) return idx;
                     }
 
@@ -1355,6 +1374,10 @@ require(['meiEditor'], function(){
 
                 $(divaObject).on('mouseenter', function(e){e.preventDefault();});
 
+                window.poke = function() {
+                    meiEditor.events.publish("PageEdited");
+                };
+
                 return true;
             }
         };
@@ -1364,3 +1387,5 @@ require(['meiEditor'], function(){
 })(jQuery);
 
 });
+
+
