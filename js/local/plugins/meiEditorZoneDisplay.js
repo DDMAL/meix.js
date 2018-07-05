@@ -1242,7 +1242,7 @@ require(['meiEditor'], function(){
 
                     if (divaFilenames.length === 0) divaFilenames = meiEditorSettings.divaInstance.getFilenames();
 
-                    console.log(divaFilenames);
+                    // console.log(divaFilenames);
 
                     for(var idx = 0; idx < divaFilenames.length; idx++)
                     {
