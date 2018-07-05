@@ -515,36 +515,23 @@ require(['meiEditor'], function(){
                     clearTimeout(highlightSingleClickTimeout);
                     
                     //if we don't hear a double-click after some time, call this
-                    highlightSingleClickTimeout = setTimeout(function()
+                    highlightSingleClickTimeout = setTimeout(function()                    
                     {
                         clearTimeout(highlightSingleClickTimeout);
                         e.stopPropagation();
-
-                        //index of the page clicked on
-                        var clickedIdx = $(e.target).closest('.diva-document-page').attr('data-index');
-                        var clickedTitle = pageTitleForDivaFilename(divaFilenames[clickedIdx]);
-
-                        //if the clicked page is not linked, return and do nothing
-                        if (clickedTitle === false)
+                        var pageTitles = meiEditor.getLinkedPageTitles();
+                        var currentIndex = meiEditorSettings.divaInstance.getCurrentPageIndex();
+                        var currentMEI = meiEditor.getActivePageTitle();
+                        if(!(currentIndex in pageTitles) || 
+                           currentMEI !== pageTitles[currentIndex])
                         {
-                            meiEditor.deselectAllHighlights();
-                            return false;
+                            console.log('Unsynchronized mei file with manuscript image');
+                            return;
                         }
-
-                        //diva index of the page currently clicked on
-                        var currentTitle = meiEditor.getActivePageTitle();
-                        var currentIdx = divaFilenames.indexOf(currentTitle.split(".")[0]);
-
-                        //if the two indices are not the same
-                        if (clickedIdx != currentIdx)
-                        {
-                            meiEditor.switchToPage(clickedTitle);
-                        }
-
-                        meiEditor.deselectAllHighlights();
-                        meiEditor.selectHighlight(e.target);
-                        return true;
-                    }, SINGLE_CLICK_TIMEOUT);
+                        
+                        var id = $(e.target).attr('data-highlight-id');
+                        meiEditor.gotoLineWithID(id);                        
+                    }, SINGLE_CLICK_TIMEOUT);                        
                 };
 
                 /*
