@@ -1329,6 +1329,8 @@ require(['meiEditor'], function(){
                 diva.Events.subscribe("VisiblePageDidChange", function(pageNumber, fileName)
                 {
                     //only if it's linked
+                    fileName = fileName.split('/');
+                    fileName = fileName[fileName.length - 1];
                     var activeFileName = pageTitleForDivaFilename(fileName);
                     if (activeFileName)
                     {
