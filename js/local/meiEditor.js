@@ -738,9 +738,10 @@ define([], function ($)
 
             var line = 0;
             while (line < linesArr.length)
-            {
+            {            
                 var retLine = parseInt(line, 10) + 1;
                 var lineDict = parseXMLLine(linesArr[line]);
+                line++;
                 if(!lineDict) continue;
                 else if (lineDict.hasOwnProperty(tag))
                 {
@@ -751,8 +752,7 @@ define([], function ($)
                         else if (lineDict[tag][att] == val)
                             return [retLine, lineDict];
                     }
-                }
-                line++;
+                }                
             }
             return false;
         };
