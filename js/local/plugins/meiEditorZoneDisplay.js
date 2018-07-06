@@ -1209,10 +1209,9 @@ require(['meiEditor'], function(){
                     var pageTitles = meiEditor.getPageTitles();
                     var idx = pageTitles.length;
                     while(idx--)
-                    {                        
+                    {
                         var curTitle = pageTitles[idx];
                         var divaIdx = getDivaIndexForPage(curTitle);
-                        console.log(curTitle, divaIdx);
                         if (divaIdx > -1) linkedPages[divaIdx] = curTitle;
                     }
 
