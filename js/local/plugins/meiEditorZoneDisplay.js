@@ -158,7 +158,6 @@ require(['meiEditor'], function(){
                 */
                 var reloadOneToOneZones = function()
                 {
-                    console.log("here");
                     if(!meiEditorSettings.oneToOneMEI)
                     {
                         meiEditor.localError("Multiple surfaces found. Can not reload zones.");
@@ -172,8 +171,6 @@ require(['meiEditor'], function(){
                     var divaIndexes = Object.keys(pageTitles);
                     var idx = divaIndexes.length;
 
-                    console.log(pageTitles);
-
                     while(idx--)
                     {
                         var divaIdx = divaIndexes[idx];
@@ -183,7 +180,7 @@ require(['meiEditor'], function(){
                         var linesArr = parsed.getElementsByTagName('zone');
                         var lineIdx = linesArr.length;
 
-                        console.log(lineIdx);
+                        // console.log(lineIdx);
                         while(lineIdx--)
                         {
                             var line = linesArr[lineIdx];
@@ -203,7 +200,6 @@ require(['meiEditor'], function(){
                             zoneIDs.push(xmlID);
                         }
                     }
-                    console.log("here two");
                     return publishZones(zoneDict);
                 };
 
@@ -282,7 +278,6 @@ require(['meiEditor'], function(){
                 */
                 var publishZones = function(zoneDict)
                 {
-                    console.log(zoneDict);
                     for (var curPage in zoneDict)
                     {
                         if (zoneDict[curPage].length === 0) delete zoneDict[curPage];
@@ -1213,9 +1208,6 @@ require(['meiEditor'], function(){
                     var linkedPages = {};
                     var pageTitles = meiEditor.getPageTitles();
                     var idx = pageTitles.length;
-
-                    console.log(pageTitles);
-
                     while(idx--)
                     {                        
                         var curTitle = pageTitles[idx];
