@@ -9,17 +9,21 @@ import argparse
 from mako.template import Template
 
 
-INDEX_TEMPLATE = r"""
-<html>
+INDEX_TEMPLATE = r"""<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>${header}</title>
+</head>
 <body>
-<h2>${header}</h2>
-<p>This index has been generated automatically<p>
-<p>Version: ${version}<p>
-<p>
-% for name in names:
-    <li><a href="${name}">${name}</a></li>
-% endfor
-</p>
+    <h2>${header}</h2>
+    <p>This index has been generated automatically<p>
+    <p>Version: ${version}<p>
+    <ul>
+    % for name in names:
+        <li><a href="${name}">${name}</a></li>
+    % endfor
+    </ul>
 </body>
 </html>
 """
