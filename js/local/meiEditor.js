@@ -25,6 +25,7 @@ define([], function ($)
 {
     var AceMeiEditor = function(element, options){
         var self = this;
+        var meiEditor = this;
         var settings = {
             pageTitle: "Ace MEI Editor", //title for the navbar-brand object
             aceTheme: "",           //which ace theme to use, passed in as a string. Check setTheme() on http://ace.c9.io/#nav=api&api=editor
