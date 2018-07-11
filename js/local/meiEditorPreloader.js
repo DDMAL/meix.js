@@ -25,7 +25,7 @@ var MeiEditor = function(element, settingsIn, pluginsIn){
         'skipEditPane': false               //If set to true, will skip loading the Edit pane plugin.
     };
 
-    $.extend(settings, settingsIn)
+    $.extend(settings, settingsIn);
 
     window.meiEditorLocation = settings.meiEditorLocation;
 
