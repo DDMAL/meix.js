@@ -18,7 +18,7 @@ require(['meiEditor'], function(){
                     return false;
                 }
 
-                var defaults = 
+                var defaults =
                 {
                     meiToIgnore: [], //an array of MEI tags to ignore the zones for
                     disableShiftNew: false, //if true, pressing the shift key down does not automatically start creating a new highlight
@@ -33,9 +33,11 @@ require(['meiEditor'], function(){
                     zoneIDs: [],               //an array of IDs for faster lookup
                     //these two are caches of selected/resizable highlights organized by diva pages
                     selectedCache: {},         //where selectedCache[divaItem] = [UUID, UUID...]
-                    resizableCache: {},        
+                    resizableCache: {},
                     selectedClass: "editorSelected", //class to identify selected highlights. NOT a selector.
                     resizableClass: "editorResizable", //class to identify resizable highlights. NOT a selector.
+                    highlightClass: "diva-highlight",
+                    highlightIdAttribute: 'data-highlight-id',
 
                     oneToOneMEI: true
                 };
@@ -54,6 +56,9 @@ require(['meiEditor'], function(){
                 var selectedSelector = "." + selectedClass;
                 var resizableClass = meiEditorSettings.resizableClass;
                 var resizableSelector = "." + resizableClass;
+                var highlightClass = meiEditorSettings.highlightClass;
+                var highlightSelector = "." + highlightClass;
+                var highlightIdAttribute = meiEditorSettings.highlightIdAttribute;
                 var overlayID = "overlay-div";
                 var overlaySelector = "#" + overlayID;
                 var dragID = "drag-div";
@@ -129,29 +134,53 @@ require(['meiEditor'], function(){
                     });
                 };
 
-                
                 var lastRow = 0;
                 var cursorUpdate = function(a, selection)
                 {
                     var curRow = selection.getCursor().row;
-
-                    if (curRow === lastRow)
+                    if (curRow === lastRow) {
                         return;
-                    else
+                    } else {
                         lastRow = curRow;
-
-                    var UUIDs = selection.doc.getLine(curRow).match(/[hm]*-[\dabcdef]{8}-([\dabcdef]{4})-([\dabcdef]{4})-([\dabcdef]{4})-([\dabcdef]{12})/gi);
+                    }
+                    var UUIDs = selection.doc.getLine(curRow).match(
+                            /[hm]*-[\dabcdef]{8}-([\dabcdef]{4})-([\dabcdef]{4})-([\dabcdef]{4})-([\dabcdef]{12})/gi);
                     if(!UUIDs) return;
-
                     var curFacs = UUIDs.length;
-
                     meiEditor.deselectAllHighlights();
-
-                    while(curFacs--)
-                    {
-                        meiEditor.selectHighlight($("#" + UUIDs[curFacs]), true);
+                    while(curFacs--) {
+                        meiEditor.selectHighlight(UUIDs[curFacs], true);
                     }
                 };
+
+                // meiEditor.events.subscribe("ActiveLineChanged", function (fileName, lineNumber) {
+                //     if (fileName !== meiEditor.getActivePageTitle()) {
+                //         // Something really weird happened
+                //         return;
+                //     }
+                //     var pageRef = meiEditor.getPageData(fileName);
+                //     var lineText = pageRef.session.doc.getLine(lineNumber);
+                //     var xml;
+                //     try {
+                //         xml = $.parseXML(lineText);
+                //     } catch(err) {
+                //         return;
+                //     }
+                //     var id = $(xml).find('neume').attr('facs');
+                //     if (!id) {
+                //         // It wasn't a neume with facs attribute
+                //         // let's try a zone with xml:id attribute
+                //         id = $(xml).find('zone').attr('xml:id');
+                //     }
+                //     $.each($('.diva-highlight'), function(index, obj) {
+                //         var highlightId = $(obj).attr('data-highlight-id');
+                //         if (highlightId === id){
+                //             var style = $(obj).css('background-color', 'rgba(255, 255, 0, 0.2)');
+                //             console.log(style);
+                //         }
+                //     });
+                //     console.log(id);
+                // });
 
                 /*
                     Highlight reloading code:
@@ -326,11 +355,9 @@ require(['meiEditor'], function(){
 
                 meiEditor.toggleOneToOne = function()
                 {
-                    console.log('setting');
                     //if ($("#one-to-one-checkbox").prop('checked'))
                     if (meiEditorSettings.oneToOneMEI)
-                    {
-                        console.log("in true");
+                    {                        
                         meiEditorSettings.oneToOneMEI = true;
                         meiEditor.reloadZones = reloadOneToOneZones;
                     }
@@ -341,8 +368,7 @@ require(['meiEditor'], function(){
                     }
                 };
 
-                //no matter what, trigger this once to make sure it's the right listener
-                console.log("setting for the fiorst time");
+                //no matter what, trigger this once to make sure it's the right listener                
                 meiEditor.toggleOneToOne();
                 $("#one-to-one-checkbox").on('change', meiEditor.toggleOneToOne);
 
@@ -500,33 +526,32 @@ require(['meiEditor'], function(){
                         e.stopPropagation();
                     });
 
-                    origObject = e.target;  
+                    origObject = e.target;
                     meiEditor.selectResizable(origObject);
                 };
 
-                var highlightClickHandler = function(e)
-                {
+                var highlightClickHandler = function(e) {
                     //no matter what, clear the timeout
                     clearTimeout(highlightSingleClickTimeout);
-                    
+
                     //if we don't hear a double-click after some time, call this
-                    highlightSingleClickTimeout = setTimeout(function()                    
-                    {
+                    highlightSingleClickTimeout = setTimeout(function () {
                         clearTimeout(highlightSingleClickTimeout);
                         e.stopPropagation();
                         var pageTitles = meiEditor.getLinkedPageTitles();
                         var currentIndex = meiEditorSettings.divaInstance.getCurrentPageIndex();
                         var currentMEI = meiEditor.getActivePageTitle();
-                        if(!(currentIndex in pageTitles) || 
-                           currentMEI !== pageTitles[currentIndex])
-                        {
+                        if(!(currentIndex in pageTitles) ||
+                           currentMEI !== pageTitles[currentIndex]) {
                             console.log('Unsynchronized mei file with manuscript image');
                             return;
                         }
-                        
+
                         var id = $(e.target).attr('data-highlight-id');
-                        meiEditor.gotoLineWithID(id);                        
-                    }, SINGLE_CLICK_TIMEOUT);                        
+                        meiEditor.deselectAllHighlights();
+                        meiEditor.selectHighlight(id, false);
+                        meiEditor.gotoLineWithID(id);
+                    }, SINGLE_CLICK_TIMEOUT);
                 };
 
                 /*
@@ -534,21 +559,24 @@ require(['meiEditor'], function(){
                     @param divToSelect The highlight to select.
                     @param findOverride Overrides jumping to the div in the editor pane.
                 */
-                meiEditor.selectHighlight = function(divToSelect, findOverride)
+                meiEditor.selectHighlight = function(highlightId, findOverride)
                 {
-                    //don't select resizables
-                    if($(divToSelect).hasClass("ui-resizable")) return;
+                    // don't select resizables
+                    // TODO: Find out why we shouldn't select resizables
+                    var highlight = $(highlightSelector + "[" +
+                            highlightIdAttribute + "='" + highlightId + "']");
+                    if($(highlight).hasClass("ui-resizable")) return;                             
 
-                    if(!findOverride) 
-                    {
-                        var pageTitle = meiEditor.getActivePageTitle();
-                        meiEditor.getPageData(pageTitle).selection.removeListener('changeCursor', cursorUpdate);
-                        meiEditor.gotoLineWithID(divToSelect.id);
-                        meiEditor.getPageData(pageTitle).selection.on('changeCursor', cursorUpdate);
-                    }
+                    // if(!findOverride) 
+                    // {
+                    //     var pageTitle = meiEditor.getActivePageTitle();
+                    //     meiEditor.getPageData(pageTitle).selection.removeListener('changeCursor', cursorUpdate);
+                    //     meiEditor.gotoLineWithID($(divToSelect).attr("data-highlight-id"));
+                    //     meiEditor.getPageData(pageTitle).selection.on('changeCursor', cursorUpdate);
+                    // }
 
-                    $(divToSelect).addClass(selectedClass);
-                    $(divToSelect).css('background-color', 'rgba(0, 255, 0, 0.1)');
+                    $(highlight).addClass(selectedClass);
+                    $(highlight).css('background-color', 'rgba(0, 255, 0, 0.1)');
                     updateCaches();
 
                 };
@@ -1365,7 +1393,4 @@ require(['meiEditor'], function(){
     })());
     window.pluginLoader.pluginLoaded();
 })(jQuery);
-
 });
-
-
