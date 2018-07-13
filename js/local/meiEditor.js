@@ -393,7 +393,8 @@ define([], function ($)
             //when the document is clicked
             $("#" + fileNameStripped).on('click', function(e) //parent of editorPane
             {
-                if ($(e.target).hasClass('ace_scroller')){
+                if ($(e.target).hasClass('ace_scroller') ||
+                    $(e.target).hasClass('ace_gutter-cell')){
                     return;
                 }
 
@@ -404,7 +405,7 @@ define([], function ($)
                 if (docRow in pageData[pageName].getSession().$decorations)
                 {
                     pageData[pageName].getSession().removeGutterDecoration(parseInt(docRow, 10), pageData[pageName].getSession().$decorations[docRow].substring(1));
-                } 
+                }
             });
 
             //pageDataKeys was called before page was added - if only an untitled page existed before, delete it
