@@ -49,9 +49,9 @@ require(['meiEditor'], function(){
                 var HIGHLIGHT_SELECTOR = "." + HIGHLIGHT_CLASS;
                 var SINGLE_CLICK_TIMEOUT = 250;
 
-
                 //local variables that don't need to be attached to the settings object
                 var highlightSingleClickTimeout;
+                var pageChangeTimeout;
                 var selectedClass = meiEditorSettings.selectedClass;
                 var selectedSelector = "." + selectedClass;
                 var resizableClass = meiEditorSettings.resizableClass;
@@ -59,6 +59,9 @@ require(['meiEditor'], function(){
                 var highlightClass = meiEditorSettings.highlightClass;
                 var highlightSelector = "." + highlightClass;
                 var highlightIdAttribute = meiEditorSettings.highlightIdAttribute;
+                var shiftKeyDown;
+                var metaKeyDown;
+                var ctrlKeyDown;
                 var overlayID = "overlay-div";
                 var overlaySelector = "#" + overlayID;
                 var dragID = "drag-div";
@@ -73,9 +76,9 @@ require(['meiEditor'], function(){
 
 
                 meiEditor.addToNavbar("Zone Display", "zone-display");
-                
+
                 //the div that pops up when highlights are hovered over
-                meiEditorSettings.element.append('<span id="hover-div"></span>'); 
+                meiEditorSettings.element.append('<span id="hover-div"></span>');
 
                 $("#help-dropdown").append("<li><a id='zone-display-help'>Zone display</a></li>");
                 $("#zone-display-help").on('click', function(){
@@ -261,7 +264,7 @@ require(['meiEditor'], function(){
 
                             //initialize that key of the dictionary
                             zoneDict[curPage] = [];
-                        
+
                     }
 
                     var zoneArr = editorRef.parsed.getElementsByTagName('zone');
@@ -357,7 +360,7 @@ require(['meiEditor'], function(){
                 {
                     //if ($("#one-to-one-checkbox").prop('checked'))
                     if (meiEditorSettings.oneToOneMEI)
-                    {                        
+                    {
                         meiEditorSettings.oneToOneMEI = true;
                         meiEditor.reloadZones = reloadOneToOneZones;
                     }
@@ -368,7 +371,7 @@ require(['meiEditor'], function(){
                     }
                 };
 
-                //no matter what, trigger this once to make sure it's the right listener                
+                //no matter what, trigger this once to make sure it's the right listener
                 meiEditor.toggleOneToOne();
                 $("#one-to-one-checkbox").on('change', meiEditor.toggleOneToOne);
 
@@ -417,7 +420,7 @@ require(['meiEditor'], function(){
                         'display': 'block'
                     });
 
-                    //if this isn't selected, change the color 
+                    //if this isn't selected, change the color
                     if (!$("#" + currentTarget).hasClass(selectedClass) && !$("#" + currentTarget).hasClass(resizableClass))
                     {
                         $("#"+currentTarget).css('background-color', 'rgba(255, 0, 0, 0.1)');
@@ -481,7 +484,7 @@ require(['meiEditor'], function(){
                     divaObject.append("<div id='" + overlayID + "'></div>");
                     $(overlaySelector).offset({'top': divaObject.offset().top, 'left': divaObject.offset().left});
                     $(overlaySelector).width(divaObject.width());
-                    $(overlaySelector).height(divaObject.height());    
+                    $(overlaySelector).height(divaObject.height());
                     $(overlaySelector).css('background-color', 'rgba(0, 0, 0, 0.5)');
                     $("#hover-div").css('display', 'none'); //hides the div
                     $("#hover-div").html("");
@@ -509,7 +512,7 @@ require(['meiEditor'], function(){
                     $(HIGHLIGHT_SELECTOR).on('dblclick', highlightDoubleClickHandler);
                     $(HIGHLIGHT_SELECTOR).on('mouseenter', highlightMouseEnterHandler).on('mouseleave', highlightMouseLeaveHandler);
                 };
-                
+
                 var highlightDoubleClickHandler = function(e)
                 {
                     clearTimeout(highlightSingleClickTimeout);
@@ -538,6 +541,7 @@ require(['meiEditor'], function(){
                     highlightSingleClickTimeout = setTimeout(function () {
                         clearTimeout(highlightSingleClickTimeout);
                         e.stopPropagation();
+                        var boundingBox = shiftKeyDown;
                         var pageTitles = meiEditor.getLinkedPageTitles();
                         var currentIndex = meiEditorSettings.divaInstance.getCurrentPageIndex();
                         var currentMEI = meiEditor.getActivePageTitle();
@@ -550,7 +554,7 @@ require(['meiEditor'], function(){
                         var id = $(e.target).attr('data-highlight-id');
                         meiEditor.deselectAllHighlights();
                         meiEditor.selectHighlight(id, false);
-                        meiEditor.gotoLineWithID(id);
+                        meiEditor.gotoLineWithID(id, boundingBox);
                     }, SINGLE_CLICK_TIMEOUT);
                 };
 
@@ -565,9 +569,9 @@ require(['meiEditor'], function(){
                     // TODO: Find out why we shouldn't select resizables
                     var highlight = $(highlightSelector + "[" +
                             highlightIdAttribute + "='" + highlightId + "']");
-                    if($(highlight).hasClass("ui-resizable")) return;                             
+                    if($(highlight).hasClass("ui-resizable")) return;
 
-                    // if(!findOverride) 
+                    // if(!findOverride)
                     // {
                     //     var pageTitle = meiEditor.getActivePageTitle();
                     //     meiEditor.getPageData(pageTitle).selection.removeListener('changeCursor', cursorUpdate);
@@ -621,7 +625,7 @@ require(['meiEditor'], function(){
                                 e.stopPropagation();
                                 e.preventDefault();
                                 //check the size and update the icon accordingly
-                                checkResizable(resizableSelector); 
+                                checkResizable(resizableSelector);
                             },
                             stop: function(e, ui)
                             {
@@ -630,7 +634,7 @@ require(['meiEditor'], function(){
                                 meiEditor.updateBox(ui.helper);
                             }
                         });
- 
+
                         checkResizable(resizableSelector);
                     }
                     //jQuery UI draggable, when drag stops update the box's position in the document
@@ -644,7 +648,7 @@ require(['meiEditor'], function(){
                         });
                     }
 
-                    if(!findOverride) 
+                    if(!findOverride)
                     {
                         var pageTitle = meiEditor.getActivePageTitle();
                         meiEditor.getPageData(pageTitle).selection.removeListener('changeCursor', cursorUpdate);
@@ -694,7 +698,7 @@ require(['meiEditor'], function(){
 
                     //rewriting will trigger an edit, which in turn will trigger reloading the zones
                     //because this acts like an edit, it can be run multiple times in quick succession and will only upload zones when it's done
-                    
+
                     meiEditor.getPageData(pageTitle).selection.removeListener('changeCursor', cursorUpdate);
                     rewriteAce(pageRef);
                     meiEditor.getPageData(pageTitle).selection.on('changeCursor', cursorUpdate);
@@ -723,7 +727,7 @@ require(['meiEditor'], function(){
                     var dragLeft = $(dragSelector).offset().left;
                     var dragTop = $(dragSelector).offset().top;
                     var dragRight = dragLeft + $(dragSelector).width();
-                    var dragBottom = dragTop + $(dragSelector).height();           
+                    var dragBottom = dragTop + $(dragSelector).height();
 
                     //if we're moving left
                     if (e.pageX < meiEditorSettings.initDragLeft)
@@ -749,7 +753,7 @@ require(['meiEditor'], function(){
                     //unbind everything that could have caused this
                     $(document).unbind('mousemove', changeDragSize);
                     $(document).unbind('mouseup', createHighlight);
-                    
+
                     //if the clicked page is not linked, warn and do nothing
                     var clickedIdx = meiEditorSettings.divaInstance.getPageIndexForPageXYValues(initDragLeft, initDragTop);
                     if (divaFilenames[clickedIdx] === undefined) return false; //this line should not be necessary?
@@ -764,7 +768,7 @@ require(['meiEditor'], function(){
                     //aliasing a function for readability here
                     divaTranslate = meiEditorSettings.divaInstance.translateToMaxZoomLevel;
                     var divaPageObj = $("#1-diva-page-" + meiEditorSettings.divaInstance.getCurrentPageIndex());
-                        
+
                     //if this was just a click
                     if ($(dragSelector).width() < 2 && $(dragSelector).height() < 2)
                     {
@@ -779,7 +783,7 @@ require(['meiEditor'], function(){
                         insertNewZone(clickedIdx, centerX - 100, centerY - 100, centerX + 100, centerY + 100);
                     }
                     //else if we dragged to create a neume
-                    else 
+                    else
                     {
                         //left position
                         var draggedBoxLeft = $(dragSelector).offset().left - divaPageObj.offset().left;
@@ -808,7 +812,7 @@ require(['meiEditor'], function(){
                     uly = parseInt(uly, 10);
                     lrx = parseInt(lrx, 10);
                     lry = parseInt(lry, 10);
-                    
+
                     meiEditor.localLog("Got a new highlight at (" + ulx + ", " + uly + ") to (" + lrx + ", " + lry + ").");
                     if (meiEditorSettings.oneToOneMEI)
                     {
@@ -821,7 +825,7 @@ require(['meiEditor'], function(){
                         var idx = zones.length;
 
                         //create a [xml:id, uly, lry, centerY] object for each zone
-                        var highlights = []; 
+                        var highlights = [];
                         var curZone, xmlID, curUly, curLry;
 
                         while(idx--)
@@ -881,7 +885,7 @@ require(['meiEditor'], function(){
                             {
                                 curCluster = clusters[added];
                                 curCluster.ids.push(curPoint.xmlID);
-                                
+
                                 if (curPoint.lry > curCluster.lry) curCluster.lry = curPoint.lry;
                                 if (curPoint.uly < curCluster.uly) curCluster.uly = curPoint.uly;
                                 added = false;
@@ -958,7 +962,7 @@ require(['meiEditor'], function(){
                         if (chosenIdx === undefined)
                         {
                             //if we found a cluster before the new zone
-                            if (lastIdx === undefined) 
+                            if (lastIdx === undefined)
                             {
                                 sorted = orderCluster(clusters[0]);
                                 nextZone = sorted[0].zoneRef;
@@ -1002,7 +1006,7 @@ require(['meiEditor'], function(){
                                     sorted = orderCluster(clusters[chosenIdx + 1]);
                                     nextZone = sorted[0].zoneRef;
                                 }
-                            } 
+                            }
                             else
                             {
                                 for (idx = 0; idx < sorted.length; idx++)
@@ -1028,25 +1032,25 @@ require(['meiEditor'], function(){
                         {
                             indentIndex = Array.prototype.indexOf.call(nextZone.parentElement.childNodes, nextZone);
                             indentNode = nextZone.parentElement.childNodes[indentIndex - 1].cloneNode(false);
-                            
+
                             nextZone.parentElement.insertBefore(toInsert, nextZone);
                             nextZone.parentElement.insertBefore(indentNode, nextZone);
                         }
-                        else 
+                        else
                         {
                             indentIndex = Array.prototype.indexOf.call(prevZone.parentElement.childNodes, prevZone);
                             indentNode = prevZone.parentElement.childNodes[indentIndex - 1].cloneNode(false);
 
                             inserted = prevZone.insertAdjacentElement("afterEnd", toInsert);
                             inserted.parentElement.insertBefore(indentNode, inserted);
-                        }             
+                        }
 
                         rewriteAce(pageRef);
 
                         //publishes an event with four parameters: reference to pageData, id of prevZone, id of nextZone, id of newly added zone
-                        meiEditor.events.publish('NewZone', [pageRef, 
-                            (prevZone ? prevZone.getAttribute('xml:id') : undefined), 
-                            (nextZone ? nextZone.getAttribute('xml:id') : undefined), 
+                        meiEditor.events.publish('NewZone', [pageRef,
+                            (prevZone ? prevZone.getAttribute('xml:id') : undefined),
+                            (nextZone ? nextZone.getAttribute('xml:id') : undefined),
                             newZoneUUID]);
                     }
 
@@ -1067,11 +1071,9 @@ require(['meiEditor'], function(){
 
                 $(document).on('keydown', function(e)
                 {
-                    if (e.shiftKey && !newHighlightActive && !meiEditorSettings.disableShiftNew && $("#diva-wrapper").is(":hover"))
-                    {
-                        e.stopPropagation();
-                        meiEditor.startNewHighlight();
-                    } 
+                    if (e.key === "Shift") {
+                        shiftKeyDown = true;
+                    }
                 });
 
                 $(document).on('keyup', function(e)
@@ -1080,12 +1082,13 @@ require(['meiEditor'], function(){
                     var selectedActive = ($(selectedSelector).length > 0);
 
                     //no matter what, if this was toggling the shift key and it wasn't down before, listen to remove the overlay
-                    if (!e.shiftKey && newHighlightActive) 
-                    {
-                        newHighlightActive = false;
-                        if (!editorLastFocus) e.stopPropagation();
-                        $(overlaySelector).unbind('mousedown', prepNewHighlight);
-                        destroyOverlay();
+                    // if (e.shiftKey && newHighlightActive)
+                    if (e.key === "Shift") {
+                        shiftKeyDown = false;
+                        // newHighlightActive = false;
+                        // if (!editorLastFocus) e.stopPropagation();
+                        // $(overlaySelector).unbind('mousedown', prepNewHighlight);
+                        // destroyOverlay();
                         return;
                     }
 
@@ -1093,19 +1096,19 @@ require(['meiEditor'], function(){
                     if (editorLastFocus) return;
 
                     //escape to quit whatever the current selection is
-                    if (e.keyCode == 27 && (resizableActive || selectedActive)) 
-                    { 
+                    if (e.keyCode == 27 && (resizableActive || selectedActive))
+                    {
                         e.stopPropagation();
                         ($(resizableSelector).length > 0) ? meiEditor.deselectResizable(resizableSelector) : meiEditor.deselectAllHighlights();
                         destroyOverlay();
-                    } 
+                    }
                     //arrow keys to nudge resizable
                     else if ((e.keyCode < 41) && (e.keyCode > 36) && resizableActive)
                     {
                         e.stopPropagation();
                         e.preventDefault();
 
-                        switch (e.keyCode) 
+                        switch (e.keyCode)
                         {
                             case 37:
                                 $(resizableSelector).offset({'left': $(resizableSelector).offset().left - 1});
@@ -1132,7 +1135,7 @@ require(['meiEditor'], function(){
 
                         //if double-click active, we want to remove only the resizable, otherwise we want to remove the selected
                         var selector = ($(resizableSelector).length > 0) ? resizableSelector : selectedSelector;
-                        
+
                         var pageTitle = meiEditor.getActivePageTitle();
                         var pageRef = meiEditor.getPageData(pageTitle);
                         pageRef.selection.removeListener('changeCursor', cursorUpdate);
@@ -1142,7 +1145,7 @@ require(['meiEditor'], function(){
                         var zoneArr = [];
                         while (curItemIndex--) //in case there's multiple
                         {
-                            var curItem = $(selector)[curItemIndex];    
+                            var curItem = $(selector)[curItemIndex];
                             var itemID = $(curItem).attr('id');
 
                             //regenerate these every time
@@ -1151,7 +1154,7 @@ require(['meiEditor'], function(){
 
                             zoneArr = pageRef.parsed.querySelectorAll('[facs=' + itemID + ']');
                             safelyRemove(zoneArr[0]);
-                            
+
                             $(curItem).remove();
                         }
 
@@ -1161,9 +1164,9 @@ require(['meiEditor'], function(){
 
                         pageRef.gotoLine(curSelection.row, curSelection.column, false);
                         pageRef.selection.on('changeCursor', cursorUpdate);
-                        meiEditor.localLog("Deleted highlight."); 
+                        meiEditor.localLog("Deleted highlight.");
                     }
-                });   
+                });
 
                 /*
                     Saves highlights/resizable IDs while highlights are being reloaded.
@@ -1347,18 +1350,22 @@ require(['meiEditor'], function(){
                 diva.Events.subscribe("ZoomLevelDidChange", updateCaches);
                 diva.Events.subscribe("VisiblePageDidChange", function(pageNumber, fileName)
                 {
-                    //only if it's linked
-                    fileName = fileName.split('/');
-                    fileName = fileName[fileName.length - 1];
-                    var activeFileName = pageTitleForDivaFilename(fileName);
-                    if (activeFileName)
-                    {
-                        skipDivaJump = true;
-                        meiEditor.switchToPage(activeFileName);
-                        skipDivaJump = false;
-                    }
+                    clearTimeout(pageChangeTimeout);
+                    pageChangeTimeout = setTimeout(function () {
+                        //only if it's linked
+                        console.log("ChangeTab!");
+                        fileName = fileName.split('/');
+                        fileName = fileName[fileName.length - 1];
+                        var activeFileName = pageTitleForDivaFilename(fileName);
+                        if (activeFileName)
+                        {
+                            skipDivaJump = true;
+                            meiEditor.switchToPage(activeFileName);
+                            skipDivaJump = false;
+                        }
+                    }, meiEditorSettings.PAGE_CHANGE_TIMEOUT);
                 });
-                
+
                 var pageTitles = meiEditor.getPageTitles();
                 var idx = pageTitles.length;
 
