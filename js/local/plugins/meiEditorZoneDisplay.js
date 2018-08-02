@@ -130,11 +130,19 @@ require(['meiEditor'], function(){
                 //changes the position of the on-hover box
                 var changeHoverPosition = function(e)
                 {
+                    if (shiftKeyDown) {
+                        $("#hover-div .zone").css('display', 'block');
+                        $("#hover-div .neume").css('display', 'none');
+                    } else {
+                        $("#hover-div .zone").css('display', 'none');
+                        $("#hover-div .neume").css('display', 'block');
+                    }
                     $("#hover-div").offset(
                     {
                         'top': e.pageY - 10,
                         'left': e.pageX + 10
                     });
+
                 };
 
                 var lastRow = 0;
@@ -392,17 +400,19 @@ require(['meiEditor'], function(){
                         return;
                     }
 
-                    var currentTarget = e.target.id;
+                    var currentTarget =
+                        $(e.target).attr(meiEditorSettings.highlightIdAttribute);
 
                     var pageTitle = meiEditor.getActivePageTitle();
                     var pageRef = meiEditor.getPageData(pageTitle);
 
                     var object = pageRef.parsed.querySelectorAll('[*|facs="' + currentTarget + '"]')[0];
+                    var zone = pageRef.parsed.querySelectorAll('zone[*|id="' + currentTarget + '"]')[0];
 
-                    if(!object) return;
+                    if(!object || !zone) return;
 
                     var idx = object.attributes.length;
-                    var string = object.tagName + ":<br>";
+                    var string = '<div class=neume>' + object.tagName;
 
                     while(idx--)
                     {
@@ -411,14 +421,37 @@ require(['meiEditor'], function(){
                             string += "<div style='margin-left:5px'>" + curAtt.name + ": " + curAtt.value + "</div>";
                     }
 
+                    string += "</div>";
+
+                    var idx = zone.attributes.length;
+                    string += '<div class=zone>' + zone.tagName;
+
+                    while(idx--)
+                    {
+                        curAtt = zone.attributes[idx];
+                        if (curAtt.name !== "xml:id")
+                            string += "<div style='margin-left:5px'>" + curAtt.name + ": " + curAtt.value + "</div>";
+                    }
+
+                    string += "</div>";
+
                     $("#hover-div").html(string + "<br>Click to find in document.");
                     $("#hover-div").css(
                     {
                         'height': 'auto',
                         'top': e.pageY - 10,
                         'left': e.pageX + 10,
-                        'display': 'block'
+                        'display': 'block',
+                        'background-color': 'rgba(220,220,220,0.7)'
                     });
+
+                    if (shiftKeyDown) {
+                        $("#hover-div .zone").css('display', 'block');
+                        $("#hover-div .neume").css('display', 'none');
+                    } else {
+                        $("#hover-div .zone").css('display', 'none');
+                        $("#hover-div .neume").css('display', 'block');
+                    }
 
                     //if this isn't selected, change the color
                     if (!$("#" + currentTarget).hasClass(selectedClass) && !$("#" + currentTarget).hasClass(resizableClass))
@@ -432,7 +465,7 @@ require(['meiEditor'], function(){
 
                 var highlightMouseLeaveHandler = function(e)
                 {
-                    currentTarget = e.target.id;
+                    currentTarget = $(e.target).attr(meiEditorSettings.highlightIdAttribute);
                     $(document).unbind('mousemove', changeHoverPosition); //stops moving the div
                     $("#hover-div").css('display', 'none'); //hides the div
                     $("#hover-div").html("");
@@ -483,18 +516,18 @@ require(['meiEditor'], function(){
                     meiEditorSettings.divaInstance.disableScrollable();
                     divaObject.append("<div id='" + overlayID + "'></div>");
                     $(overlaySelector).offset({'top': divaObject.offset().top, 'left': divaObject.offset().left});
-                    $(overlaySelector).width(divaObject.width());
-                    $(overlaySelector).height(divaObject.height());
+                    $(overlaySelector).width(divaObject.width() / 2);
+                    $(overlaySelector).height(divaObject.height() / 2);
                     $(overlaySelector).css('background-color', 'rgba(0, 0, 0, 0.5)');
                     $("#hover-div").css('display', 'none'); //hides the div
                     $("#hover-div").html("");
 
 
                     //this prevents a graphical glitch with Diva
-                    divaObject.on('resize', function(e){
-                        e.stopPropagation();
-                        e.preventDefault();
-                    });
+                    // divaObject.on('resize', function(e){
+                    //     e.stopPropagation();
+                    //     e.preventDefault();
+                    // });
 
                     $(HIGHLIGHT_SELECTOR).unbind('click', highlightClickHandler);
                     $(HIGHLIGHT_SELECTOR).unbind('dblclick', highlightDoubleClickHandler);
@@ -516,6 +549,7 @@ require(['meiEditor'], function(){
                 var highlightDoubleClickHandler = function(e)
                 {
                     clearTimeout(highlightSingleClickTimeout);
+                    return;
                     e.stopPropagation();
 
                     //don't want multiple resizable
@@ -551,7 +585,8 @@ require(['meiEditor'], function(){
                             return;
                         }
 
-                        var id = $(e.target).attr('data-highlight-id');
+                        var id =
+                            $(e.target).attr(meiEditorSettings.highlightIdAttribute);
                         meiEditor.deselectAllHighlights();
                         meiEditor.selectHighlight(id, false);
                         meiEditor.gotoLineWithID(id, boundingBox);
@@ -956,7 +991,7 @@ require(['meiEditor'], function(){
                         };
 
                         //find the ID to insert things after
-                        var prevZone, nextZone, indentIndex, indentNode;
+                        var prevZone, nextZone, indentIndex, indentde;
 
                         //if we didn't find the right cluster
                         if (chosenIdx === undefined)
@@ -1353,7 +1388,6 @@ require(['meiEditor'], function(){
                     clearTimeout(pageChangeTimeout);
                     pageChangeTimeout = setTimeout(function () {
                         //only if it's linked
-                        console.log("ChangeTab!");
                         fileName = fileName.split('/');
                         fileName = fileName[fileName.length - 1];
                         var activeFileName = pageTitleForDivaFilename(fileName);
