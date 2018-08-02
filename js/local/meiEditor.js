@@ -340,8 +340,7 @@ define([], function ($)
         {
             if (checkDuplicatePageTitles(fileName))
             {
-                self.localError("Error in adding " + fileName + ": this filename is too similar to one that already exists in this project. Please close the other or choose a different name.");
-                return false;
+                self.removePageFromProject(fileName, true);
             }
 
 
